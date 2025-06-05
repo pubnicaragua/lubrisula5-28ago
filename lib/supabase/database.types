@@ -1,0 +1,160 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      aseguradoras: {
+        Row: {
+          id: string
+          user_id: string | null
+          nombre: string | null
+          direccion: string | null
+          nivel_servicio: string | null
+          created_at: string | null
+          updated_at: string | null
+          cliente_id: string | null
+          flota_id: string | null
+          corrreo: string | null
+          telefono: string | null
+          estado_tributario: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          nombre: string | null
+          direccion?: string | null
+          nivel_servicio?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          cliente_id?: string | null
+          flota_id?: string | null
+           corrreo?: string | null
+          telefono?: string | null
+          estado_tributario?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          nombre?: string | null
+          direccion?: string | null
+          nivel_servicio?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          cliente_id?: string | null
+          flota_id?: string | null
+           corrreo?: string | null
+          telefono?: string | null
+          estado_tributario?: string | null
+        }
+      }
+      clients: {
+        Row: {
+          id: string
+          user_id: string | null
+          name: string
+          company: string | null
+          phone: string
+          email: string | null
+          client_type: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          name: string
+          company?: string | null
+          phone: string
+          email?: string | null
+          client_type: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          name?: string
+          company?: string | null
+          phone?: string
+          email?: string | null
+          client_type?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      kanban_cards: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      kanban_columns: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      materiales: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      order_details: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      orders: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      quotation_parts: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      quotations: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      roles: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      roles_usuario: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      talleres: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+      vehicles: {
+        Row: any
+        Insert: any
+        Update: any
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}

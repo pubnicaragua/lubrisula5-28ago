@@ -1,0 +1,31 @@
+diff --git a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
+index 9a5a2e0..e7a0a2d 100644
+--- a/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
++++ b/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.esm.js
+@@ -1,6 +1,6 @@
+ import React, { Component, PureComponent } from 'react';
+-import ReactDOM from 'react-dom';
+-import { flushSync } from 'react-dom';
++import * as ReactDOM from 'react-dom';
++import * as ReactDOMClient from 'react-dom/client';
+ 
+ // Manually patched for React 18 compatibility
+ 
+@@ -3714,7 +3714,7 @@ var getFormattedMessage = function getFormattedMessage(
+ 
+ var clean$1 = function clean() {
+   if (isCleaning) {
+-    flushSync(tryResetStore);
++    ReactDOM.flushSync ? ReactDOM.flushSync(tryResetStore) : tryResetStore();
+     return;
+   }
+ 
+@@ -3722,7 +3722,7 @@ var clean$1 = function clean() {
+ 
+   try {
+     isCleaning = true;
+-    flushSync(tryResetStore);
++    ReactDOM.flushSync ? ReactDOM.flushSync(tryResetStore) : tryResetStore();
+   } finally {
+     isCleaning = false;
+     unbindWindowEvents();
