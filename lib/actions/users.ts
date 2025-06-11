@@ -1,6 +1,6 @@
 "use server"
 import { revalidatePath } from "next/cache"
-import { supabaseAdmin } from "@/lib/supabase/admin-client" // Importación correcta de supabaseAdmin
+import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 // Tipo para el usuario
 export type UserWithDetails = {

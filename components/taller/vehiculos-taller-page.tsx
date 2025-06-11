@@ -24,13 +24,15 @@ import {
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { Edit, MoreHorizontal, Plus, Search, Trash2, Eye } from "lucide-react"
-import { ExportData } from "@/components/ui/export-data"
+import { Edit, MoreHorizontal, Plus, Search, Trash2, Eye, FileText, FileInput } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import * as XLSX from "xlsx"
+import { jsPDF } from "jspdf"
+import "jspdf-autotable"
 
 const vehiculoSchema = z.object({
   marca: z.string().min(1, { message: "La marca es requerida" }),
@@ -43,17 +45,21 @@ const vehiculoSchema = z.object({
   vin: z.string().optional(),
 })
 
-export function VehiculosTallerPage() {
-  const [vehiculos, setVehiculos] = useState([])
-  const [filteredVehiculos, setFilteredVehiculos] = useState([])
+interface VehiculosTallerPageProps {
+  onOpenHojaIngreso?: (vehiculoId: string) => void
+}
+
+export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPageProps) {
+  const [vehiculos, setVehiculos] = useState<any[]>([])
+  const [filteredVehiculos, setFilteredVehiculos] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const [vehiculoToDelete, setVehiculoToDelete] = useState(null)
+  const [vehiculoToDelete, setVehiculoToDelete] = useState<string | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [currentVehiculo, setCurrentVehiculo] = useState(null)
-  const [clientes, setClientes] = useState([])
+  const [currentVehiculo, setCurrentVehiculo] = useState<any>(null)
+  const [clientes, setClientes] = useState<any[]>([])
   const supabase = createClientComponentClient()
   const { toast } = useToast()
   const router = useRouter()
@@ -95,9 +101,9 @@ export function VehiculosTallerPage() {
     if (searchTerm) {
       const filtered = vehiculos.filter(
         (vehiculo: any) =>
-          vehiculo.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vehiculo.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vehiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vehiculo.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vehiculo.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vehiculo.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           vehiculo.cliente?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
       setFilteredVehiculos(filtered)
@@ -263,43 +269,97 @@ export function VehiculosTallerPage() {
     }
   }
 
-  const exportData = filteredVehiculos.map((vehiculo: any) => ({
-    ID: vehiculo.id,
-    Marca: vehiculo.marca,
-    Modelo: vehiculo.modelo,
-    Año: vehiculo.anio,
-    Placa: vehiculo.placa,
-    Color: vehiculo.color,
-    Tipo: vehiculo.tipo,
-    VIN: vehiculo.vin || "N/A",
-    Cliente: `${vehiculo.cliente?.nombre || ""} ${vehiculo.cliente?.apellido || ""}`,
-  }))
+  const exportToExcel = () => {
+    const dataToExport = filteredVehiculos.map((vehiculo: any) => ({
+      Marca: vehiculo.marca,
+      Modelo: vehiculo.modelo,
+      Año: vehiculo.anio,
+      Placa: vehiculo.placa,
+      Color: vehiculo.color,
+      Tipo: vehiculo.tipo,
+      VIN: vehiculo.vin || "N/A",
+      Cliente: vehiculo.cliente ? `${vehiculo.cliente.nombre} ${vehiculo.cliente.apellido || ""}` : "N/A",
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Vehículos")
+    XLSX.writeFile(workbook, "Vehiculos.xlsx")
+  }
+
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+
+    // Título
+    doc.setFontSize(18)
+    doc.text("Listado de Vehículos", 14, 22)
+
+    // Fecha de generación
+    doc.setFontSize(11)
+    doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30)
+
+    // Tabla
+    const tableColumn = ["Marca", "Modelo", "Año", "Placa", "Color", "Cliente"]
+    const tableRows = filteredVehiculos.map((vehiculo: any) => [
+      vehiculo.marca,
+      vehiculo.modelo,
+      vehiculo.anio,
+      vehiculo.placa,
+      vehiculo.color,
+      vehiculo.cliente ? `${vehiculo.cliente.nombre} ${vehiculo.cliente.apellido || ""}` : "N/A",
+    ])
+
+    // @ts-ignore - jspdf-autotable types
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: "grid",
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [66, 66, 66] },
+    })
+
+    doc.save("Vehiculos.pdf")
+  }
+
+  const handleHojaIngresoClick = (vehiculoId: string) => {
+    if (onOpenHojaIngreso) {
+      onOpenHojaIngreso(vehiculoId)
+    } else {
+      router.push(`/taller/vehiculos/${vehiculoId}/ingreso`)
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Vehículos</h2>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Nuevo Vehículo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportToExcel}>
+            Excel
+          </Button>
+          <Button variant="outline" onClick={exportToPDF}>
+            PDF
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Nuevo Vehículo
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Gestión de Vehículos</CardTitle>
           <CardDescription>Administra todos los vehículos registrados en el taller</CardDescription>
-          <div className="flex justify-between items-center mt-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar vehículos..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <ExportData data={exportData} fileName="vehiculos" title="Vehículos Registrados" />
+          <div className="relative w-full max-w-sm mt-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar vehículos..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -342,41 +402,58 @@ export function VehiculosTallerPage() {
                           {vehiculo.cliente?.nombre} {vehiculo.cliente?.apellido}
                         </TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Abrir menú</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => router.push(`/taller/vehiculos/${vehiculo.id}`)}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver detalles
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setCurrentVehiculo(vehiculo)
-                                  setShowEditDialog(true)
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => {
-                                  setVehiculoToDelete(vehiculo.id)
-                                  setShowDeleteDialog(true)
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleHojaIngresoClick(vehiculo.id)}
+                              className="h-8"
+                            >
+                              <FileInput className="h-4 w-4 mr-1" />
+                              Hoja de Ingreso
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Abrir menú</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => router.push(`/taller/vehiculos/${vehiculo.id}`)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Ver detalles
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => router.push(`/taller/vehiculos/${vehiculo.id}/inspeccion`)}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Hoja de Inspección
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setCurrentVehiculo(vehiculo)
+                                    setShowEditDialog(true)
+                                  }}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    setVehiculoToDelete(vehiculo.id)
+                                    setShowDeleteDialog(true)
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

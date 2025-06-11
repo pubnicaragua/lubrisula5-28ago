@@ -1,297 +1,371 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import type React from "react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter } from "next/navigation"
+import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect } from "react"
 
-const formSchema = z.object({
-  cliente_id: z.string().min(1, { message: "Seleccione un cliente" }),
-  vehiculo_id: z.string().min(1, { message: "Seleccione un vehículo" }),
-  descripcion: z.string().min(5, { message: "La descripción debe tener al menos 5 caracteres" }),
-  tipo_servicio: z.string().min(1, { message: "Seleccione un tipo de servicio" }),
-  fecha_ingreso: z.string().min(1, { message: "Seleccione una fecha de ingreso" }),
-  fecha_estimada_entrega: z.string().min(1, { message: "Seleccione una fecha estimada de entrega" }),
-  tecnico_asignado: z.string().min(1, { message: "Seleccione un técnico" }),
-  prioridad: z.string().min(1, { message: "Seleccione una prioridad" }),
-})
+interface OrdenForm {
+  clienteId: string
+  clienteNombre: string
+  vehiculoId: string
+  vehiculoInfo: string
+  descripcion: string
+  tipoServicio: "Mantenimiento" | "Reparación" | "Diagnóstico" | "Revisión" | "Otro"
+  fechaIngreso: string
+  fechaEstimadaEntrega: string
+  fechaEntrega?: string
+  tecnicoAsignado: string
+  prioridad: "Baja" | "Normal" | "Alta" | "Urgente"
+  estado: "Pendiente" | "En Proceso" | "Completada" | "Entregada" | "Cancelada"
+  costoEstimado?: number
+  costoFinal?: number
+  observaciones?: string
+}
 
-export default function NuevaOrdenForm() {
-  const [clientes, setClientes] = useState([])
-  const [vehiculos, setVehiculos] = useState([])
-  const [tecnicos, setTecnicos] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
-  const supabase = createClientComponentClient()
+interface NuevaOrdenFormProps {
+  onSubmit: (orden: OrdenForm) => void
+  ordenExistente?: any
+}
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      cliente_id: "",
-      vehiculo_id: "",
-      descripcion: "",
-      tipo_servicio: "",
-      fecha_ingreso: new Date().toISOString().split("T")[0],
-      fecha_estimada_entrega: "",
-      tecnico_asignado: "",
-      prioridad: "normal",
-    },
+export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps) {
+  const [formData, setFormData] = useState<OrdenForm>({
+    clienteId: "",
+    clienteNombre: "",
+    vehiculoId: "",
+    vehiculoInfo: "",
+    descripcion: "",
+    tipoServicio: "Mantenimiento",
+    fechaIngreso: new Date().toISOString().split("T")[0],
+    fechaEstimadaEntrega: "",
+    tecnicoAsignado: "",
+    prioridad: "Normal",
+    estado: "Pendiente",
+    costoEstimado: 0,
+    observaciones: "",
   })
 
-  // Cargar datos iniciales
-  useState(() => {
-    const fetchData = async () => {
-      // Cargar clientes
-      const { data: clientesData } = await supabase.from("clientes").select("*")
-      if (clientesData) setClientes(clientesData)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [clientes, setClientes] = useState<any[]>([])
+  const [vehiculos, setVehiculos] = useState<any[]>([])
+  const [tecnicos, setTecnicos] = useState<any[]>([])
 
-      // Cargar vehículos
-      const { data: vehiculosData } = await supabase.from("vehiculos").select("*")
-      if (vehiculosData) setVehiculos(vehiculosData)
+  // Cargar datos del localStorage
+  useEffect(() => {
+    const savedClientes = localStorage.getItem("clientes")
+    const savedVehiculos = localStorage.getItem("vehiculos")
+    const savedMiembros = localStorage.getItem("miembros")
 
-      // Cargar técnicos
-      const { data: tecnicosData } = await supabase.from("usuarios").select("*").eq("rol", "tecnico")
-      if (tecnicosData) setTecnicos(tecnicosData)
+    if (savedClientes) {
+      setClientes(JSON.parse(savedClientes))
     }
-
-    fetchData()
+    if (savedVehiculos) {
+      setVehiculos(JSON.parse(savedVehiculos))
+    }
+    if (savedMiembros) {
+      const miembros = JSON.parse(savedMiembros)
+      setTecnicos(miembros.filter((m: any) => m.cargo.includes("Técnico")))
+    }
   }, [])
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("ordenes_trabajo")
-        .insert([
-          {
-            cliente_id: values.cliente_id,
-            vehiculo_id: values.vehiculo_id,
-            descripcion: values.descripcion,
-            tipo_servicio: values.tipo_servicio,
-            fecha_ingreso: values.fecha_ingreso,
-            fecha_estimada_entrega: values.fecha_estimada_entrega,
-            tecnico_asignado: values.tecnico_asignado,
-            prioridad: values.prioridad,
-            estado: "pendiente",
-          },
-        ])
-        .select()
-
-      if (error) throw error
-
-      toast({
-        title: "Orden creada",
-        description: "La orden de trabajo ha sido creada exitosamente",
+  // Cargar datos de la orden existente si se está editando
+  useEffect(() => {
+    if (ordenExistente) {
+      setFormData({
+        clienteId: ordenExistente.clienteId || "",
+        clienteNombre: ordenExistente.clienteNombre || "",
+        vehiculoId: ordenExistente.vehiculoId || "",
+        vehiculoInfo: ordenExistente.vehiculoInfo || "",
+        descripcion: ordenExistente.descripcion || "",
+        tipoServicio: ordenExistente.tipoServicio || "Mantenimiento",
+        fechaIngreso: ordenExistente.fechaIngreso || new Date().toISOString().split("T")[0],
+        fechaEstimadaEntrega: ordenExistente.fechaEstimadaEntrega || "",
+        fechaEntrega: ordenExistente.fechaEntrega || "",
+        tecnicoAsignado: ordenExistente.tecnicoAsignado || "",
+        prioridad: ordenExistente.prioridad || "Normal",
+        estado: ordenExistente.estado || "Pendiente",
+        costoEstimado: ordenExistente.costoEstimado || 0,
+        costoFinal: ordenExistente.costoFinal || 0,
+        observaciones: ordenExistente.observaciones || "",
       })
+    }
+  }, [ordenExistente])
 
-      router.push("/taller/ordenes")
-      router.refresh()
-    } catch (error) {
-      console.error("Error al crear la orden:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo crear la orden de trabajo",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData({
+      ...formData,
+      [name]: name === "costoEstimado" || name === "costoFinal" ? Number.parseFloat(value) || 0 : value,
+    })
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value })
+
+    // Si cambia el cliente, actualizar el nombre del cliente
+    if (name === "clienteId") {
+      const cliente = clientes.find((c) => c.id === value)
+      if (cliente) {
+        setFormData((prev) => ({
+          ...prev,
+          clienteId: value,
+          clienteNombre: `${cliente.nombre} ${cliente.apellido}`,
+        }))
+      }
+    }
+
+    // Si cambia el vehículo, actualizar la info del vehículo
+    if (name === "vehiculoId") {
+      const vehiculo = vehiculos.find((v) => v.id === value)
+      if (vehiculo) {
+        setFormData((prev) => ({
+          ...prev,
+          vehiculoId: value,
+          vehiculoInfo: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.año} (${vehiculo.placa})`,
+        }))
+      }
     }
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    // Simular delay de procesamiento
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    onSubmit(formData)
+
+    // Limpiar formulario si no es edición
+    if (!ordenExistente) {
+      setFormData({
+        clienteId: "",
+        clienteNombre: "",
+        vehiculoId: "",
+        vehiculoInfo: "",
+        descripcion: "",
+        tipoServicio: "Mantenimiento",
+        fechaIngreso: new Date().toISOString().split("T")[0],
+        fechaEstimadaEntrega: "",
+        tecnicoAsignado: "",
+        prioridad: "Normal",
+        estado: "Pendiente",
+        costoEstimado: 0,
+        observaciones: "",
+      })
+    }
+
+    setIsSubmitting(false)
+  }
+
+  // Filtrar vehículos por cliente seleccionado
+  const vehiculosFiltrados = vehiculos.filter((v) => v.clienteId === formData.clienteId)
+
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Nueva Orden de Trabajo</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="cliente_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar cliente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clientes.map((cliente: any) => (
-                          <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.nombre} {cliente.apellido}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="clienteId">Cliente *</Label>
+          <Select onValueChange={(value) => handleSelectChange("clienteId", value)} value={formData.clienteId}>
+            <SelectTrigger id="clienteId">
+              <SelectValue placeholder="Seleccionar cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              {clientes.map((cliente) => (
+                <SelectItem key={cliente.id} value={cliente.id}>
+                  {cliente.nombre} {cliente.apellido}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="vehiculoId">Vehículo *</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange("vehiculoId", value)}
+            value={formData.vehiculoId}
+            disabled={!formData.clienteId}
+          >
+            <SelectTrigger id="vehiculoId">
+              <SelectValue
+                placeholder={!formData.clienteId ? "Selecciona un cliente primero" : "Seleccionar vehículo"}
               />
+            </SelectTrigger>
+            <SelectContent>
+              {vehiculosFiltrados.map((vehiculo) => (
+                <SelectItem key={vehiculo.id} value={vehiculo.id}>
+                  {vehiculo.marca} {vehiculo.modelo} ({vehiculo.placa})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="vehiculo_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Vehículo</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar vehículo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {vehiculos.map((vehiculo: any) => (
-                          <SelectItem key={vehiculo.id} value={vehiculo.id}>
-                            {vehiculo.marca} {vehiculo.modelo} - {vehiculo.placa}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="grid gap-2">
+        <Label htmlFor="descripcion">Descripción del Servicio *</Label>
+        <Textarea
+          id="descripcion"
+          name="descripcion"
+          value={formData.descripcion}
+          onChange={handleInputChange}
+          placeholder="Describe el servicio a realizar..."
+          rows={3}
+          required
+        />
+      </div>
 
-              <FormField
-                control={form.control}
-                name="tipo_servicio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Servicio</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar tipo de servicio" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                        <SelectItem value="reparacion">Reparación</SelectItem>
-                        <SelectItem value="diagnostico">Diagnóstico</SelectItem>
-                        <SelectItem value="revision">Revisión</SelectItem>
-                        <SelectItem value="otro">Otro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="tipoServicio">Tipo de Servicio *</Label>
+          <Select onValueChange={(value) => handleSelectChange("tipoServicio", value)} value={formData.tipoServicio}>
+            <SelectTrigger id="tipoServicio">
+              <SelectValue placeholder="Seleccionar tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
+              <SelectItem value="Reparación">Reparación</SelectItem>
+              <SelectItem value="Diagnóstico">Diagnóstico</SelectItem>
+              <SelectItem value="Revisión">Revisión</SelectItem>
+              <SelectItem value="Otro">Otro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="tecnicoAsignado">Técnico Asignado *</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange("tecnicoAsignado", value)}
+            value={formData.tecnicoAsignado}
+          >
+            <SelectTrigger id="tecnicoAsignado">
+              <SelectValue placeholder="Seleccionar técnico" />
+            </SelectTrigger>
+            <SelectContent>
+              {tecnicos.map((tecnico) => (
+                <SelectItem key={tecnico.id} value={`${tecnico.nombre} ${tecnico.apellido}`}>
+                  {tecnico.nombre} {tecnico.apellido} - {tecnico.especialidad}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="tecnico_asignado"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Técnico Asignado</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar técnico" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tecnicos.map((tecnico: any) => (
-                          <SelectItem key={tecnico.id} value={tecnico.id}>
-                            {tecnico.nombre} {tecnico.apellido}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="fechaIngreso">Fecha de Ingreso *</Label>
+          <Input
+            id="fechaIngreso"
+            name="fechaIngreso"
+            type="date"
+            value={formData.fechaIngreso}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="fechaEstimadaEntrega">Fecha Estimada de Entrega *</Label>
+          <Input
+            id="fechaEstimadaEntrega"
+            name="fechaEstimadaEntrega"
+            type="date"
+            value={formData.fechaEstimadaEntrega}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="fechaEntrega">Fecha de Entrega</Label>
+          <Input
+            id="fechaEntrega"
+            name="fechaEntrega"
+            type="date"
+            value={formData.fechaEntrega || ""}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="fecha_ingreso"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha de Ingreso</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="prioridad">Prioridad *</Label>
+          <Select onValueChange={(value) => handleSelectChange("prioridad", value)} value={formData.prioridad}>
+            <SelectTrigger id="prioridad">
+              <SelectValue placeholder="Seleccionar prioridad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Baja">Baja</SelectItem>
+              <SelectItem value="Normal">Normal</SelectItem>
+              <SelectItem value="Alta">Alta</SelectItem>
+              <SelectItem value="Urgente">Urgente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="estado">Estado *</Label>
+          <Select onValueChange={(value) => handleSelectChange("estado", value)} value={formData.estado}>
+            <SelectTrigger id="estado">
+              <SelectValue placeholder="Seleccionar estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Pendiente">Pendiente</SelectItem>
+              <SelectItem value="En Proceso">En Proceso</SelectItem>
+              <SelectItem value="Completada">Completada</SelectItem>
+              <SelectItem value="Entregada">Entregada</SelectItem>
+              <SelectItem value="Cancelada">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="costoEstimado">Costo Estimado (L)</Label>
+          <Input
+            id="costoEstimado"
+            name="costoEstimado"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.costoEstimado}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="fecha_estimada_entrega"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Estimada de Entrega</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      {formData.estado === "Completada" || formData.estado === "Entregada" ? (
+        <div className="grid gap-2">
+          <Label htmlFor="costoFinal">Costo Final (L)</Label>
+          <Input
+            id="costoFinal"
+            name="costoFinal"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.costoFinal || 0}
+            onChange={handleInputChange}
+          />
+        </div>
+      ) : null}
 
-              <FormField
-                control={form.control}
-                name="prioridad"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prioridad</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar prioridad" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="baja">Baja</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="alta">Alta</SelectItem>
-                        <SelectItem value="urgente">Urgente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+      <div className="grid gap-2">
+        <Label htmlFor="observaciones">Observaciones</Label>
+        <Textarea
+          id="observaciones"
+          name="observaciones"
+          value={formData.observaciones}
+          onChange={handleInputChange}
+          placeholder="Observaciones adicionales..."
+          rows={3}
+        />
+      </div>
 
-            <FormField
-              control={form.control}
-              name="descripcion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción del Servicio</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describa el servicio a realizar..." className="min-h-[120px]" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <CardFooter className="px-0 pt-6">
-              <Button type="submit" className="ml-auto" disabled={isLoading}>
-                {isLoading ? "Creando..." : "Crear Orden de Trabajo"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end mt-4">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Guardando..." : ordenExistente ? "Actualizar Orden" : "Crear Orden"}
+        </Button>
+      </div>
+    </form>
   )
 }
