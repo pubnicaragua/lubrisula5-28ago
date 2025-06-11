@@ -12,7 +12,6 @@ import {
   Settings,
   Wrench,
   LayoutGrid,
-  Palette,
   UserCog,
   DollarSign,
   Package,
@@ -76,11 +75,6 @@ export function TallerNav() {
       href: "/taller/accesos",
       title: "Gestión de Accesos",
       icon: <UserCog className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/taller/kanban-personalizado",
-      title: "Personalizar Kanban",
-      icon: <Palette className="mr-2 h-4 w-4" />,
     },
     {
       href: "/taller/configuracion",
