@@ -6,59 +6,45 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect } from "react"
+import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react"
 
-interface MiembroForm {
+interface MiembroEquipo {
   nombre: string
-  apellido: string
   cargo: string
   especialidad: string
   telefono: string
   email: string
+  fechaContratacion: string
   estado: "Activo" | "Inactivo" | "De Vacaciones" | "Permiso"
-  salario?: number
+  horasTrabajadas: number
+  ordenesCompletadas: number
 }
 
 interface NuevoMiembroFormProps {
-  onSubmit: (miembro: MiembroForm) => void
-  miembroExistente?: any
+  onSubmit: (miembro: MiembroEquipo) => void
 }
 
-export function NuevoMiembroForm({ onSubmit, miembroExistente }: NuevoMiembroFormProps) {
-  const [formData, setFormData] = useState<MiembroForm>({
+export function NuevoMiembroForm({ onSubmit }: NuevoMiembroFormProps) {
+  const today = new Date().toISOString().split("T")[0]
+
+  const [formData, setFormData] = useState<MiembroEquipo>({
     nombre: "",
-    apellido: "",
-    cargo: "",
-    especialidad: "",
+    cargo: "Técnico",
+    especialidad: "Mecánica General",
     telefono: "",
     email: "",
+    fechaContratacion: today,
     estado: "Activo",
-    salario: 0,
+    horasTrabajadas: 0,
+    ordenesCompletadas: 0,
   })
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Cargar datos del miembro existente si se está editando
-  useEffect(() => {
-    if (miembroExistente) {
-      setFormData({
-        nombre: miembroExistente.nombre || "",
-        apellido: miembroExistente.apellido || "",
-        cargo: miembroExistente.cargo || "",
-        especialidad: miembroExistente.especialidad || "",
-        telefono: miembroExistente.telefono || "",
-        email: miembroExistente.email || "",
-        estado: miembroExistente.estado || "Activo",
-        salario: miembroExistente.salario || 0,
-      })
-    }
-  }, [miembroExistente])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: name === "salario" ? Number.parseFloat(value) || 0 : value,
+      [name]: name === "horasTrabajadas" || name === "ordenesCompletadas" ? Number.parseInt(value) || 0 : value,
     })
   }
 
@@ -66,126 +52,126 @@ export function NuevoMiembroForm({ onSubmit, miembroExistente }: NuevoMiembroFor
     setFormData({ ...formData, [name]: value })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    // Simular delay de procesamiento
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
     onSubmit(formData)
-
-    // Limpiar formulario si no es edición
-    if (!miembroExistente) {
-      setFormData({
-        nombre: "",
-        apellido: "",
-        cargo: "",
-        especialidad: "",
-        telefono: "",
-        email: "",
-        estado: "Activo",
-        salario: 0,
-      })
-    }
-
-    setIsSubmitting(false)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+    <form onSubmit={handleSubmit} className="space-y-4 py-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="nombre">Nombre *</Label>
+          <Label htmlFor="nombre">Nombre Completo</Label>
           <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} required />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="apellido">Apellido *</Label>
-          <Input id="apellido" name="apellido" value={formData.apellido} onChange={handleInputChange} required />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="cargo">Cargo *</Label>
-          <Select onValueChange={(value) => handleSelectChange("cargo", value)} value={formData.cargo}>
+          <Label htmlFor="cargo">Cargo</Label>
+          <Select onValueChange={(value) => handleSelectChange("cargo", value)} defaultValue={formData.cargo}>
             <SelectTrigger id="cargo">
               <SelectValue placeholder="Seleccionar cargo" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Técnico">Técnico</SelectItem>
               <SelectItem value="Técnico Senior">Técnico Senior</SelectItem>
-              <SelectItem value="Jefe de Taller">Jefe de Taller</SelectItem>
               <SelectItem value="Administrativo">Administrativo</SelectItem>
-              <SelectItem value="Recepcionista">Recepcionista</SelectItem>
+              <SelectItem value="Supervisor">Supervisor</SelectItem>
               <SelectItem value="Gerente">Gerente</SelectItem>
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="especialidad">Especialidad *</Label>
-          <Select onValueChange={(value) => handleSelectChange("especialidad", value)} value={formData.especialidad}>
+          <Label htmlFor="especialidad">Especialidad</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange("especialidad", value)}
+            defaultValue={formData.especialidad}
+          >
             <SelectTrigger id="especialidad">
               <SelectValue placeholder="Seleccionar especialidad" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Mecánica General">Mecánica General</SelectItem>
-              <SelectItem value="Carrocería">Carrocería</SelectItem>
               <SelectItem value="Pintura">Pintura</SelectItem>
+              <SelectItem value="Carrocería">Carrocería</SelectItem>
               <SelectItem value="Electricidad">Electricidad</SelectItem>
-              <SelectItem value="Transmisión">Transmisión</SelectItem>
-              <SelectItem value="Frenos">Frenos</SelectItem>
+              <SelectItem value="Alineación y Balanceo">Alineación y Balanceo</SelectItem>
               <SelectItem value="Atención al Cliente">Atención al Cliente</SelectItem>
               <SelectItem value="Administración">Administración</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="telefono">Teléfono *</Label>
-          <Input id="telefono" name="telefono" value={formData.telefono} onChange={handleInputChange} required />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="estado">Estado *</Label>
-          <Select onValueChange={(value) => handleSelectChange("estado", value)} value={formData.estado}>
+          <Label htmlFor="estado">Estado</Label>
+          <Select onValueChange={(value) => handleSelectChange("estado", value)} defaultValue={formData.estado}>
             <SelectTrigger id="estado">
               <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Activo">Activo</SelectItem>
+              <SelectItem value="Inactivo">Inactivo</SelectItem>
               <SelectItem value="De Vacaciones">De Vacaciones</SelectItem>
               <SelectItem value="Permiso">Permiso</SelectItem>
-              <SelectItem value="Inactivo">Inactivo</SelectItem>
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="salario">Salario (L)</Label>
+          <Label htmlFor="telefono">Teléfono</Label>
+          <Input id="telefono" name="telefono" value={formData.telefono} onChange={handleInputChange} required />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="fechaContratacion">Fecha de Contratación</Label>
           <Input
-            id="salario"
-            name="salario"
+            id="fechaContratacion"
+            name="fechaContratacion"
+            type="date"
+            value={formData.fechaContratacion}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="horasTrabajadas">Horas Trabajadas</Label>
+          <Input
+            id="horasTrabajadas"
+            name="horasTrabajadas"
             type="number"
             min="0"
-            step="0.01"
-            value={formData.salario}
+            value={formData.horasTrabajadas}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="ordenesCompletadas">Órdenes Completadas</Label>
+          <Input
+            id="ordenesCompletadas"
+            name="ordenesCompletadas"
+            type="number"
+            min="0"
+            value={formData.ordenesCompletadas}
             onChange={handleInputChange}
           />
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Guardando..." : miembroExistente ? "Actualizar Miembro" : "Guardar Miembro"}
-        </Button>
+      <div className="grid gap-2">
+        <Label htmlFor="observaciones">Observaciones</Label>
+        <Textarea id="observaciones" name="observaciones" placeholder="Observaciones adicionales..." rows={3} />
+      </div>
+
+      <div className="flex justify-end pt-4">
+        <Button type="submit">Guardar Miembro</Button>
       </div>
     </form>
   )

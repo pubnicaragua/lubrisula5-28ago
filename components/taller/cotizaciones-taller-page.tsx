@@ -1328,15 +1328,31 @@ export function CotizacionesTallerPage() {
                               </div>
                             </div>
 
-                            <h3 className="text-lg font-semibold mt-4 mb-2">Tiempos Estimados</h3>
+                            <h3 className="text-lg font-semibold mt-4 mb-2">Detalles Adicionales</h3>
                             <div className="space-y-2">
                               <div className="grid grid-cols-2">
-                                <span className="font-medium">Horas de Reparación:</span>
+                                <span className="font-medium">Horas Estimadas:</span>
                                 <span>{calcularTotales().repair_hours.toFixed(2)} horas</span>
                               </div>
                               <div className="grid grid-cols-2">
                                 <span className="font-medium">Días Estimados:</span>
                                 <span>{calcularTotales().estimated_days} días</span>
+                              </div>
+                              <div className="grid grid-cols-2">
+                                <span className="font-medium">Estado:</span>
+                                <span>{formData.status}</span>
+                              </div>
+                              <div className="grid grid-cols-2">
+                                <span className="font-medium">Prioridad:</span>
+                                <span>{formData.priority}</span>
+                              </div>
+                              <div className="grid grid-cols-2">
+                                <span className="font-medium">Método de Pago:</span>
+                                <span>{formData.payment_method}</span>
+                              </div>
+                              <div className="grid grid-cols-1">
+                                <span className="font-medium">Notas:</span>
+                                <span>{formData.notes}</span>
                               </div>
                             </div>
                           </div>
@@ -1344,8 +1360,11 @@ export function CotizacionesTallerPage() {
                       </CardContent>
                     </Card>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end space-x-2">
                       <Button type="submit">Crear Cotización</Button>
+                      <Button type="button" variant="secondary" onClick={() => setOpenDialog(false)}>
+                        Cancelar
+                      </Button>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -1355,7 +1374,7 @@ export function CotizacionesTallerPage() {
         </div>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estadísticas generales */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader>
@@ -1397,29 +1416,10 @@ export function CotizacionesTallerPage() {
             <div className="text-2xl font-bold">{stats.convertidas}</div>
           </CardContent>
         </Card>
-        <Card className="md:col-span-2 lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Monto Total Cotizado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">L {stats.montoTotal.toFixed(2)}</div>
-            <p className="text-sm text-muted-foreground">
-              Monto promedio por cotización: L {stats.montoPromedio.toFixed(2)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="md:col-span-1 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Tiempo Promedio de Reparación</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.tiempoPromedio.toFixed(2)} horas</div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Barra de búsqueda y filtros */}
-      <div className="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0 md:space-x-4">
+      {/* Filtros y acciones */}
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
         <Input
           type="text"
           placeholder="Buscar cotización..."
@@ -1427,16 +1427,19 @@ export function CotizacionesTallerPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-md"
         />
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-          Filtrar
-        </Button>
+
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+            {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+          </Button>
+        </div>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros avanzados */}
       {showFilters && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="status">Estado</Label>
+            <Label htmlFor="filterStatus">Estado</Label>
             <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos los estados" />
@@ -1450,8 +1453,9 @@ export function CotizacionesTallerPage() {
               </SelectContent>
             </Select>
           </div>
+
           <div>
-            <Label htmlFor="priority">Prioridad</Label>
+            <Label htmlFor="filterPriority">Prioridad</Label>
             <Select value={filterPriority} onValueChange={(value) => setFilterPriority(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todas las prioridades" />
@@ -1464,21 +1468,19 @@ export function CotizacionesTallerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="from">Desde</Label>
+
+          <div className="flex flex-col space-y-2">
+            <Label>Rango de Fechas</Label>
+            <div className="flex space-x-2">
               <Input
                 type="date"
-                id="from"
+                placeholder="Desde"
                 value={filterDate.from}
                 onChange={(e) => setFilterDate({ ...filterDate, from: e.target.value })}
               />
-            </div>
-            <div>
-              <Label htmlFor="to">Hasta</Label>
               <Input
                 type="date"
-                id="to"
+                placeholder="Hasta"
                 value={filterDate.to}
                 onChange={(e) => setFilterDate({ ...filterDate, to: e.target.value })}
               />
@@ -1513,32 +1515,21 @@ export function CotizacionesTallerPage() {
           <TableBody>
             {filteredCotizaciones.map((cotizacion) => (
               <TableRow key={cotizacion.id}>
-                <TableCell>{cotizacion.quotation_number}</TableCell>
+                <TableCell className="font-medium">{cotizacion.quotation_number}</TableCell>
                 <TableCell>{new Date(cotizacion.date).toLocaleDateString()}</TableCell>
                 <TableCell>{cotizacion.client.name}</TableCell>
                 <TableCell>{`${cotizacion.vehicle.brand} ${cotizacion.vehicle.model}`}</TableCell>
                 <TableCell>
-                  <div className="flex items-center">
-                    <div className={`rounded-full p-1 mr-2 ${getStatusColor(cotizacion.status)}`}></div>
-                    <Select
-                      value={cotizacion.status}
-                      onValueChange={(value) => handleStatusChange(cotizacion.id, value)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={cotizacion.status} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pendiente">Pendiente</SelectItem>
-                        <SelectItem value="Aprobada">Aprobada</SelectItem>
-                        <SelectItem value="Rechazada">Rechazada</SelectItem>
-                        <SelectItem value="Convertida a Orden">Convertida a Orden</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${getStatusColor(cotizacion.status)}`}
+                  >
+                    {cotizacion.status}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center">
-                    <div className={`rounded-full p-1 mr-2 ${getPriorityColor(cotizacion.priority)}`}></div>
+                  <div
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${getPriorityColor(cotizacion.priority)}`}
+                  >
                     {cotizacion.priority}
                   </div>
                 </TableCell>
@@ -1554,7 +1545,7 @@ export function CotizacionesTallerPage() {
                       onClick={() => handleExport(cotizacion.id)}
                       disabled={isExporting}
                     >
-                      {isExporting ? <>Exportando...</> : <>Exportar</>}
+                      {isExporting ? "Exportando..." : "Exportar"}
                     </Button>
                     <Button
                       variant="ghost"
@@ -1562,7 +1553,7 @@ export function CotizacionesTallerPage() {
                       onClick={() => handlePrint(cotizacion.id)}
                       disabled={isPrinting}
                     >
-                      {isPrinting ? <>Imprimiendo...</> : <>Imprimir</>}
+                      {isPrinting ? "Imprimiendo..." : "Imprimir"}
                     </Button>
                     <Button
                       variant="ghost"
@@ -1570,16 +1561,27 @@ export function CotizacionesTallerPage() {
                       onClick={() => handleSendEmail(cotizacion.id)}
                       disabled={isEmailSending}
                     >
-                      {isEmailSending ? <>Enviando...</> : <>Enviar</>}
+                      {isEmailSending ? "Enviando..." : "Enviar Email"}
                     </Button>
-                    {cotizacion.status === "Pendiente" && (
-                      <Button variant="ghost" size="icon" onClick={() => handleConvertToOrder(cotizacion.id)}>
-                        Convertir
-                      </Button>
-                    )}
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(cotizacion.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    <Select onValueChange={(value) => handleStatusChange(cotizacion.id, value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={cotizacion.status} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pendiente">Pendiente</SelectItem>
+                        <SelectItem value="Aprobada">Aprobada</SelectItem>
+                        <SelectItem value="Rechazada">Rechazada</SelectItem>
+                        <SelectItem value="Convertida a Orden">Convertida a Orden</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {cotizacion.status === "Aprobada" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleConvertToOrder(cotizacion.id)}>
+                        Convertir a Orden
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -1601,46 +1603,38 @@ export function CotizacionesTallerPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Información General</h3>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Nro. Cotización:</span>
-                      <span>{selectedCotizacion.quotation_number}</span>
+                    <div>
+                      <strong>Nro. Cotización:</strong> {selectedCotizacion.quotation_number}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Fecha:</span>
-                      <span>{new Date(selectedCotizacion.date).toLocaleDateString()}</span>
+                    <div>
+                      <strong>Fecha:</strong> {new Date(selectedCotizacion.date).toLocaleDateString()}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Estado:</span>
-                      <span>{selectedCotizacion.status}</span>
+                    <div>
+                      <strong>Estado:</strong> {selectedCotizacion.status}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Prioridad:</span>
-                      <span>{selectedCotizacion.priority}</span>
+                    <div>
+                      <strong>Prioridad:</strong> {selectedCotizacion.priority}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Asignado a:</span>
-                      <span>{selectedCotizacion.assigned_to}</span>
+                    <div>
+                      <strong>Asignado a:</strong> {selectedCotizacion.assigned_to}
                     </div>
                   </div>
                 </div>
+
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Información del Cliente</h3>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Cliente:</span>
-                      <span>{selectedCotizacion.client.name}</span>
+                    <div>
+                      <strong>Cliente:</strong> {selectedCotizacion.client.name}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Teléfono:</span>
-                      <span>{selectedCotizacion.client.phone}</span>
+                    <div>
+                      <strong>Teléfono:</strong> {selectedCotizacion.client.phone}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Email:</span>
-                      <span>{selectedCotizacion.client.email}</span>
+                    <div>
+                      <strong>Email:</strong> {selectedCotizacion.client.email}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Tipo de Cliente:</span>
-                      <span>{selectedCotizacion.client.client_type}</span>
+                    <div>
+                      <strong>Tipo de Cliente:</strong> {selectedCotizacion.client.client_type}
                     </div>
                   </div>
                 </div>
@@ -1650,85 +1644,90 @@ export function CotizacionesTallerPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Información del Vehículo</h3>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Marca:</span>
-                      <span>{selectedCotizacion.vehicle.brand}</span>
+                    <div>
+                      <strong>Marca:</strong> {selectedCotizacion.vehicle.brand}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Modelo:</span>
-                      <span>{selectedCotizacion.vehicle.model}</span>
+                    <div>
+                      <strong>Modelo:</strong> {selectedCotizacion.vehicle.model}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Año:</span>
-                      <span>{selectedCotizacion.vehicle.year}</span>
+                    <div>
+                      <strong>Año:</strong> {selectedCotizacion.vehicle.year}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Placa:</span>
-                      <span>{selectedCotizacion.vehicle.plate}</span>
+                    <div>
+                      <strong>Placa:</strong> {selectedCotizacion.vehicle.plate}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">VIN:</span>
-                      <span>{selectedCotizacion.vehicle.vin}</span>
+                    <div>
+                      <strong>VIN:</strong> {selectedCotizacion.vehicle.vin}
                     </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Color:</span>
-                      <span>{selectedCotizacion.vehicle.color}</span>
+                    <div>
+                      <strong>Color:</strong> {selectedCotizacion.vehicle.color}
                     </div>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Información de Pago</h3>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Método de Pago:</span>
-                      <span>{selectedCotizacion.payment_method}</span>
-                    </div>
-                    <div className="grid grid-cols-2">
-                      <span className="font-medium">Cubierto por Seguro:</span>
-                      <span>{selectedCotizacion.insurance_coverage ? "Sí" : "No"}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Notas</h3>
-                <p>{selectedCotizacion.notes}</p>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Detalles de Costos</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <strong>Mano de Obra:</strong> L {selectedCotizacion.total_labor.toFixed(2)}
+                    </div>
+                    <div>
+                      <strong>Materiales:</strong> L {selectedCotizacion.total_materials.toFixed(2)}
+                    </div>
+                    <div>
+                      <strong>Repuestos:</strong> L {selectedCotizacion.total_parts.toFixed(2)}
+                    </div>
+                    <div>
+                      <strong>Total:</strong> L {selectedCotizacion.total.toFixed(2)}
+                    </div>
+                    <div>
+                      <strong>Horas de Reparación:</strong> {selectedCotizacion.repair_hours}
+                    </div>
+                    <div>
+                      <strong>Días Estimados:</strong> {selectedCotizacion.estimated_days}
+                    </div>
+                    <div>
+                      <strong>Método de Pago:</strong> {selectedCotizacion.payment_method}
+                    </div>
+                    <div>
+                      <strong>Cubierto por Seguro:</strong> {selectedCotizacion.insurance_coverage ? "Sí" : "No"}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Partes y Servicios</h3>
-
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>No.</TableHead>
-                      <TableHead>Cant</TableHead>
-                      <TableHead>Parte</TableHead>
-                      <TableHead>OP</TableHead>
-                      <TableHead>T.Mat</TableHead>
-                      <TableHead>T.Rep</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Cantidad</TableHead>
+                      <TableHead>Operación</TableHead>
+                      <TableHead>Material</TableHead>
+                      <TableHead>Reparación</TableHead>
                       <TableHead>Horas</TableHead>
                       <TableHead>Mano de Obra</TableHead>
                       <TableHead>Materiales</TableHead>
-                      <TableHead>Repuesto</TableHead>
+                      <TableHead>Repuestos</TableHead>
                       <TableHead>Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedCotizacion.parts.map((parte, index) => (
-                      <TableRow key={parte.id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{parte.quantity}</TableCell>
-                        <TableCell>{parte.name}</TableCell>
-                        <TableCell>{parte.operation}</TableCell>
-                        <TableCell>{parte.material_type}</TableCell>
-                        <TableCell>{parte.repair_type}</TableCell>
-                        <TableCell>{parte.repair_hours.toFixed(2)}</TableCell>
-                        <TableCell>L {parte.labor_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {parte.materials_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {parte.parts_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {parte.total.toFixed(2)}</TableCell>
+                    {selectedCotizacion.parts.map((part) => (
+                      <TableRow key={part.id}>
+                        <TableCell>{part.category}</TableCell>
+                        <TableCell>{part.name}</TableCell>
+                        <TableCell>{part.quantity}</TableCell>
+                        <TableCell>{part.operation}</TableCell>
+                        <TableCell>{part.material_type}</TableCell>
+                        <TableCell>{part.repair_type}</TableCell>
+                        <TableCell>{part.repair_hours}</TableCell>
+                        <TableCell>L {part.labor_cost.toFixed(2)}</TableCell>
+                        <TableCell>L {part.materials_cost.toFixed(2)}</TableCell>
+                        <TableCell>L {part.parts_cost.toFixed(2)}</TableCell>
+                        <TableCell>L {part.total.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1736,46 +1735,18 @@ export function CotizacionesTallerPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-2">Resumen de Costos</h3>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Mano de Obra:</span>
-                    <span>L {selectedCotizacion.total_labor.toFixed(2)}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Materiales:</span>
-                    <span>L {selectedCotizacion.total_materials.toFixed(2)}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Repuestos:</span>
-                    <span>L {selectedCotizacion.total_parts.toFixed(2)}</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Total:</span>
-                    <span>L {selectedCotizacion.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Tiempos Estimados</h3>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Horas de Reparación:</span>
-                    <span>{selectedCotizacion.repair_hours.toFixed(2)} horas</span>
-                  </div>
-                  <div className="grid grid-cols-2">
-                    <span className="font-medium">Días Estimados:</span>
-                    <span>{selectedCotizacion.estimated_days} días</span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Notas Adicionales</h3>
+                <p>{selectedCotizacion.notes}</p>
               </div>
             </div>
           )}
+          <div className="flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setOpenDetailDialog(false)}>
+              Cerrar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-
-export default CotizacionesTallerPage

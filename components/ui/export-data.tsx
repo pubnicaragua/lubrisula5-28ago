@@ -1,10 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { FileSpreadsheet, FileIcon as FilePdf } from "lucide-react"
-import * as XLSX from "xlsx"
-import { jsPDF } from "jspdf"
-import "jspdf-autotable"
+import { Download } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 interface ExportDataProps {
   data: any[]
@@ -13,51 +11,48 @@ interface ExportDataProps {
 }
 
 export function ExportData({ data, fileName, title }: ExportDataProps) {
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, fileName)
-    XLSX.writeFile(workbook, `${fileName}.xlsx`)
-  }
+  const exportToCsv = () => {
+    if (!data || data.length === 0) {
+      toast({
+        title: "No hay datos para exportar",
+        description: "No se encontraron datos para exportar.",
+        variant: "destructive",
+      })
+      return
+    }
 
-  const exportToPDF = () => {
-    const doc = new jsPDF()
+    const headers = Object.keys(data[0])
+    const csv = [
+      headers.join(","),
+      ...data.map((row) => headers.map((fieldName) => JSON.stringify(row[fieldName])).join(",")),
+    ].join("\n")
 
-    // Título
-    doc.setFontSize(18)
-    doc.text(title, 14, 22)
-
-    // Fecha de generación
-    doc.setFontSize(11)
-    doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30)
-
-    // Obtener las columnas
-    const columns = Object.keys(data[0])
-    const rows = data.map((item) => Object.values(item))
-
-    // @ts-ignore - jspdf-autotable types
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-      startY: 40,
-      theme: "grid",
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [66, 66, 66] },
-    })
-
-    doc.save(`${fileName}.pdf`)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob)
+      link.setAttribute("href", url)
+      link.setAttribute("download", `${fileName}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast({
+        title: "Exportación exitosa",
+        description: `${title} exportados a CSV.`,
+      })
+    } else {
+      toast({
+        title: "Error de exportación",
+        description: "Tu navegador no soporta la exportación directa a CSV.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
-    <div className="flex gap-2">
-      <Button onClick={exportToExcel} variant="outline" size="sm">
-        <FileSpreadsheet className="h-4 w-4 mr-2" />
-        Excel
-      </Button>
-      <Button onClick={exportToPDF} variant="outline" size="sm">
-        <FilePdf className="h-4 w-4 mr-2" />
-        PDF
-      </Button>
-    </div>
+    <Button onClick={exportToCsv} variant="outline">
+      <Download className="mr-2 h-4 w-4" /> Exportar CSV
+    </Button>
   )
 }

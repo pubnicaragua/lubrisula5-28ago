@@ -1,13 +1,16 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "./database.types"
+import { cache } from "react"
 
-// Create Supabase client for server-side
-export const createServerSupabaseClient = () => {
+// Crear cliente de Supabase para el lado del servidor
+export const createServerSupabaseClient = cache(() => {
   const cookieStore = cookies()
   return createServerComponentClient<Database>({ cookies: () => cookieStore })
-}
+})
 
-// Keep these exports for compatibility with existing code
+// Añadimos esta función para mantener compatibilidad con el código existente
 export const getSupabaseServer = createServerSupabaseClient
+
+// Añadimos createClient como alias para mantener compatibilidad con código que lo importa
 export const createClient = createServerSupabaseClient
