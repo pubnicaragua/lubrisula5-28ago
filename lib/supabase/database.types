@@ -88,6 +88,32 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      inspecciones_vehiculo: {
+        Row: {
+          id: string
+          vehiculo_id: string
+          fecha: string
+          datos_inspeccion: Json
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          vehiculo_id: string
+          fecha: string
+          datos_inspeccion: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          vehiculo_id?: string
+          fecha?: string
+          datos_inspeccion?: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       kanban_cards: {
         Row: {
           id: string
@@ -201,6 +227,56 @@ export interface Database {
           stock?: number
           unidad_medida?: string
           categoria_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      miembros_equipo: {
+        Row: {
+          id: string
+          nombre: string
+          apellido: string
+          cargo: string
+          especialidad: string
+          telefono: string
+          email: string
+          fecha_contratacion: string
+          estado: string
+          horas_trabajadas: number
+          ordenes_completadas: number
+          salario: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          apellido: string
+          cargo: string
+          especialidad: string
+          telefono: string
+          email: string
+          fecha_contratacion?: string
+          estado: string
+          horas_trabajadas?: number
+          ordenes_completadas?: number
+          salario?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          nombre?: string
+          apellido?: string
+          cargo?: string
+          especialidad?: string
+          telefono?: string
+          email?: string
+          fecha_contratacion?: string
+          estado?: string
+          horas_trabajadas?: number
+          ordenes_completadas?: number
+          salario?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -339,53 +415,44 @@ export interface Database {
         Row: {
           id: string
           client_id: string | null
-          make: string
-          model: string
-          year: number
-          license_plate: string
+          marca: string
+          modelo: string
+          anio: number
+          placa: string
           vin: string | null
           color: string | null
-          mileage: number | null
+          kilometraje: number | null
           last_service_date: string | null
           created_at: string | null
           updated_at: string | null
-          marca: string | null
-          modelo: string | null
-          placa: string | null
         }
         Insert: {
           id?: string
           client_id?: string | null
-          make: string
-          model: string
-          year: number
-          license_plate: string
+          marca: string
+          modelo: string
+          anio: number
+          placa: string
           vin?: string | null
           color?: string | null
-          mileage?: number | null
+          kilometraje?: number | null
           last_service_date?: string | null
           created_at?: string | null
           updated_at?: string | null
-          marca?: string | null
-          modelo?: string | null
-          placa?: string | null
         }
         Update: {
           id?: string
           client_id?: string | null
-          make?: string
-          model?: string
-          year?: number
-          license_plate?: string
+          marca?: string
+          modelo?: string
+          anio?: number
+          placa?: string
           vin?: string | null
           color?: string | null
-          mileage?: number | null
+          kilometraje?: number | null
           last_service_date?: string | null
           created_at?: string | null
           updated_at?: string | null
-          marca?: string | null
-          modelo?: string | null
-          placa?: string | null
         }
       }
     }

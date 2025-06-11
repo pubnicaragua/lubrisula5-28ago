@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { GripVertical, Plus, Save, Trash2 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
-import { saveKanbanConfiguration } from "@/lib/actions/kanban"
+import { saveKanbanConfiguration, getKanbanConfiguration } from "@/lib/actions/kanban"
 
 const kanbanFormSchema = z.object({
   tipoTaller: z.string({
@@ -82,6 +82,24 @@ export function KanbanPersonalizado() {
     },
   })
 
+  // Cargar configuración al inicio
+  useEffect(() => {
+    const loadConfig = async () => {
+      const config = await getKanbanConfiguration()
+      if (config.columnas.length > 0) {
+        form.reset({
+          tipoTaller: config.tipoTaller,
+          columnas: config.columnas,
+          mostrarPorcentajes: config.mostrarPorcentajes,
+          mostrarTiempoEstimado: config.mostrarTiempoEstimado,
+          mostrarAsignados: config.mostrarAsignados,
+        })
+        setTipoSeleccionado(config.tipoTaller)
+      }
+    }
+    loadConfig()
+  }, [form])
+
   async function onSubmit(data: KanbanFormValues) {
     const result = await saveKanbanConfiguration(
       data.tipoTaller,
@@ -103,7 +121,7 @@ export function KanbanPersonalizado() {
         variant: "destructive",
       })
     }
-    console.log(data)
+    console.log("Datos enviados para guardar:", data)
   }
 
   const handleTipoChange = (tipo: string) => {
@@ -114,7 +132,7 @@ export function KanbanPersonalizado() {
 
   const handleAddColumn = () => {
     const columnas = form.getValues("columnas")
-    const newId = `col-${columnas.length + 1}`
+    const newId = `col-${Date.now()}` // Usar timestamp para ID único
     form.setValue("columnas", [...columnas, { id: newId, nombre: "Nueva columna", color: "#64748b", porcentaje: 0 }])
   }
 
