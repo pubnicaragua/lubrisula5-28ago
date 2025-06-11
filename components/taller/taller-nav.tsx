@@ -16,8 +16,6 @@ import {
   UserCog,
   DollarSign,
   Package,
-  BarChart,
-  ListChecks,
 } from "lucide-react"
 
 export function TallerNav() {
@@ -45,11 +43,6 @@ export function TallerNav() {
       icon: <Car className="mr-2 h-4 w-4" />,
     },
     {
-      href: "/taller/clientes", // Módulo de Clientes añadido
-      title: "Clientes",
-      icon: <Users className="mr-2 h-4 w-4" />,
-    },
-    {
       href: "/taller/cotizaciones",
       title: "Cotizaciones",
       icon: <FileText className="mr-2 h-4 w-4" />,
@@ -75,6 +68,11 @@ export function TallerNav() {
       icon: <Users className="mr-2 h-4 w-4" />,
     },
     {
+      href: "/taller/clientes",
+      title: "Gestión de Clientes",
+      icon: <Users className="mr-2 h-4 w-4" />,
+    },
+    {
       href: "/taller/accesos",
       title: "Gestión de Accesos",
       icon: <UserCog className="mr-2 h-4 w-4" />,
@@ -83,16 +81,6 @@ export function TallerNav() {
       href: "/taller/kanban-personalizado",
       title: "Personalizar Kanban",
       icon: <Palette className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/taller/servicios", // Añadido de vuelta
-      title: "Servicios",
-      icon: <ListChecks className="mr-2 h-4 w-4" />,
-    },
-    {
-      href: "/taller/reportes", // Añadido de vuelta
-      title: "Reportes",
-      icon: <BarChart className="mr-2 h-4 w-4" />,
     },
     {
       href: "/taller/configuracion",
