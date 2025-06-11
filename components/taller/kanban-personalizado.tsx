@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { GripVertical, Plus, Save, Trash2 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
+import { saveKanbanConfiguration } from "@/lib/actions/kanban"
 
 const kanbanFormSchema = z.object({
   tipoTaller: z.string({
@@ -81,11 +82,27 @@ export function KanbanPersonalizado() {
     },
   })
 
-  function onSubmit(data: KanbanFormValues) {
-    toast({
-      title: "Configuración guardada",
-      description: "La configuración del tablero Kanban ha sido actualizada correctamente.",
-    })
+  async function onSubmit(data: KanbanFormValues) {
+    const result = await saveKanbanConfiguration(
+      data.tipoTaller,
+      data.columnas,
+      data.mostrarPorcentajes,
+      data.mostrarTiempoEstimado,
+      data.mostrarAsignados,
+    )
+
+    if (result.success) {
+      toast({
+        title: "Configuración guardada",
+        description: result.message,
+      })
+    } else {
+      toast({
+        title: "Error al guardar",
+        description: result.error || "Ocurrió un error desconocido.",
+        variant: "destructive",
+      })
+    }
     console.log(data)
   }
 

@@ -80,10 +80,10 @@ export async function POST() {
     // Si no hay columnas, crear columnas de ejemplo
     if (!existingColumns || existingColumns.length === 0) {
       const columnasEjemplo = [
-        { title: "Por Hacer", description: "Tareas pendientes", color: "#1890ff", position: 1 },
-        { title: "En Progreso", description: "Tareas en curso", color: "#faad14", position: 2 },
-        { title: "En Revisión", description: "Tareas en revisión", color: "#722ed1", position: 3 },
-        { title: "Completado", description: "Tareas finalizadas", color: "#52c41a", position: 4 },
+        { title: "Por Hacer", description: "Tareas pendientes", color: "#1890ff", position: 0 },
+        { title: "En Progreso", description: "Tareas en curso", color: "#faad14", position: 1 },
+        { title: "En Revisión", description: "Tareas en revisión", color: "#722ed1", position: 2 },
+        { title: "Completado", description: "Tareas finalizadas", color: "#52c41a", position: 3 },
       ]
 
       const { error: insertColumnsError } = await supabase.from("kanban_columns").insert(columnasEjemplo)
