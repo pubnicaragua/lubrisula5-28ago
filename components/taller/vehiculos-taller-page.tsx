@@ -21,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Edit, MoreHorizontal, Plus, Search, Trash2, Eye, FileText, FileInput } from "lucide-react"
@@ -33,6 +32,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import * as XLSX from "xlsx"
 import { jsPDF } from "jspdf"
 import "jspdf-autotable"
+
+// Mock data para clientes
+const mockClientes = [
+  { id: "1", nombre: "Juan", apellido: "Pérez", telefono: "555-0001", email: "juan.perez@email.com" },
+  { id: "2", nombre: "María", apellido: "García", telefono: "555-0002", email: "maria.garcia@email.com" },
+  { id: "3", nombre: "Carlos", apellido: "López", telefono: "555-0003", email: "carlos.lopez@email.com" },
+  { id: "4", nombre: "Ana", apellido: "Martínez", telefono: "555-0004", email: "ana.martinez@email.com" },
+  { id: "5", nombre: "Roberto", apellido: "Sánchez", telefono: "555-0005", email: "roberto.sanchez@email.com" },
+  { id: "6", nombre: "Laura", apellido: "Torres", telefono: "555-0006", email: "laura.torres@email.com" },
+]
+
+// Mock data para vehículos
+const mockVehiculos = [
+  {
+    id: "1",
+    marca: "Toyota",
+    modelo: "Corolla",
+    anio: 2020,
+    placa: "ABC-123",
+    color: "Blanco",
+    tipo: "sedan",
+    vin: "1HGBH41JXMN109186",
+    cliente_id: "1",
+    cliente: mockClientes[0],
+    created_at: "2024-01-15T10:30:00Z",
+  },
+  {
+    id: "2",
+    marca: "Honda",
+    modelo: "Civic",
+    anio: 2019,
+    placa: "DEF-456",
+    color: "Azul",
+    tipo: "sedan",
+    vin: "2HGBH41JXMN109187",
+    cliente_id: "2",
+    cliente: mockClientes[1],
+    created_at: "2024-01-20T14:15:00Z",
+  },
+  {
+    id: "3",
+    marca: "Chevrolet",
+    modelo: "Spark",
+    anio: 2022,
+    placa: "GHI-789",
+    color: "Rojo",
+    tipo: "hatchback",
+    vin: "3HGBH41JXMN109188",
+    cliente_id: "3",
+    cliente: mockClientes[2],
+    created_at: "2024-02-01T09:45:00Z",
+  },
+  {
+    id: "4",
+    marca: "Ford",
+    modelo: "Focus",
+    anio: 2021,
+    placa: "JKL-012",
+    color: "Negro",
+    tipo: "hatchback",
+    vin: "4HGBH41JXMN109189",
+    cliente_id: "4",
+    cliente: mockClientes[3],
+    created_at: "2024-02-10T16:20:00Z",
+  },
+  {
+    id: "5",
+    marca: "Nissan",
+    modelo: "Sentra",
+    anio: 2018,
+    placa: "MNO-345",
+    color: "Gris",
+    tipo: "sedan",
+    vin: "5HGBH41JXMN109190",
+    cliente_id: "5",
+    cliente: mockClientes[4],
+    created_at: "2024-02-15T11:30:00Z",
+  },
+]
 
 const vehiculoSchema = z.object({
   marca: z.string().min(1, { message: "La marca es requerida" }),
@@ -60,7 +138,6 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [currentVehiculo, setCurrentVehiculo] = useState<any>(null)
   const [clientes, setClientes] = useState<any[]>([])
-  const supabase = createClientComponentClient()
   const { toast } = useToast()
   const router = useRouter()
 
@@ -93,8 +170,7 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
   })
 
   useEffect(() => {
-    fetchVehiculos()
-    fetchClientes()
+    loadMockData()
   }, [])
 
   useEffect(() => {
@@ -127,146 +203,105 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
     }
   }, [currentVehiculo, editForm])
 
-  const fetchVehiculos = async () => {
+  const loadMockData = () => {
     setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("vehiculos")
-        .select(`
-          *,
-          cliente:cliente_id(*)
-        `)
-        .order("created_at", { ascending: false })
 
-      if (error) throw error
+    // Simular carga de datos
+    setTimeout(() => {
+      // Cargar datos desde localStorage o usar mock data
+      const savedVehiculos = localStorage.getItem("mockVehiculos")
+      const savedClientes = localStorage.getItem("mockClientes")
 
-      setVehiculos(data || [])
-      setFilteredVehiculos(data || [])
-    } catch (error) {
-      console.error("Error fetching vehiculos:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los vehículos",
-        variant: "destructive",
-      })
-    } finally {
+      if (savedVehiculos) {
+        setVehiculos(JSON.parse(savedVehiculos))
+      } else {
+        setVehiculos(mockVehiculos)
+        localStorage.setItem("mockVehiculos", JSON.stringify(mockVehiculos))
+      }
+
+      if (savedClientes) {
+        setClientes(JSON.parse(savedClientes))
+      } else {
+        setClientes(mockClientes)
+        localStorage.setItem("mockClientes", JSON.stringify(mockClientes))
+      }
+
       setIsLoading(false)
-    }
+    }, 500)
   }
 
-  const fetchClientes = async () => {
-    try {
-      const { data, error } = await supabase.from("clientes").select("*").order("nombre", { ascending: true })
-
-      if (error) throw error
-
-      setClientes(data || [])
-    } catch (error) {
-      console.error("Error fetching clientes:", error)
-    }
-  }
-
-  const handleDeleteVehiculo = async () => {
+  const handleDeleteVehiculo = () => {
     if (!vehiculoToDelete) return
 
-    try {
-      const { error } = await supabase.from("vehiculos").delete().eq("id", vehiculoToDelete)
+    const updatedVehiculos = vehiculos.filter((vehiculo: any) => vehiculo.id !== vehiculoToDelete)
+    setVehiculos(updatedVehiculos)
+    localStorage.setItem("mockVehiculos", JSON.stringify(updatedVehiculos))
 
-      if (error) throw error
+    toast({
+      title: "Vehículo eliminado",
+      description: "El vehículo ha sido eliminado exitosamente",
+    })
 
-      setVehiculos(vehiculos.filter((vehiculo: any) => vehiculo.id !== vehiculoToDelete))
-      toast({
-        title: "Vehículo eliminado",
-        description: "El vehículo ha sido eliminado exitosamente",
-      })
-    } catch (error) {
-      console.error("Error deleting vehiculo:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el vehículo",
-        variant: "destructive",
-      })
-    } finally {
-      setVehiculoToDelete(null)
-      setShowDeleteDialog(false)
-    }
+    setVehiculoToDelete(null)
+    setShowDeleteDialog(false)
   }
 
-  const onSubmit = async (values: z.infer<typeof vehiculoSchema>) => {
-    try {
-      const { data, error } = await supabase
-        .from("vehiculos")
-        .insert([
-          {
-            marca: values.marca,
-            modelo: values.modelo,
-            anio: Number.parseInt(values.anio),
-            placa: values.placa,
-            color: values.color,
-            cliente_id: values.cliente_id,
-            tipo: values.tipo,
-            vin: values.vin || null,
-          },
-        ])
-        .select()
-
-      if (error) throw error
-
-      toast({
-        title: "Vehículo agregado",
-        description: "El vehículo ha sido agregado exitosamente",
-      })
-
-      fetchVehiculos()
-      setShowAddDialog(false)
-      form.reset()
-    } catch (error) {
-      console.error("Error adding vehiculo:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo agregar el vehículo",
-        variant: "destructive",
-      })
+  const onSubmit = (values: z.infer<typeof vehiculoSchema>) => {
+    const newVehiculo = {
+      id: Date.now().toString(),
+      marca: values.marca,
+      modelo: values.modelo,
+      anio: Number.parseInt(values.anio),
+      placa: values.placa,
+      color: values.color,
+      cliente_id: values.cliente_id,
+      tipo: values.tipo,
+      vin: values.vin || "",
+      cliente: clientes.find((c) => c.id === values.cliente_id),
+      created_at: new Date().toISOString(),
     }
+
+    const updatedVehiculos = [...vehiculos, newVehiculo]
+    setVehiculos(updatedVehiculos)
+    localStorage.setItem("mockVehiculos", JSON.stringify(updatedVehiculos))
+
+    toast({
+      title: "Vehículo agregado",
+      description: "El vehículo ha sido agregado exitosamente",
+    })
+
+    setShowAddDialog(false)
+    form.reset()
   }
 
-  const onEditSubmit = async (values: z.infer<typeof vehiculoSchema>) => {
+  const onEditSubmit = (values: z.infer<typeof vehiculoSchema>) => {
     if (!currentVehiculo) return
 
-    try {
-      const { data, error } = await supabase
-        .from("vehiculos")
-        .update({
-          marca: values.marca,
-          modelo: values.modelo,
-          anio: Number.parseInt(values.anio),
-          placa: values.placa,
-          color: values.color,
-          cliente_id: values.cliente_id,
-          tipo: values.tipo,
-          vin: values.vin || null,
-        })
-        .eq("id", currentVehiculo.id)
-        .select()
-
-      if (error) throw error
-
-      toast({
-        title: "Vehículo actualizado",
-        description: "El vehículo ha sido actualizado exitosamente",
-      })
-
-      fetchVehiculos()
-      setShowEditDialog(false)
-      setCurrentVehiculo(null)
-    } catch (error) {
-      console.error("Error updating vehiculo:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el vehículo",
-        variant: "destructive",
-      })
+    const updatedVehiculo = {
+      ...currentVehiculo,
+      marca: values.marca,
+      modelo: values.modelo,
+      anio: Number.parseInt(values.anio),
+      placa: values.placa,
+      color: values.color,
+      cliente_id: values.cliente_id,
+      tipo: values.tipo,
+      vin: values.vin || "",
+      cliente: clientes.find((c) => c.id === values.cliente_id),
     }
+
+    const updatedVehiculos = vehiculos.map((v: any) => (v.id === currentVehiculo.id ? updatedVehiculo : v))
+
+    setVehiculos(updatedVehiculos)
+    localStorage.setItem("mockVehiculos", JSON.stringify(updatedVehiculos))
+
+    toast({
+      title: "Vehículo actualizado",
+      description: "El vehículo ha sido actualizado exitosamente",
+    })
+
+    setShowEditDialog(false)
+    setCurrentVehiculo(null)
   }
 
   const exportToExcel = () => {
@@ -290,15 +325,12 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
   const exportToPDF = () => {
     const doc = new jsPDF()
 
-    // Título
     doc.setFontSize(18)
     doc.text("Listado de Vehículos", 14, 22)
 
-    // Fecha de generación
     doc.setFontSize(11)
     doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30)
 
-    // Tabla
     const tableColumn = ["Marca", "Modelo", "Año", "Placa", "Color", "Cliente"]
     const tableRows = filteredVehiculos.map((vehiculo: any) => [
       vehiculo.marca,
@@ -309,7 +341,7 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       vehiculo.cliente ? `${vehiculo.cliente.nombre} ${vehiculo.cliente.apellido || ""}` : "N/A",
     ])
 
-    // @ts-ignore - jspdf-autotable types
+    // @ts-ignore
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
@@ -350,7 +382,10 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       <Card>
         <CardHeader>
           <CardTitle>Gestión de Vehículos</CardTitle>
-          <CardDescription>Administra todos los vehículos registrados en el taller</CardDescription>
+          <CardDescription>
+            Administra todos los vehículos registrados en el taller (Mock Data Local - {vehiculos.length} vehículos,{" "}
+            {clientes.length} clientes)
+          </CardDescription>
           <div className="relative w-full max-w-sm mt-4">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
