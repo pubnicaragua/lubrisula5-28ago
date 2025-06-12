@@ -3,11 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 export async function GET() {
   try {
-    // 1. Verificar si la tabla roles existe
+    // 1. Verificar si la tabla roles existe y crearla con el tipo correcto
     const { error: tableCheckError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS roles (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id BIGSERIAL PRIMARY KEY,
           nombre VARCHAR(50) NOT NULL UNIQUE,
           descripcion TEXT,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -24,9 +24,9 @@ export async function GET() {
     const { error: rolesUsuarioError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS roles_usuario (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id BIGSERIAL PRIMARY KEY,
           user_id UUID NOT NULL,
-          rol_id UUID NOT NULL REFERENCES roles(id),
+          rol_id BIGINT NOT NULL REFERENCES roles(id),
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           UNIQUE(user_id, rol_id)
@@ -50,16 +50,16 @@ export async function GET() {
       throw new Error(`Error al crear índices: ${indicesError.message}`)
     }
 
-    // 2. Insertar roles básicos usando SQL directo para evitar problemas de RLS
+    // 2. Insertar roles básicos usando SQL directo con BIGSERIAL
     const { error: insertRolesError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
-        INSERT INTO roles (id, nombre, descripcion, created_at, updated_at)
+        INSERT INTO roles (nombre, descripcion, created_at, updated_at)
         VALUES 
-          (uuid_generate_v4(), 'superadmin', 'Acceso completo a todas las funcionalidades del sistema', NOW(), NOW()),
-          (uuid_generate_v4(), 'admin', 'Administrador del sistema con acceso a la mayoría de funcionalidades', NOW(), NOW()),
-          (uuid_generate_v4(), 'taller', 'Usuario de taller con acceso a funcionalidades de reparación y mantenimiento', NOW(), NOW()),
-          (uuid_generate_v4(), 'aseguradora', 'Usuario de aseguradora con acceso a cotizaciones y seguimiento', NOW(), NOW()),
-          (uuid_generate_v4(), 'cliente', 'Cliente con acceso limitado a sus vehículos y cotizaciones', NOW(), NOW())
+          ('superadmin', 'Acceso completo a todas las funcionalidades del sistema', NOW(), NOW()),
+          ('admin', 'Administrador del sistema con acceso a la mayoría de funcionalidades', NOW(), NOW()),
+          ('taller', 'Usuario de taller con acceso a funcionalidades de reparación y mantenimiento', NOW(), NOW()),
+          ('aseguradora', 'Usuario de aseguradora con acceso a cotizaciones y seguimiento', NOW(), NOW()),
+          ('cliente', 'Cliente con acceso limitado a sus vehículos y cotizaciones', NOW(), NOW())
         ON CONFLICT (nombre) DO NOTHING;
       `,
     })

@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 export async function GET() {
@@ -34,7 +35,13 @@ export async function GET() {
           .select("user_id, role_id")
 
         if (existingError2) {
-          throw new Error(`Error al obtener roles de usuario existentes: ${existingError2.message}`)
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Error al obtener roles de usuario existentes: ${existingError2.message}`,
+            },
+            { status: 500 },
+          )
         }
 
         // Crear un conjunto de IDs de usuario que ya tienen roles asignados
@@ -71,7 +78,13 @@ export async function GET() {
           const { error: insertError } = await supabaseAdmin.from("roles_usuario").insert(rolesToInsert)
 
           if (insertError) {
-            throw new Error(`Error al insertar roles de usuario: ${insertError.message}`)
+            return NextResponse.json(
+              {
+                success: false,
+                message: `Error al insertar roles de usuario: ${insertError.message}`,
+              },
+              { status: 500 },
+            )
           }
 
           console.log(`Sincronizados ${rolesToInsert.length} usuarios con sus roles`)
@@ -79,7 +92,13 @@ export async function GET() {
           console.log("No hay nuevos usuarios para sincronizar")
         }
       } else {
-        throw new Error(`Error al obtener roles de usuario existentes: ${existingError.message}`)
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Error al obtener roles de usuario existentes: ${existingError.message}`,
+          },
+          { status: 500 },
+        )
       }
     } else {
       // Crear un conjunto de IDs de usuario que ya tienen roles asignados
@@ -116,7 +135,13 @@ export async function GET() {
         const { error: insertError } = await supabaseAdmin.from("roles_usuario").insert(rolesToInsert)
 
         if (insertError) {
-          throw new Error(`Error al insertar roles de usuario: ${insertError.message}`)
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Error al insertar roles de usuario: ${insertError.message}`,
+            },
+            { status: 500 },
+          )
         }
 
         console.log(`Sincronizados ${rolesToInsert.length} usuarios con sus roles`)
@@ -125,12 +150,18 @@ export async function GET() {
       }
     }
 
-    return { success: true, message: "Sincronización completada con éxito" }
+    return NextResponse.json({
+      success: true,
+      message: "Sincronización completada con éxito",
+    })
   } catch (error) {
     console.error("Error en la sincronización de roles:", error)
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "Error desconocido en la sincronización",
-    }
+    return NextResponse.json(
+      {
+        success: false,
+        message: error instanceof Error ? error.message : "Error desconocido en la sincronización",
+      },
+      { status: 500 },
+    )
   }
 }

@@ -3,11 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 export async function POST() {
   try {
-    // Crear tabla kanban_columns si no existe
+    // Crear tabla kanban_columns si no existe con BIGSERIAL
     const { error: createColumnsError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS kanban_columns (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id BIGSERIAL PRIMARY KEY,
           title TEXT NOT NULL,
           description TEXT,
           color TEXT,
@@ -33,8 +33,8 @@ export async function POST() {
     const { error: createCardsError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS kanban_cards (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          column_id UUID REFERENCES kanban_columns(id) ON DELETE CASCADE,
+          id BIGSERIAL PRIMARY KEY,
+          column_id BIGINT REFERENCES kanban_columns(id) ON DELETE CASCADE,
           title TEXT NOT NULL,
           description TEXT,
           order_id UUID,
@@ -75,17 +75,16 @@ export async function POST() {
       )
     }
 
-    // Si no hay columnas, crear columnas de ejemplo
+    // Si no hay columnas, crear columnas de ejemplo usando SQL directo
     if (!existingColumns || existingColumns.length === 0) {
-      // Usar uuid_generate_v4() para generar IDs explícitamente
       const { error: insertColumnsError } = await supabaseAdmin.rpc("execute_sql", {
         sql_query: `
-          INSERT INTO kanban_columns (id, title, description, color, position, created_at, updated_at)
+          INSERT INTO kanban_columns (title, description, color, position, created_at, updated_at)
           VALUES 
-            (uuid_generate_v4(), 'Por Hacer', 'Tareas pendientes', '#1890ff', 0, NOW(), NOW()),
-            (uuid_generate_v4(), 'En Progreso', 'Tareas en curso', '#faad14', 1, NOW(), NOW()),
-            (uuid_generate_v4(), 'En Revisión', 'Tareas en revisión', '#722ed1', 2, NOW(), NOW()),
-            (uuid_generate_v4(), 'Completado', 'Tareas finalizadas', '#52c41a', 3, NOW(), NOW());
+            ('Por Hacer', 'Tareas pendientes', '#1890ff', 0, NOW(), NOW()),
+            ('En Progreso', 'Tareas en curso', '#faad14', 1, NOW(), NOW()),
+            ('En Revisión', 'Tareas en revisión', '#722ed1', 2, NOW(), NOW()),
+            ('Completado', 'Tareas finalizadas', '#52c41a', 3, NOW(), NOW());
         `,
       })
 

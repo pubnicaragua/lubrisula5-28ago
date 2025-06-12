@@ -1,25 +1,20 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { supabaseAdmin } from "@/lib/supabase/admin-client"
+
+// Marcar como dinámico para evitar errores de renderizado estático
+export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
     console.log("Iniciando proceso de inicialización de la base de datos...")
 
-    // Crear cliente de Supabase con la clave de servicio
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
-    )
+    // Verificar conexión con una consulta simple
+    const { data: connectionTest, error: connectionError } = await supabaseAdmin
+      .from("information_schema.tables")
+      .select("table_name")
+      .limit(1)
 
-    // Verificar conexión
-    const { data: connectionTest, error: connectionError } = await supabase.from("_test").select("*").limit(1)
-    if (connectionError && !connectionError.message.includes('relation "_test" does not exist')) {
+    if (connectionError) {
       throw new Error(`Error de conexión: ${connectionError.message}`)
     }
 
@@ -54,8 +49,51 @@ export async function GET() {
             ano INTEGER NOT NULL,
             color TEXT,
             placa TEXT NOT NULL UNIQUE,
+            license_plate TEXT,
             vin TEXT,
             kilometraje INTEGER,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `,
+      },
+      {
+        name: "talleres",
+        query: `
+          CREATE TABLE IF NOT EXISTS talleres (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            nombre TEXT NOT NULL,
+            descripcion TEXT,
+            direccion TEXT,
+            telefono TEXT,
+            email TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `,
+      },
+      {
+        name: "categorias_materiales",
+        query: `
+          CREATE TABLE IF NOT EXISTS categorias_materiales (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            nombre TEXT NOT NULL UNIQUE,
+            descripcion TEXT,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `,
+      },
+      {
+        name: "materiales",
+        query: `
+          CREATE TABLE IF NOT EXISTS materiales (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            categoria_id UUID REFERENCES categorias_materiales(id) ON DELETE SET NULL,
+            nombre TEXT NOT NULL,
+            descripcion TEXT,
+            precio DECIMAL(12,2),
+            unidad TEXT,
+            stock INTEGER DEFAULT 0,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
           );
@@ -70,7 +108,7 @@ export async function GET() {
             vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
             fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             fecha_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            estado TEXT DEFAULT 'pendiente', -- pendiente, aprobada, rechazada, completada
+            estado TEXT DEFAULT 'pendiente',
             total DECIMAL(12,2) DEFAULT 0,
             descripcion TEXT,
             notas TEXT
@@ -102,7 +140,7 @@ export async function GET() {
             fecha_inicio TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             fecha_estimada_fin TIMESTAMP WITH TIME ZONE,
             fecha_real_fin TIMESTAMP WITH TIME ZONE,
-            estado TEXT DEFAULT 'en_progreso', -- en_progreso, completada, cancelada
+            estado TEXT DEFAULT 'en_progreso',
             total DECIMAL(12,2) DEFAULT 0,
             descripcion TEXT,
             notas TEXT
@@ -119,7 +157,7 @@ export async function GET() {
             cantidad INTEGER NOT NULL,
             precio_unitario DECIMAL(12,2) NOT NULL,
             subtotal DECIMAL(12,2) NOT NULL,
-            estado TEXT DEFAULT 'pendiente', -- pendiente, en_proceso, completada
+            estado TEXT DEFAULT 'pendiente',
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
           );
         `,
@@ -155,34 +193,6 @@ export async function GET() {
         `,
       },
       {
-        name: "kanban_columns",
-        query: `
-          CREATE TABLE IF NOT EXISTS kanban_columns (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            titulo TEXT NOT NULL,
-            orden INTEGER NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-          );
-        `,
-      },
-      {
-        name: "kanban_cards",
-        query: `
-          CREATE TABLE IF NOT EXISTS kanban_cards (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            column_id UUID REFERENCES kanban_columns(id) ON DELETE CASCADE,
-            order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-            titulo TEXT NOT NULL,
-            descripcion TEXT,
-            fecha_vencimiento TIMESTAMP WITH TIME ZONE,
-            prioridad TEXT DEFAULT 'normal', -- baja, normal, alta, urgente
-            orden INTEGER NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-          );
-        `,
-      },
-      {
         name: "invoices",
         query: `
           CREATE TABLE IF NOT EXISTS invoices (
@@ -196,7 +206,7 @@ export async function GET() {
             impuesto DECIMAL(12,2) DEFAULT 0,
             total DECIMAL(12,2) NOT NULL,
             pagado BOOLEAN DEFAULT FALSE,
-            estado TEXT DEFAULT 'pendiente', -- pendiente, pagada, anulada, vencida
+            estado TEXT DEFAULT 'pendiente',
             notas TEXT
           );
         `,
@@ -209,32 +219,9 @@ export async function GET() {
             invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
             fecha_pago TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             monto DECIMAL(12,2) NOT NULL,
-            metodo_pago TEXT NOT NULL, -- efectivo, tarjeta, transferencia
+            metodo_pago TEXT NOT NULL,
             referencia TEXT,
             notas TEXT
-          );
-        `,
-      },
-      {
-        name: "roles",
-        query: `
-          CREATE TABLE IF NOT EXISTS roles (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            nombre TEXT NOT NULL UNIQUE,
-            descripcion TEXT,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-          );
-        `,
-      },
-      {
-        name: "roles_usuario",
-        query: `
-          CREATE TABLE IF NOT EXISTS roles_usuario (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-            role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            UNIQUE(user_id, role_id)
           );
         `,
       },
@@ -242,45 +229,27 @@ export async function GET() {
 
     // Crear extensión UUID si no existe
     console.log("Creando extensión UUID...")
-    await supabase.rpc("create_uuid_extension").catch((error) => {
-      console.log("Extensión UUID ya existe o no se pudo crear:", error.message)
-    })
+    await supabaseAdmin
+      .rpc("execute_sql", {
+        sql_query: 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";',
+      })
+      .catch((error) => {
+        console.log("Extensión UUID ya existe o no se pudo crear:", error.message)
+      })
 
     // Crear tablas
     for (const tabla of tablas) {
       console.log(`Creando tabla ${tabla.name}...`)
       try {
-        // Intentar ejecutar la consulta directamente
-        const { error } = await supabase.rpc("execute_sql", { sql: tabla.query })
+        const { error } = await supabaseAdmin.rpc("execute_sql", { sql_query: tabla.query })
 
         if (error) {
           console.error(`Error al crear tabla ${tabla.name}:`, error)
-          // Si hay error, intentar otro método
-          const { error: error2 } = await supabase.rpc("create_table", { tabla_nombre: tabla.name })
-          if (error2 && !error2.message.includes("already exists")) {
-            console.error(`Error al usar create_table para ${tabla.name}:`, error2)
-          }
+        } else {
+          console.log(`Tabla ${tabla.name} creada exitosamente`)
         }
       } catch (err) {
         console.error(`Error en la tabla ${tabla.name}:`, err)
-      }
-    }
-
-    // Insertar roles básicos
-    const roles = [
-      { nombre: "superadmin", descripcion: "Super Administrador con permisos completos" },
-      { nombre: "admin", descripcion: "Administrador del sistema" },
-      { nombre: "taller", descripcion: "Usuario de taller" },
-      { nombre: "aseguradora", descripcion: "Usuario de aseguradora" },
-      { nombre: "cliente", descripcion: "Cliente del taller" },
-    ]
-
-    console.log("Insertando roles básicos...")
-    for (const rol of roles) {
-      const { error } = await supabase.from("roles").upsert([rol], { onConflict: "nombre" })
-
-      if (error) {
-        console.error(`Error al insertar rol ${rol.nombre}:`, error)
       }
     }
 

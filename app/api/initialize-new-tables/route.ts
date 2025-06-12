@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { initializeNewTables } from "@/lib/scripts/initialize-new-tables"
 
+// Marcar como dinámico para evitar errores de renderizado estático
+export const dynamic = "force-dynamic"
+
 export async function GET() {
   try {
     const result = await initializeNewTables()
