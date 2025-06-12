@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 export async function POST() {
-  const supabase = createClient()
-
   try {
     // Crear tabla kanban_columns si no existe
-    const { error: createColumnsError } = await supabase.rpc("execute_sql", {
+    const { error: createColumnsError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS kanban_columns (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           title TEXT NOT NULL,
           description TEXT,
           color TEXT,
@@ -32,10 +30,10 @@ export async function POST() {
     }
 
     // Crear tabla kanban_cards si no existe
-    const { error: createCardsError } = await supabase.rpc("execute_sql", {
+    const { error: createCardsError } = await supabaseAdmin.rpc("execute_sql", {
       sql_query: `
         CREATE TABLE IF NOT EXISTS kanban_cards (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           column_id UUID REFERENCES kanban_columns(id) ON DELETE CASCADE,
           title TEXT NOT NULL,
           description TEXT,
@@ -64,7 +62,7 @@ export async function POST() {
     }
 
     // Verificar si ya existen columnas
-    const { data: existingColumns, error: checkError } = await supabase.from("kanban_columns").select("id")
+    const { data: existingColumns, error: checkError } = await supabaseAdmin.from("kanban_columns").select("id")
 
     if (checkError) {
       return NextResponse.json(
@@ -79,14 +77,17 @@ export async function POST() {
 
     // Si no hay columnas, crear columnas de ejemplo
     if (!existingColumns || existingColumns.length === 0) {
-      const columnasEjemplo = [
-        { title: "Por Hacer", description: "Tareas pendientes", color: "#1890ff", position: 0 },
-        { title: "En Progreso", description: "Tareas en curso", color: "#faad14", position: 1 },
-        { title: "En Revisión", description: "Tareas en revisión", color: "#722ed1", position: 2 },
-        { title: "Completado", description: "Tareas finalizadas", color: "#52c41a", position: 3 },
-      ]
-
-      const { error: insertColumnsError } = await supabase.from("kanban_columns").insert(columnasEjemplo)
+      // Usar uuid_generate_v4() para generar IDs explícitamente
+      const { error: insertColumnsError } = await supabaseAdmin.rpc("execute_sql", {
+        sql_query: `
+          INSERT INTO kanban_columns (id, title, description, color, position, created_at, updated_at)
+          VALUES 
+            (uuid_generate_v4(), 'Por Hacer', 'Tareas pendientes', '#1890ff', 0, NOW(), NOW()),
+            (uuid_generate_v4(), 'En Progreso', 'Tareas en curso', '#faad14', 1, NOW(), NOW()),
+            (uuid_generate_v4(), 'En Revisión', 'Tareas en revisión', '#722ed1', 2, NOW(), NOW()),
+            (uuid_generate_v4(), 'Completado', 'Tareas finalizadas', '#52c41a', 3, NOW(), NOW());
+        `,
+      })
 
       if (insertColumnsError) {
         return NextResponse.json(
@@ -97,73 +98,6 @@ export async function POST() {
           },
           { status: 500 },
         )
-      }
-
-      // Obtener las columnas creadas
-      const { data: columns, error: getColumnsError } = await supabase
-        .from("kanban_columns")
-        .select("id")
-        .order("position", { ascending: true })
-
-      if (getColumnsError || !columns || columns.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Error al obtener columnas creadas",
-            detalle: getColumnsError?.message || "No se pudieron crear las columnas",
-          },
-          { status: 500 },
-        )
-      }
-
-      // Obtener clientes y vehículos para crear tarjetas de ejemplo
-      const { data: clients } = await supabase.from("clients").select("id").limit(2)
-      const { data: vehicles } = await supabase.from("vehicles").select("id").limit(2)
-
-      if (clients && clients.length > 0 && vehicles && vehicles.length > 0) {
-        // Crear tarjetas de ejemplo
-        const tarjetasEjemplo = [
-          {
-            column_id: columns[0].id,
-            title: "Revisión inicial",
-            description: "Realizar diagnóstico completo del vehículo",
-            vehicle_id: vehicles[0].id,
-            client_id: clients[0].id,
-            priority: "Alta",
-            position: 1,
-          },
-          {
-            column_id: columns[0].id,
-            title: "Presupuesto",
-            description: "Elaborar presupuesto detallado",
-            vehicle_id: vehicles[0].id,
-            client_id: clients[0].id,
-            priority: "Media",
-            position: 2,
-          },
-          {
-            column_id: columns[1].id,
-            title: "Reparación de carrocería",
-            description: "Reparar abolladuras en puerta delantera",
-            vehicle_id: vehicles[1].id,
-            client_id: clients[1].id,
-            priority: "Alta",
-            position: 1,
-          },
-        ]
-
-        const { error: insertCardsError } = await supabase.from("kanban_cards").insert(tarjetasEjemplo)
-
-        if (insertCardsError) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: "Error al insertar tarjetas de ejemplo",
-              detalle: insertCardsError.message,
-            },
-            { status: 500 },
-          )
-        }
       }
     }
 

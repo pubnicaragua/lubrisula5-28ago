@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -111,16 +111,7 @@ const mockTecnicosIniciales = [
 
 export function TecnicosPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [tecnicos, setTecnicos] = useState(() => {
-    // Cargar desde localStorage o usar datos iniciales
-    const saved = localStorage.getItem("mockTecnicos")
-    if (saved) {
-      return JSON.parse(saved)
-    } else {
-      localStorage.setItem("mockTecnicos", JSON.stringify(mockTecnicosIniciales))
-      return mockTecnicosIniciales
-    }
-  })
+  const [tecnicos, setTecnicos] = useState<any[]>(mockTecnicosIniciales)
   const [openDialog, setOpenDialog] = useState(false)
   const [openPerfilDialog, setOpenPerfilDialog] = useState(false)
   const [openHorarioDialog, setOpenHorarioDialog] = useState(false)
@@ -141,9 +132,27 @@ export function TecnicosPage() {
     disponibilidad: "Disponible",
   })
 
+  // Usar useEffect para cargar datos desde localStorage solo en el cliente
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("mockTecnicos")
+      if (saved) {
+        setTecnicos(JSON.parse(saved))
+      } else {
+        localStorage.setItem("mockTecnicos", JSON.stringify(mockTecnicosIniciales))
+      }
+    } catch (error) {
+      console.error("Error accediendo a localStorage:", error)
+    }
+  }, [])
+
   const saveTecnicos = (newTecnicos: any[]) => {
     setTecnicos(newTecnicos)
-    localStorage.setItem("mockTecnicos", JSON.stringify(newTecnicos))
+    try {
+      localStorage.setItem("mockTecnicos", JSON.stringify(newTecnicos))
+    } catch (error) {
+      console.error("Error guardando en localStorage:", error)
+    }
   }
 
   const getAvailabilityColor = (status: string) => {
