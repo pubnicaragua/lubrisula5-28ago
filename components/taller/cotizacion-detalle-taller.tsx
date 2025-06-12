@@ -1,497 +1,409 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { AlertTriangle, ArrowLeft, Printer, FileText, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, AlertTriangle, Printer, FileText, ArrowRight, Car, User } from "lucide-react"
-
-// Datos de ejemplo para una cotización
-const COTIZACION_EJEMPLO = {
-  id: "1",
-  quotation_number: "COT-2023-001",
-  client: {
-    id: "1",
-    name: "Juan Pérez",
-    phone: "9999-8888",
-    email: "juan.perez@example.com",
-    client_type: "Particular",
-  },
-  vehicle: {
-    id: "1",
-    brand: "Toyota",
-    model: "Corolla",
-    year: 2019,
-    plate: "ABC-1234",
-    vin: "1HGCM82633A123456",
-    color: "Blanco",
-  },
-  date: "2023-05-10",
-  status: "Pendiente",
-  total_labor: 5000.0,
-  total_materials: 3500.0,
-  total_parts: 4000.0,
-  total: 12500.0,
-  repair_hours: 8.5,
-  estimated_days: 2.5,
-  parts: [
-    {
-      id: "1",
-      category: "Estructural",
-      name: "POSICIONAMIENTO EN MAQUINA DE ENDEREZADO",
-      quantity: 1,
-      operation: "Cor",
-      material_type: "HI",
-      repair_type: "MM",
-      repair_hours: 2.0,
-      labor_cost: 1200.0,
-      materials_cost: 0.0,
-      parts_cost: 0.0,
-      total: 1200.0,
-    },
-    {
-      id: "2",
-      category: "Carrocería",
-      name: "CUBIERTA SUPERIOR DE BOMPER",
-      quantity: 1,
-      operation: "Rep",
-      material_type: "PL",
-      repair_type: "MM",
-      repair_hours: 6.0,
-      labor_cost: 2160.0,
-      materials_cost: 1072.94,
-      parts_cost: 0.0,
-      total: 3232.94,
-    },
-    {
-      id: "3",
-      category: "Pintura",
-      name: "PINTURA GENERAL",
-      quantity: 1,
-      operation: "Rep",
-      material_type: "PL",
-      repair_type: "GN",
-      repair_hours: 4.0,
-      labor_cost: 1640.0,
-      materials_cost: 2427.06,
-      parts_cost: 4000.0,
-      total: 8067.06,
-    },
-  ],
-}
+import { getQuotationById, updateQuotation } from "@/lib/actions/quotations"
+import { NuevaCotizacionForm } from "@/components/cotizaciones/nueva-cotizacion-form"
+import Link from "next/link"
 
 interface CotizacionDetalleTallerProps {
-  cotizacionId?: string
+  id: string
 }
 
-export function CotizacionDetalleTaller({ cotizacionId = "1" }: CotizacionDetalleTallerProps) {
-  const [cotizacion] = useState(COTIZACION_EJEMPLO)
-  const [actualizando, setActualizando] = useState(false)
+export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
+  const [cotizacion, setCotizacion] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  const handleStatusChange = async (newStatus: string) => {
-    setActualizando(true)
+  const loadCotizacion = async () => {
+    setLoading(true)
+    try {
+      const { success, data, error: quotationError, isTableMissing } = await getQuotationById(id)
 
-    // Simulamos una actualización
-    setTimeout(() => {
-      setActualizando(false)
-      toast({
-        title: "Estado actualizado",
-        description: `La cotización ha sido marcada como ${newStatus}`,
-      })
-    }, 1000)
-  }
-
-  const convertirAOrden = async () => {
-    setActualizando(true)
-
-    // Simulamos una conversión
-    setTimeout(() => {
-      setActualizando(false)
-      toast({
-        title: "Cotización convertida",
-        description: "La cotización se ha convertido a orden de trabajo",
-      })
-    }, 1000)
-  }
-
-  // Función para obtener el color del badge según el estado
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Pendiente":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-      case "Aprobada":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
-      case "Rechazada":
-        return "bg-red-100 text-red-800 hover:bg-red-100"
-      case "Convertida a Orden":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+      if (isTableMissing) {
+        setError("La tabla de cotizaciones no existe. Por favor, inicialice la base de datos.")
+      } else if (!success) {
+        setError(quotationError || "Error al cargar la cotización")
+      } else if (success && data) {
+        setCotizacion(data)
+      }
+    } catch (err) {
+      setError("Error al conectar con la base de datos")
+      console.error("Error loading quotation:", err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-3 rounded-md">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{cotizacion.quotation_number}</h1>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">{new Date(cotizacion.date).toLocaleDateString()}</span>
-              <Badge className={getStatusColor(cotizacion.status)}>{cotizacion.status}</Badge>
-            </div>
-          </div>
+  useEffect(() => {
+    loadCotizacion()
+  }, [id])
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false)
+    loadCotizacion()
+    toast({
+      title: "Cotización actualizada",
+      description: "La cotización ha sido actualizada exitosamente",
+    })
+  }
+
+  const handleStatusChange = async (newStatus: "Pendiente" | "Aprobada" | "Rechazada" | "Convertida a Orden") => {
+    try {
+      const { success, error: updateError } = await updateQuotation(id, {
+        status: newStatus,
+      })
+
+      if (success) {
+        toast({
+          title: "Estado actualizado",
+          description: `La cotización ha sido marcada como ${newStatus}`,
+        })
+        loadCotizacion()
+      } else {
+        toast({
+          title: "Error",
+          description: updateError || "No se pudo actualizar el estado de la cotización",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar el estado de la cotización",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+  }
+
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case "Pendiente":
+        return "outline"
+      case "Aprobada":
+        return "success"
+      case "Rechazada":
+        return "destructive"
+      case "Convertida a Orden":
+        return "default"
+      default:
+        return "secondary"
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm">
-            <Printer className="mr-2 h-4 w-4" />
-            Imprimir
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-xl text-red-600 flex items-center">
+              <AlertTriangle className="mr-2 h-5 w-5" /> Error de Configuración
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">{error}</p>
+            <p className="mb-6">
+              Para utilizar el sistema de cotizaciones, es necesario configurar correctamente la base de datos con las
+              tablas requeridas.
+            </p>
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
+              <h3 className="font-semibold text-amber-800 mb-2">Pasos para solucionar este problema:</h3>
+              <ol className="list-decimal list-inside text-amber-700 space-y-2">
+                <li>Verifique que su base de datos Supabase esté correctamente configurada</li>
+                <li>Asegúrese de que las tablas necesarias (clients, vehicles, quotations, quotation_parts) existan</li>
+                <li>Ejecute el script de inicialización de la base de datos si está disponible</li>
+                <li>Contacte al administrador del sistema si el problema persiste</li>
+              </ol>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link href="/taller/cotizaciones">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Cotizaciones
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!cotizacion) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Cotización no encontrada</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>La cotización solicitada no existe o ha sido eliminada.</p>
+          </CardContent>
+          <CardFooter>
+            <Link href="/taller/cotizaciones">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Volver a Cotizaciones
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center">
+          <Link href="/taller/cotizaciones">
+            <Button variant="outline" size="icon" className="mr-4">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold">Cotización {cotizacion.quotation_number}</h1>
+        </div>
+        <div className="flex gap-2">
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="mr-2 h-4 w-4" /> Editar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Editar Cotización</DialogTitle>
+                <DialogDescription>Modifica los detalles de esta cotización.</DialogDescription>
+              </DialogHeader>
+              <NuevaCotizacionForm onSuccess={handleEditSuccess} cotizacionExistente={cotizacion} />
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" /> Imprimir
           </Button>
-          <Button variant="outline" size="sm">
-            <FileText className="mr-2 h-4 w-4" />
-            Exportar PDF
-          </Button>
-          <Button size="sm">Editar</Button>
         </div>
       </div>
 
-      <Tabs defaultValue="resumen" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="resumen">Resumen</TabsTrigger>
-          <TabsTrigger value="detalles">Detalles</TabsTrigger>
-          <TabsTrigger value="acciones">Acciones</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Información del Cliente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div>
+                <span className="font-medium">Nombre:</span> {cotizacion.client?.name || "No disponible"}
+              </div>
+              <div>
+                <span className="font-medium">Teléfono:</span> {cotizacion.client?.phone || "No disponible"}
+              </div>
+              <div>
+                <span className="font-medium">Email:</span> {cotizacion.client?.email || "No disponible"}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="resumen" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Información del Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Nombre:</span>
-                    <p>{cotizacion.client?.name || "No disponible"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Teléfono:</span>
-                    <p>{cotizacion.client?.phone || "No disponible"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Email:</span>
-                    <p>{cotizacion.client?.email || "No disponible"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Tipo:</span>
-                    <p>{cotizacion.client?.client_type || "No disponible"}</p>
-                  </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Información del Vehículo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div>
+                <span className="font-medium">Marca:</span> {cotizacion.vehicle?.brand || "No disponible"}
+              </div>
+              <div>
+                <span className="font-medium">Modelo:</span> {cotizacion.vehicle?.model || "No disponible"}
+              </div>
+              <div>
+                <span className="font-medium">Año:</span> {cotizacion.vehicle?.year || "No disponible"}
+              </div>
+              <div>
+                <span className="font-medium">Placa:</span> {cotizacion.vehicle?.plate || "No disponible"}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Detalles de la Cotización</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div>
+                <span className="font-medium">Número:</span> {cotizacion.quotation_number}
+              </div>
+              <div>
+                <span className="font-medium">Fecha:</span> {formatDate(cotizacion.date)}
+              </div>
+              <div>
+                <span className="font-medium">Estado:</span>{" "}
+                <Badge variant={getBadgeVariant(cotizacion.status)}>{cotizacion.status}</Badge>
+              </div>
+              <div>
+                <span className="font-medium">Tiempo estimado:</span> {cotizacion.estimated_days.toFixed(1)} días (
+                {cotizacion.repair_hours.toFixed(1)} horas)
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Partes y Servicios</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No.</TableHead>
+                <TableHead>Cant</TableHead>
+                <TableHead>Parte</TableHead>
+                <TableHead>OP</TableHead>
+                <TableHead>T.Mat</TableHead>
+                <TableHead>T.Rep</TableHead>
+                <TableHead>Horas</TableHead>
+                <TableHead>Mano de Obra</TableHead>
+                <TableHead>Materiales</TableHead>
+                <TableHead>Repuesto</TableHead>
+                <TableHead>Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cotizacion.parts && cotizacion.parts.length > 0 ? (
+                cotizacion.parts.map((parte: any, index: number) => (
+                  <TableRow key={parte.id || index}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{parte.quantity}</TableCell>
+                    <TableCell>{parte.name}</TableCell>
+                    <TableCell>{parte.operation}</TableCell>
+                    <TableCell>{parte.material_type}</TableCell>
+                    <TableCell>{parte.repair_type}</TableCell>
+                    <TableCell>{parte.repair_hours.toFixed(2)}</TableCell>
+                    <TableCell>L {parte.labor_cost.toFixed(2)}</TableCell>
+                    <TableCell>L {parte.materials_cost.toFixed(2)}</TableCell>
+                    <TableCell>L {parte.parts_cost.toFixed(2)}</TableCell>
+                    <TableCell>L {parte.total.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center">
+                    No hay partes registradas para esta cotización
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumen de Costos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2">
+                  <span className="font-medium">Mano de Obra:</span>
+                  <span>L {cotizacion.total_labor.toFixed(2)}</span>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Car className="h-5 w-5" />
-                  Información del Vehículo
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Marca y Modelo:</span>
-                    <p>{`${cotizacion.vehicle?.brand || "N/A"} ${cotizacion.vehicle?.model || ""}`}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Año:</span>
-                    <p>{cotizacion.vehicle?.year || "N/A"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Placa:</span>
-                    <p>{cotizacion.vehicle?.plate || "N/A"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">VIN:</span>
-                    <p>{cotizacion.vehicle?.vin || "N/A"}</p>
-                  </div>
+                <div className="grid grid-cols-2">
+                  <span className="font-medium">Materiales:</span>
+                  <span>L {cotizacion.total_materials.toFixed(2)}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Resumen de la Cotización</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Horas de Reparación:</span>
-                    <p className="text-2xl font-bold">{cotizacion.repair_hours.toFixed(2)} horas</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Tiempo Estimado:</span>
-                    <p className="text-lg">{cotizacion.estimated_days.toFixed(1)} días</p>
-                  </div>
+                <div className="grid grid-cols-2">
+                  <span className="font-medium">Repuestos:</span>
+                  <span>L {cotizacion.total_parts.toFixed(2)}</span>
                 </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Mano de Obra:</span>
-                    <p className="text-lg">L {cotizacion.total_labor.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Materiales:</span>
-                    <p className="text-lg">L {cotizacion.total_materials.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">Repuestos:</span>
-                    <p className="text-lg">L {cotizacion.total_parts.toFixed(2)}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-sm font-medium text-muted-foreground">TOTAL:</span>
-                    <p className="text-3xl font-bold text-primary">L {cotizacion.total.toFixed(2)}</p>
-                  </div>
+                <Separator className="my-2" />
+                <div className="grid grid-cols-2">
+                  <span className="font-medium text-lg">Total:</span>
+                  <span className="font-bold text-lg">L {cotizacion.total.toFixed(2)}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
 
-        <TabsContent value="detalles" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Detalles de Reparación</CardTitle>
-              <CardDescription>Partes y servicios incluidos en la cotización</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {cotizacion.parts && cotizacion.parts.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>No.</TableHead>
-                      <TableHead>Categoría</TableHead>
-                      <TableHead>Parte/Servicio</TableHead>
-                      <TableHead>Cantidad</TableHead>
-                      <TableHead>Operación</TableHead>
-                      <TableHead>Horas</TableHead>
-                      <TableHead>Mano de Obra</TableHead>
-                      <TableHead>Materiales</TableHead>
-                      <TableHead>Repuestos</TableHead>
-                      <TableHead>Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cotizacion.parts.map((part: any, index: number) => (
-                      <TableRow key={part.id || index}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{part.category}</TableCell>
-                        <TableCell>{part.name}</TableCell>
-                        <TableCell>{part.quantity}</TableCell>
-                        <TableCell>{part.operation}</TableCell>
-                        <TableCell>{part.repair_hours.toFixed(2)}</TableCell>
-                        <TableCell>L {part.labor_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {part.materials_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {part.parts_cost.toFixed(2)}</TableCell>
-                        <TableCell>L {part.total.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-40 text-center">
-                  <AlertTriangle className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No hay partes o servicios en esta cotización</p>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Acciones</h3>
+              {cotizacion.status === "Pendiente" && (
+                <div className="flex gap-2">
+                  <Button onClick={() => handleStatusChange("Aprobada")} className="flex-1">
+                    <CheckCircle className="mr-2 h-4 w-4" /> Aprobar
+                  </Button>
+                  <Button onClick={() => handleStatusChange("Rechazada")} variant="destructive" className="flex-1">
+                    <XCircle className="mr-2 h-4 w-4" /> Rechazar
+                  </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Partes Estructurales</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {cotizacion.parts && cotizacion.parts.filter((p: any) => p.category === "Estructural").length > 0 ? (
-                  <div className="space-y-2">
-                    {cotizacion.parts
-                      .filter((p: any) => p.category === "Estructural")
-                      .map((part: any, index: number) => (
-                        <div key={part.id || index} className="flex justify-between items-center">
-                          <div className="text-sm">
-                            <span className="font-medium">{part.name}</span>
-                            <div className="text-xs text-muted-foreground">
-                              {part.operation} - {part.repair_hours.toFixed(2)} horas
-                            </div>
-                          </div>
-                          <div className="text-sm font-medium">L {part.total.toFixed(2)}</div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay partes estructurales</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Partes de Carrocería</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {cotizacion.parts && cotizacion.parts.filter((p: any) => p.category === "Carrocería").length > 0 ? (
-                  <div className="space-y-2">
-                    {cotizacion.parts
-                      .filter((p: any) => p.category === "Carrocería")
-                      .map((part: any, index: number) => (
-                        <div key={part.id || index} className="flex justify-between items-center">
-                          <div className="text-sm">
-                            <span className="font-medium">{part.name}</span>
-                            <div className="text-xs text-muted-foreground">
-                              {part.operation} - {part.repair_hours.toFixed(2)} horas
-                            </div>
-                          </div>
-                          <div className="text-sm font-medium">L {part.total.toFixed(2)}</div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay partes de carrocería</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Partes de Pintura</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {cotizacion.parts && cotizacion.parts.filter((p: any) => p.category === "Pintura").length > 0 ? (
-                  <div className="space-y-2">
-                    {cotizacion.parts
-                      .filter((p: any) => p.category === "Pintura")
-                      .map((part: any, index: number) => (
-                        <div key={part.id || index} className="flex justify-between items-center">
-                          <div className="text-sm">
-                            <span className="font-medium">{part.name}</span>
-                            <div className="text-xs text-muted-foreground">
-                              {part.operation} - {part.repair_hours.toFixed(2)} horas
-                            </div>
-                          </div>
-                          <div className="text-sm font-medium">L {part.total.toFixed(2)}</div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay partes de pintura</p>
-                )}
-              </CardContent>
-            </Card>
+              {cotizacion.status === "Aprobada" && (
+                <div className="flex gap-2">
+                  <Button onClick={() => handleStatusChange("Convertida a Orden")} className="flex-1">
+                    <FileText className="mr-2 h-4 w-4" /> Convertir a Orden
+                  </Button>
+                  <Button onClick={() => handleStatusChange("Pendiente")} variant="outline" className="flex-1">
+                    Marcar como Pendiente
+                  </Button>
+                </div>
+              )}
+              {cotizacion.status === "Rechazada" && (
+                <Button onClick={() => handleStatusChange("Pendiente")} variant="outline" className="w-full">
+                  Marcar como Pendiente
+                </Button>
+              )}
+              {cotizacion.status === "Convertida a Orden" && (
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <p className="text-green-800">
+                    Esta cotización ha sido convertida a una orden de trabajo. Ya no se puede modificar su estado.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="acciones" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestión de Cotización</CardTitle>
-              <CardDescription>Cambiar estado y realizar acciones</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Estado actual:</div>
-                <Badge className={`text-sm ${getStatusColor(cotizacion.status)}`}>{cotizacion.status}</Badge>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Cambiar estado a:</div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={cotizacion.status === "Pendiente" || actualizando}
-                    onClick={() => handleStatusChange("Pendiente")}
-                  >
-                    Pendiente
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={cotizacion.status === "Aprobada" || actualizando}
-                    onClick={() => handleStatusChange("Aprobada")}
-                    className="bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Aprobar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={cotizacion.status === "Rechazada" || actualizando}
-                    onClick={() => handleStatusChange("Rechazada")}
-                    className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Rechazar
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="text-sm font-medium">Acciones disponibles:</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    className="w-full"
-                    disabled={
-                      actualizando || cotizacion.status === "Rechazada" || cotizacion.status === "Convertida a Orden"
-                    }
-                    onClick={convertirAOrden}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Convertir a Orden de Trabajo
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Enviar por Email
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Comentarios</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <textarea
-                className="min-h-[120px] w-full rounded-md border border-gray-300 px-3 py-2"
-                placeholder="Agregar comentarios o notas sobre esta cotización..."
-              />
-              <Button className="mt-4">Guardar Comentarios</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }
