@@ -1,12 +1,13 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
-import { Save, Printer, FileDown } from "lucide-react"
+import { Save, Printer, FileDown, Upload, X } from "lucide-react"
 import html2canvas from "html2canvas"
 import { jsPDF } from "jspdf"
 
@@ -16,12 +17,23 @@ interface HojaIngresoProps {
   onCancel?: () => void
 }
 
+interface Punto {
+  x: number
+  y: number
+  id: string
+  descripcion: string
+}
+
 export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) {
-  const supabase = createClientComponentClient()
   const { toast } = useToast()
   const formRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [vehiculoData, setVehiculoData] = useState<any>(null)
+  const [imagenCarroceria, setImagenCarroceria] = useState<string | null>(null)
+  const [puntos, setPuntos] = useState<Punto[]>([])
+  const [modoEdicion, setModoEdicion] = useState(false)
 
   // Estado para cada sección de la hoja de ingreso
   const [interiores, setInteriores] = useState({
@@ -62,56 +74,102 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
   const [nivelGasolina, setNivelGasolina] = useState("1/4")
   const [comentarios, setComentarios] = useState("")
 
-  // Cargar datos del vehículo si se proporciona un ID
   useEffect(() => {
     if (vehiculoId) {
-      fetchVehiculoData()
+      loadVehiculoData()
     }
   }, [vehiculoId])
 
-  const fetchVehiculoData = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("vehiculos")
-        .select("*, cliente:cliente_id(*)")
-        .eq("id", vehiculoId)
-        .single()
+  const loadVehiculoData = () => {
+    const savedVehiculos = localStorage.getItem("mockVehiculos")
+    if (savedVehiculos) {
+      const vehiculos = JSON.parse(savedVehiculos)
+      const vehiculo = vehiculos.find((v: any) => v.id === vehiculoId)
+      setVehiculoData(vehiculo)
+    }
 
-      if (error) throw error
-      setVehiculoData(data)
-
-      // Verificar si ya existe una inspección para este vehículo
-      const { data: inspeccionData, error: inspeccionError } = await supabase
-        .from("inspecciones_vehiculo")
-        .select("*")
-        .eq("vehiculo_id", vehiculoId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (inspeccionError && inspeccionError.code !== "PGRST116") throw inspeccionError
-
-      if (inspeccionData) {
-        // Cargar datos de inspección existente
-        const { datos_inspeccion } = inspeccionData
-        if (datos_inspeccion) {
-          setInteriores(datos_inspeccion.interiores || interiores)
-          setExteriores(datos_inspeccion.exteriores || exteriores)
-          setCoqueta(datos_inspeccion.coqueta || coqueta)
-          setMotor(datos_inspeccion.motor || motor)
-          setNivelGasolina(datos_inspeccion.nivel_gasolina || "1/4")
-          setComentarios(datos_inspeccion.comentarios || "")
-        }
-      }
-    } catch (error) {
-      console.error("Error al cargar datos del vehículo:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los datos del vehículo",
-        variant: "destructive",
-      })
+    // Cargar datos guardados de la inspección
+    const savedInspection = localStorage.getItem(`inspeccion_${vehiculoId}`)
+    if (savedInspection) {
+      const data = JSON.parse(savedInspection)
+      setInteriores(data.interiores || interiores)
+      setExteriores(data.exteriores || exteriores)
+      setCoqueta(data.coqueta || coqueta)
+      setMotor(data.motor || motor)
+      setNivelGasolina(data.nivel_gasolina || "1/4")
+      setComentarios(data.comentarios || "")
+      setImagenCarroceria(data.imagen_carroceria || null)
+      setPuntos(data.puntos || [])
     }
   }
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagenCarroceria(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!modoEdicion || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    const descripcion = prompt("Descripción del punto:")
+    if (descripcion) {
+      const nuevoPunto: Punto = {
+        x,
+        y,
+        id: Date.now().toString(),
+        descripcion,
+      }
+      setPuntos([...puntos, nuevoPunto])
+    }
+  }
+
+  const eliminarPunto = (id: string) => {
+    setPuntos(puntos.filter((p) => p.id !== id))
+  }
+
+  const dibujarCanvas = () => {
+    if (!canvasRef.current || !imagenCarroceria) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const img = new Image()
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx.drawImage(img, 0, 0)
+
+      // Dibujar puntos
+      puntos.forEach((punto, index) => {
+        ctx.fillStyle = "red"
+        ctx.beginPath()
+        ctx.arc(punto.x, punto.y, 8, 0, 2 * Math.PI)
+        ctx.fill()
+
+        ctx.fillStyle = "white"
+        ctx.font = "12px Arial"
+        ctx.textAlign = "center"
+        ctx.fillText((index + 1).toString(), punto.x, punto.y + 4)
+      })
+    }
+    img.src = imagenCarroceria
+  }
+
+  useEffect(() => {
+    dibujarCanvas()
+  }, [imagenCarroceria, puntos])
 
   const handleInteriorChange = (field: string, type: "cantidad" | "si" | "no", value: any) => {
     setInteriores((prev) => ({
@@ -157,7 +215,7 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
     }))
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!vehiculoId) {
       toast({
         title: "Error",
@@ -167,41 +225,27 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
       return
     }
 
-    setIsLoading(true)
-    try {
-      const inspeccionData = {
-        vehiculo_id: vehiculoId,
-        fecha: new Date().toISOString(),
-        datos_inspeccion: {
-          interiores,
-          exteriores,
-          coqueta,
-          motor,
-          nivel_gasolina: nivelGasolina,
-          comentarios,
-        },
-      }
-
-      const { data, error } = await supabase.from("inspecciones_vehiculo").insert([inspeccionData]).select()
-
-      if (error) throw error
-
-      toast({
-        title: "Éxito",
-        description: "Hoja de ingreso guardada correctamente",
-      })
-
-      if (onSave) onSave()
-    } catch (error) {
-      console.error("Error al guardar la hoja de ingreso:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo guardar la hoja de ingreso",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+    const inspeccionData = {
+      vehiculo_id: vehiculoId,
+      fecha: new Date().toISOString(),
+      interiores,
+      exteriores,
+      coqueta,
+      motor,
+      nivel_gasolina: nivelGasolina,
+      comentarios,
+      imagen_carroceria: imagenCarroceria,
+      puntos,
     }
+
+    localStorage.setItem(`inspeccion_${vehiculoId}`, JSON.stringify(inspeccionData))
+
+    toast({
+      title: "Éxito",
+      description: "Hoja de ingreso guardada correctamente",
+    })
+
+    if (onSave) onSave()
   }
 
   const exportToPDF = async () => {
@@ -590,25 +634,77 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
           </div>
         </div>
 
-        {/* Condiciones de carrocería */}
+        {/* Condiciones de carrocería con subida de imagen y marcado de puntos */}
         <div className="border rounded-md overflow-hidden">
           <div className="bg-cyan-500 text-white font-bold py-1 px-2 text-center">Condiciones de carrocería</div>
           <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div className="flex flex-col items-center">
-                  <div className="relative">
-                    <img src="/car-front-side-diagram.png" alt="Vista frontal y lateral" className="w-full h-auto" />
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div className="flex gap-2 print:hidden">
+                <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Subir Imagen
+                </Button>
+                <Button
+                  onClick={() => setModoEdicion(!modoEdicion)}
+                  variant={modoEdicion ? "default" : "outline"}
+                  size="sm"
+                >
+                  {modoEdicion ? "Finalizar Edición" : "Marcar Puntos"}
+                </Button>
+                {puntos.length > 0 && (
+                  <Button onClick={() => setPuntos([])} variant="outline" size="sm">
+                    Limpiar Puntos
+                  </Button>
+                )}
               </div>
-              <div className="space-y-4">
-                <div className="flex flex-col items-center">
-                  <div className="relative">
-                    <img src="/car-rear-top-diagram.png" alt="Vista trasera y superior" className="w-full h-auto" />
+
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+
+              {imagenCarroceria ? (
+                <div className="space-y-4">
+                  <div className="relative border rounded-lg overflow-hidden">
+                    <canvas
+                      ref={canvasRef}
+                      onClick={handleCanvasClick}
+                      className={`max-w-full h-auto ${modoEdicion ? "cursor-crosshair" : "cursor-default"}`}
+                      style={{ maxHeight: "400px" }}
+                    />
+                    {modoEdicion && (
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-sm">
+                        Haz clic para marcar puntos
+                      </div>
+                    )}
                   </div>
+
+                  {puntos.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Puntos marcados:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {puntos.map((punto, index) => (
+                          <div key={punto.id} className="flex items-center justify-between p-2 border rounded">
+                            <span className="text-sm">
+                              <strong>{index + 1}.</strong> {punto.descripcion}
+                            </span>
+                            <Button
+                              onClick={() => eliminarPunto(punto.id)}
+                              variant="ghost"
+                              size="sm"
+                              className="print:hidden"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">Haz clic en "Subir Imagen" para cargar una foto del vehículo</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -19,12 +19,63 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { FileSpreadsheet, FileIcon as FilePdf, Plus, Pencil, Trash2, Search, Filter } from "lucide-react"
 import * as XLSX from "xlsx"
 import { jsPDF } from "jspdf"
 import "jspdf-autotable"
+
+// Mock data para clientes
+const mockClientes = [
+  { id: "1", nombre: "Juan Pérez", email: "juan.perez@email.com", telefono: "555-0001" },
+  { id: "2", nombre: "María García", email: "maria.garcia@email.com", telefono: "555-0002" },
+  { id: "3", nombre: "Carlos López", email: "carlos.lopez@email.com", telefono: "555-0003" },
+  { id: "4", nombre: "Ana Martínez", email: "ana.martinez@email.com", telefono: "555-0004" },
+  { id: "5", nombre: "Roberto Sánchez", email: "roberto.sanchez@email.com", telefono: "555-0005" },
+]
+
+// Mock data para órdenes
+const mockOrdenes = [
+  { id: "1", numero: "ORD-2024-001", cliente_id: "1" },
+  { id: "2", numero: "ORD-2024-002", cliente_id: "2" },
+  { id: "3", numero: "ORD-2024-003", cliente_id: "3" },
+  { id: "4", numero: "ORD-2024-004", cliente_id: "4" },
+  { id: "5", numero: "ORD-2024-005", cliente_id: "5" },
+]
+
+// Mock data para facturas
+const mockFacturas = [
+  {
+    id: "1",
+    numero: "FAC-2024-001",
+    fecha: "2024-06-01",
+    cliente_id: "1",
+    cliente_nombre: "Juan Pérez",
+    orden_id: "1",
+    orden_numero: "ORD-2024-001",
+    subtotal: 10000,
+    impuestos: 1500,
+    total: 11500,
+    estado: "pendiente",
+    metodo_pago: "efectivo",
+    notas: "Factura por reparación de motor",
+  },
+  {
+    id: "2",
+    numero: "FAC-2024-002",
+    fecha: "2024-06-02",
+    cliente_id: "2",
+    cliente_nombre: "María García",
+    orden_id: "2",
+    orden_numero: "ORD-2024-002",
+    subtotal: 8500,
+    impuestos: 1275,
+    total: 9775,
+    estado: "pagada",
+    metodo_pago: "tarjeta",
+    notas: "Factura por cambio de aceite y filtros",
+  },
+]
 
 interface Factura {
   id: string
@@ -46,6 +97,7 @@ interface Cliente {
   id: string
   nombre: string
   email: string
+  telefono: string
 }
 
 interface Orden {
@@ -55,7 +107,6 @@ interface Orden {
 }
 
 export function FacturasPage() {
-  const supabase = createClientComponentClient()
   const { toast } = useToast()
 
   const [facturas, setFacturas] = useState<Factura[]>([])
@@ -98,9 +149,7 @@ export function FacturasPage() {
   ]
 
   useEffect(() => {
-    fetchFacturas()
-    fetchClientes()
-    fetchOrdenes()
+    loadMockData()
   }, [])
 
   useEffect(() => {
@@ -109,73 +158,39 @@ export function FacturasPage() {
     }
   }, [searchTerm, statusFilter, facturas])
 
-  const fetchFacturas = async () => {
+  const loadMockData = () => {
     setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("facturas")
-        .select(`
-          *,
-          clientes(id, nombre, email),
-          ordenes(id, numero)
-        `)
-        .order("fecha", { ascending: false })
 
-      if (error) throw error
+    // Simular carga de datos
+    setTimeout(() => {
+      // Cargar datos desde localStorage o usar mock data
+      const savedFacturas = localStorage.getItem("mockFacturas")
+      const savedClientes = localStorage.getItem("mockClientes")
+      const savedOrdenes = localStorage.getItem("mockOrdenes")
 
-      const formattedData = data.map((item) => ({
-        id: item.id,
-        numero: item.numero,
-        fecha: new Date(item.fecha).toLocaleDateString(),
-        cliente_id: item.cliente_id,
-        cliente_nombre: item.clientes?.nombre || "Cliente no encontrado",
-        orden_id: item.orden_id,
-        orden_numero: item.ordenes?.numero || "Orden no encontrada",
-        subtotal: item.subtotal,
-        impuestos: item.impuestos,
-        total: item.total,
-        estado: item.estado,
-        metodo_pago: item.metodo_pago,
-        notas: item.notas,
-      }))
+      if (savedFacturas) {
+        setFacturas(JSON.parse(savedFacturas))
+      } else {
+        setFacturas(mockFacturas)
+        localStorage.setItem("mockFacturas", JSON.stringify(mockFacturas))
+      }
 
-      setFacturas(formattedData)
-      setFilteredFacturas(formattedData)
-    } catch (error) {
-      console.error("Error al cargar facturas:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las facturas",
-        variant: "destructive",
-      })
-    } finally {
+      if (savedClientes) {
+        setClientes(JSON.parse(savedClientes))
+      } else {
+        setClientes(mockClientes)
+        localStorage.setItem("mockClientes", JSON.stringify(mockClientes))
+      }
+
+      if (savedOrdenes) {
+        setOrdenes(JSON.parse(savedOrdenes))
+      } else {
+        setOrdenes(mockOrdenes)
+        localStorage.setItem("mockOrdenes", JSON.stringify(mockOrdenes))
+      }
+
       setIsLoading(false)
-    }
-  }
-
-  const fetchClientes = async () => {
-    try {
-      const { data, error } = await supabase.from("clientes").select("id, nombre, email").order("nombre")
-
-      if (error) throw error
-      setClientes(data)
-    } catch (error) {
-      console.error("Error al cargar clientes:", error)
-    }
-  }
-
-  const fetchOrdenes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("ordenes")
-        .select("id, numero, cliente_id")
-        .order("numero", { ascending: false })
-
-      if (error) throw error
-      setOrdenes(data)
-    } catch (error) {
-      console.error("Error al cargar órdenes:", error)
-    }
+    }, 500)
   }
 
   const filterFacturas = () => {
@@ -223,76 +238,79 @@ export function FacturasPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    try {
-      if (currentFactura) {
-        // Actualizar factura existente
-        const { error } = await supabase
-          .from("facturas")
-          .update({
-            numero: formData.numero,
-            fecha: formData.fecha,
-            cliente_id: formData.cliente_id,
-            orden_id: formData.orden_id,
-            subtotal: formData.subtotal,
-            impuestos: formData.impuestos,
-            total: formData.total,
-            estado: formData.estado,
-            metodo_pago: formData.metodo_pago,
-            notas: formData.notas,
-          })
-          .eq("id", currentFactura.id)
+    const cliente = clientes.find((c) => c.id === formData.cliente_id)
+    const orden = ordenes.find((o) => o.id === formData.orden_id)
 
-        if (error) throw error
+    if (currentFactura) {
+      // Actualizar factura existente
+      const updatedFacturas = facturas.map((f) =>
+        f.id === currentFactura.id
+          ? {
+              ...f,
+              numero: formData.numero,
+              fecha: formData.fecha,
+              cliente_id: formData.cliente_id,
+              cliente_nombre: cliente?.nombre || "",
+              orden_id: formData.orden_id,
+              orden_numero: orden?.numero || "",
+              subtotal: formData.subtotal,
+              impuestos: formData.impuestos,
+              total: formData.total,
+              estado: formData.estado,
+              metodo_pago: formData.metodo_pago,
+              notas: formData.notas,
+            }
+          : f,
+      )
 
-        toast({
-          title: "Factura actualizada",
-          description: `La factura ${formData.numero} ha sido actualizada correctamente`,
-        })
-      } else {
-        // Crear nueva factura
-        const { error } = await supabase.from("facturas").insert({
-          numero: formData.numero,
-          fecha: formData.fecha,
-          cliente_id: formData.cliente_id,
-          orden_id: formData.orden_id,
-          subtotal: formData.subtotal,
-          impuestos: formData.impuestos,
-          total: formData.total,
-          estado: formData.estado,
-          metodo_pago: formData.metodo_pago,
-          notas: formData.notas,
-        })
+      setFacturas(updatedFacturas)
+      localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
 
-        if (error) throw error
-
-        toast({
-          title: "Factura creada",
-          description: `La factura ${formData.numero} ha sido creada correctamente`,
-        })
+      toast({
+        title: "Factura actualizada",
+        description: `La factura ${formData.numero} ha sido actualizada correctamente`,
+      })
+    } else {
+      // Crear nueva factura
+      const newFactura: Factura = {
+        id: Date.now().toString(),
+        numero: formData.numero,
+        fecha: formData.fecha,
+        cliente_id: formData.cliente_id,
+        cliente_nombre: cliente?.nombre || "",
+        orden_id: formData.orden_id,
+        orden_numero: orden?.numero || "",
+        subtotal: formData.subtotal,
+        impuestos: formData.impuestos,
+        total: formData.total,
+        estado: formData.estado,
+        metodo_pago: formData.metodo_pago,
+        notas: formData.notas,
       }
 
-      // Cerrar diálogo y recargar datos
-      setIsDialogOpen(false)
-      resetForm()
-      fetchFacturas()
-    } catch (error) {
-      console.error("Error al guardar factura:", error)
+      const updatedFacturas = [...facturas, newFactura]
+      setFacturas(updatedFacturas)
+      localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
+
       toast({
-        title: "Error",
-        description: "No se pudo guardar la factura",
-        variant: "destructive",
+        title: "Factura creada",
+        description: `La factura ${formData.numero} ha sido creada correctamente`,
       })
     }
+
+    // Cerrar diálogo y resetear formulario
+    setIsDialogOpen(false)
+    resetForm()
   }
 
   const handleEdit = (factura: Factura) => {
     setCurrentFactura(factura)
     setFormData({
       numero: factura.numero,
-      fecha: new Date(factura.fecha).toISOString().split("T")[0],
+      fecha: factura.fecha,
       cliente_id: factura.cliente_id,
       orden_id: factura.orden_id,
       subtotal: factura.subtotal,
@@ -305,29 +323,20 @@ export function FacturasPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!currentFactura) return
 
-    try {
-      const { error } = await supabase.from("facturas").delete().eq("id", currentFactura.id)
+    const updatedFacturas = facturas.filter((f) => f.id !== currentFactura.id)
+    setFacturas(updatedFacturas)
+    localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
 
-      if (error) throw error
+    toast({
+      title: "Factura eliminada",
+      description: `La factura ${currentFactura.numero} ha sido eliminada correctamente`,
+    })
 
-      toast({
-        title: "Factura eliminada",
-        description: `La factura ${currentFactura.numero} ha sido eliminada correctamente`,
-      })
-
-      setIsDeleteDialogOpen(false)
-      fetchFacturas()
-    } catch (error) {
-      console.error("Error al eliminar factura:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la factura",
-        variant: "destructive",
-      })
-    }
+    setIsDeleteDialogOpen(false)
+    setCurrentFactura(null)
   }
 
   const confirmDelete = (factura: Factura) => {
@@ -434,7 +443,10 @@ export function FacturasPage() {
       <Card>
         <CardHeader>
           <CardTitle>Gestión de Facturas</CardTitle>
-          <CardDescription>Administra todas las facturas de tu taller automotriz</CardDescription>
+          <CardDescription>
+            Administra todas las facturas de tu taller automotriz (Mock Data Local - {facturas.length} facturas,{" "}
+            {clientes.length} clientes)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -495,7 +507,7 @@ export function FacturasPage() {
                     filteredFacturas.map((factura) => (
                       <TableRow key={factura.id}>
                         <TableCell className="font-medium">{factura.numero}</TableCell>
-                        <TableCell>{factura.fecha}</TableCell>
+                        <TableCell>{new Date(factura.fecha).toLocaleDateString()}</TableCell>
                         <TableCell>{factura.cliente_nombre}</TableCell>
                         <TableCell>{factura.orden_numero}</TableCell>
                         <TableCell className="text-right">${factura.subtotal.toFixed(2)}</TableCell>
