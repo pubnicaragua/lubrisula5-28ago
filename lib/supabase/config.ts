@@ -1,8 +1,39 @@
-import { createClient } from "@supabase/supabase-js"
+// Configuración centralizada de Supabase
+export const supabaseConfig = {
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wcyvgqbtaimkguaslhom.supabase.co"
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjeXZncWJ0YWlta2d1YXNsaG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzQ5MjMsImV4cCI6MjA2Mjc1MDkyM30.fJAXPGUKaXyK1BgNHJx_M-MM7pswqusZtSK2Ji2KQZQ"
+// Validar configuración
+export function validateSupabaseConfig() {
+  const errors: string[] = []
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  if (!supabaseConfig.url) {
+    errors.push("NEXT_PUBLIC_SUPABASE_URL no está definido")
+  }
+
+  if (!supabaseConfig.anonKey) {
+    errors.push("NEXT_PUBLIC_SUPABASE_ANON_KEY no está definido")
+  }
+
+  if (!supabaseConfig.serviceRoleKey) {
+    errors.push("SUPABASE_SERVICE_ROLE_KEY no está definido")
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuración de Supabase incompleta:\n${errors.join("\n")}`)
+  }
+
+  return true
+}
+
+// Verificar configuración al importar
+if (typeof window === "undefined") {
+  // Solo validar en el servidor
+  try {
+    validateSupabaseConfig()
+  } catch (error) {
+    console.error("Error de configuración de Supabase:", error)
+  }
+}

@@ -1,11 +1,17 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-// Variables de entorno con valores por defecto seguros
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wcyvgqbtaimkguaslhom.supabase.co"
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjeXZncWJ0YWlta2d1YXNsaG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzQ5MjMsImV4cCI6MjA2Mjc1MDkyM30.fJAXPGUKaXyK1BgNHJx_M-MM7pswqusZtSK2Ji2KQZQ"
+// Verificar que las variables de entorno estén definidas
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL no está definido")
+}
+
+if (!supabaseAnonKey) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY no está definido")
+}
 
 // Función para crear el cliente de Supabase
 export function createClient() {
@@ -29,3 +35,9 @@ export function getSupabaseClient() {
 
 // Exportar cliente por defecto
 export const supabase = getSupabaseClient()
+
+// Exportar también como supabaseClient para compatibilidad
+export const supabaseClient = supabase
+
+// Exportar por defecto
+export default supabase

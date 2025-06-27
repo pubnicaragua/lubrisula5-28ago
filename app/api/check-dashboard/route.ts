@@ -23,7 +23,7 @@ export async function GET() {
 
     // 2. Verificar tablas necesarias
     const requiredTables = ["roles", "roles_usuario", "perfil_usuario"]
-    const tableChecks = {}
+    const tableChecks: Record<string, any> = {}
 
     for (const table of requiredTables) {
       const { data, error } = await supabaseAdmin.from(table).select("count(*)").single()
@@ -35,10 +35,20 @@ export async function GET() {
       }
     }
 
-    // 3. Verificar políticas de seguridad
-    const { data: policies, error: policiesError } = await supabaseAdmin.rpc("get_policies_for_table", {
-      table_name: "roles_usuario",
-    })
+    // 3. Verificar políticas de seguridad (opcional)
+    let policies = []
+    let policiesError = null
+
+    try {
+      const { data: policiesData, error: policiesErr } = await supabaseAdmin.rpc("get_policies_for_table", {
+        table_name: "roles_usuario",
+      })
+      policies = policiesData || []
+      policiesError = policiesErr?.message
+    } catch (error) {
+      // Si la función RPC no existe, continuamos sin error
+      policiesError = "Función get_policies_for_table no disponible"
+    }
 
     return NextResponse.json({
       success: true,
@@ -47,8 +57,8 @@ export async function GET() {
         message: "Conexión a Supabase establecida correctamente",
       },
       tables: tableChecks,
-      policies: policies || [],
-      policiesError: policiesError?.message,
+      policies: policies,
+      policiesError: policiesError,
       recommendations: [
         "Visita /fix-users para corregir problemas con usuarios específicos",
         "Ejecuta el script SQL proporcionado para asignar roles correctamente",
