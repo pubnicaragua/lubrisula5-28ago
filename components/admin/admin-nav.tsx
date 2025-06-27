@@ -83,7 +83,7 @@ export function AdminNav() {
         Aseguradoras
       </Link>
       <Link
-        href="/clientes"
+        href="/admin/clientes"
         className={cn(
           "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           pathname === "/clientes" ? "bg-accent" : "transparent",
@@ -93,7 +93,7 @@ export function AdminNav() {
         Clientes
       </Link>
       <Link
-        href="/vehiculos"
+        href="/admin/vehiculos"
         className={cn(
           "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           pathname === "/vehiculos" ? "bg-accent" : "transparent",
@@ -103,7 +103,7 @@ export function AdminNav() {
         Vehículos
       </Link>
       <Link
-        href="/cotizaciones"
+        href="/admin/cotizaciones"
         className={cn(
           "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           pathname === "/cotizaciones" ? "bg-accent" : "transparent",

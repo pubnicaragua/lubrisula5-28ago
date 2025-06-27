@@ -36,14 +36,23 @@ export default function LoginForm() {
         email,
         password,
       })
-
+      console.log(data)
       if (error) {
         console.error("Error de autenticación:", error)
         throw error
       }
 
       // Redirigir según el rol del usuario (esto se puede personalizar)
-      router.push("/dashboard")
+      if (data.user?.user_metadata?.role === "admin") {
+        router.push("/admin/dashboard")
+      } else if (data.user?.user_metadata?.role === "cliente") {
+        router.push("/dashboard")
+      } else if (data.user?.user_metadata?.role === "taller") {
+        router.push("/taller/dashboard")
+      } else {
+        // Redirección por defecto si no se encuentra el rol
+        router.push("/dashboard")
+      }
       router.refresh()
     } catch (err: any) {
       console.error("Error completo:", err)
@@ -82,7 +91,7 @@ export default function LoginForm() {
   return (
     <div className="mx-auto max-w-md space-y-6 p-6 bg-white rounded-lg shadow-md">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
+        <h1 className="text-3xl font-bold text-black">Iniciar Sesión</h1>
         <p className="text-gray-500">Ingresa tus credenciales para acceder al sistema</p>
       </div>
 

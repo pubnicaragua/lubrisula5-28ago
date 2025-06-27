@@ -24,8 +24,8 @@ async function fetchAseguradoras() {
     .in("id", roles?.map((r) => r.rol_id) || [])
 
   const userRoles = rolesInfo?.map((r) => r.nombre) || []
-
-  if (!userRoles.includes("Admin") && !userRoles.includes("SuperAdmin")) {
+  console.log(userRoles)
+  if (!userRoles.includes("admin") && !userRoles.includes("SuperAdmin")) {
     redirect("/dashboard")
   }
 
