@@ -1,48 +1,25 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "./client"
 import { useRouter } from "next/navigation"
-import type { Database } from "@/lib/supabase/database.types"
-
-// Cliente de Supabase
-export const supabase = createClientComponentClient<Database>()
+import type { User, Session } from "@supabase/supabase-js"
 
 // Tipos
-export type User = {
-  id: string
-  email: string | null
-  role?: string
-  dbRole?: string | null
-}
-
-type AuthContextType = {
+export type AuthContextType = {
   user: User | null
+  session: Session | null
   loading: boolean
-  error: string | null
-  signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
-  signUp: (email: string, password: string, role?: string) => Promise<void>
-  hasRole: (role: string) => boolean
-  hasPermission: (permission: string) => boolean
-  updateUserRole: (userId: string, role: string) => Promise<void>
-  refreshUserRole: () => Promise<void>
 }
 
 // Contexto de autenticación
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   loading: true,
-  error: null,
-  signIn: async () => {},
   signOut: async () => {},
-  signUp: async () => {},
-  hasRole: () => false,
-  hasPermission: () => false,
-  updateUserRole: async () => {},
-  refreshUserRole: async () => {},
 })
 
 // Función para normalizar roles (convertir SuperAdmin a superadmin, etc.)
@@ -58,66 +35,6 @@ function normalizeRole(role: string | undefined): string {
   }
 
   return "cliente" // Rol por defecto
-}
-
-// Funciones de autenticación
-export async function signInWithEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data
-}
-
-export async function signOutUser() {
-  const { error } = await supabase.auth.signOut()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-}
-
-export const signUpWithEmail = async (email: string, password: string, role = "cliente") => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role,
-      },
-    },
-  })
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data
-}
-
-export async function getSession() {
-  const { data, error } = await supabase.auth.getSession()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data.session
-}
-
-export async function getUser() {
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data.user
 }
 
 // Función corregida para obtener el rol del usuario desde la base de datos
@@ -194,233 +111,41 @@ export async function setAdminRole() {
 // Proveedor de autenticación
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Función para actualizar el rol del usuario desde la base de datos
-  const refreshUserRole = async () => {
-    if (!user) return
-
-    try {
-      const dbRole = await getUserRoleFromDB(user.id)
-
-      setUser((prev) => {
-        if (!prev) return null
-        return {
-          ...prev,
-          dbRole,
-        }
-      })
-    } catch (err) {
-      console.error("Error al actualizar rol de usuario:", err)
-    }
-  }
-
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const session = await getSession()
-        if (session) {
-          const currentUser = await getUser()
-          const normalizedRole = normalizeRole(currentUser.user_metadata?.role)
-
-          // Obtener el rol desde la base de datos
-          const dbRole = await getUserRoleFromDB(currentUser.id)
-
-          setUser({
-            id: currentUser.id,
-            email: currentUser.email,
-            role: normalizedRole,
-            dbRole,
-          })
-
-          console.log("AuthProvider - User Role:", normalizedRole, "DB Role:", dbRole)
-        }
-      } catch (err) {
-        console.error("Error al cargar el usuario:", err)
-        setError(err instanceof Error ? err.message : "Error desconocido")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUser()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        const currentUser = session.user
-        const normalizedRole = normalizeRole(currentUser.user_metadata?.role)
-
-        // Obtener el rol desde la base de datos
-        const dbRole = await getUserRoleFromDB(currentUser.id)
-
-        setUser({
-          id: currentUser.id,
-          email: currentUser.email,
-          role: normalizedRole,
-          dbRole,
-        })
-
-        console.log("AuthProvider - Auth State Change - User Role:", normalizedRole, "DB Role:", dbRole)
-      } else {
-        setUser(null)
-      }
+    // Obtener sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    // Escuchar cambios de autenticación
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await signInWithEmail(email, password)
-
-      if (data.user) {
-        // Obtener el usuario actualizado para asegurarnos de tener los metadatos más recientes
-        const {
-          data: { user: updatedUser },
-        } = await supabase.auth.getUser()
-
-        const normalizedRole = normalizeRole(updatedUser?.user_metadata?.role)
-        console.log("SignIn - User Role:", normalizedRole)
-
-        // Obtener el rol desde la base de datos
-        const dbRole = await getUserRoleFromDB(data.user.id)
-
-        setUser({
-          id: data.user.id,
-          email: data.user.email,
-          role: normalizedRole,
-          dbRole,
-        })
-
-        // Usar preferentemente el rol de la base de datos si está disponible
-        const effectiveRole = dbRole || normalizedRole
-
-        // Redirigir según el rol - asegurándonos de que las rutas sean correctas
-        if (effectiveRole === "superadmin" || effectiveRole === "admin") {
-          router.push("/admin/dashboard")
-        } else if (effectiveRole === "taller") {
-          router.push("/taller/dashboard")
-        } else if (effectiveRole === "aseguradora") {
-          router.push("/aseguradora/dashboard")
-        } else if (effectiveRole === "cliente") {
-          router.push("/cliente/dashboard")
-        } else {
-          router.push("/dashboard")
-        }
-      }
-    } catch (err) {
-      console.error("Error al iniciar sesión:", err)
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión")
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const signOut = async () => {
-    try {
-      setLoading(true)
-      await signOutUser()
-      setUser(null)
-      router.push("/auth/login")
-    } catch (err) {
-      console.error("Error al cerrar sesión:", err)
-      setError(err instanceof Error ? err.message : "Error al cerrar sesión")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const signUp = async (email: string, password: string, role = "cliente") => {
-    try {
-      setLoading(true)
-      setError(null)
-      await signUpWithEmail(email, password, role)
-    } catch (err) {
-      console.error("Error al registrar usuario:", err)
-      setError(err instanceof Error ? err.message : "Error al registrar usuario")
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const hasRole = (role: string) => {
-    if (!user) return false
-
-    // Normalizar el rol solicitado
-    const normalizedRequestedRole = normalizeRole(role)
-
-    // Usar preferentemente el rol de la base de datos si está disponible
-    const effectiveRole = user.dbRole || user.role
-
-    // Permitir que superadmin tenga acceso a todo
-    if (effectiveRole === "superadmin") {
-      return true
-    }
-
-    // Para admin, permitir acceso a taller y aseguradora
-    if (
-      effectiveRole === "admin" &&
-      (normalizedRequestedRole === "taller" || normalizedRequestedRole === "aseguradora")
-    ) {
-      return true
-    }
-
-    return effectiveRole === normalizedRequestedRole
-  }
-
-  const hasPermission = (permission: string) => {
-    // Implementar lógica de permisos según sea necesario
-    // Por defecto, superadmin tiene todos los permisos
-    if (user?.role === "superadmin" || user?.dbRole === "superadmin") return true
-    return false
-  }
-
-  const updateUserRoleHandler = async (userId: string, role: string) => {
-    try {
-      setLoading(true)
-      await updateUserRole(userId, role)
-
-      // Si es el usuario actual, actualizar el estado
-      if (user && user.id === userId) {
-        setUser({
-          ...user,
-          role: normalizeRole(role),
-        })
-
-        // Actualizar también el rol en la base de datos
-        await refreshUserRole()
-      }
-    } catch (err) {
-      console.error("Error al actualizar el rol del usuario:", err)
-      setError(err instanceof Error ? err.message : "Error al actualizar el rol del usuario")
-      throw err
-    } finally {
-      setLoading(false)
-    }
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push("/auth/login")
   }
 
   const value = {
     user,
+    session,
     loading,
-    error,
-    signIn,
     signOut,
-    signUp,
-    hasRole,
-    hasPermission,
-    updateUserRole: updateUserRoleHandler,
-    refreshUserRole,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -429,8 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 // Hook para usar el contexto de autenticación
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth debe ser usado dentro de un AuthProvider")
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }
