@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -34,7 +28,7 @@ export interface Database {
           updated_at?: string | null
           cliente_id?: string | null
           flota_id?: string | null
-           corrreo?: string | null
+          corrreo?: string | null
           telefono?: string | null
           estado_tributario?: string | null
         }
@@ -48,7 +42,7 @@ export interface Database {
           updated_at?: string | null
           cliente_id?: string | null
           flota_id?: string | null
-           corrreo?: string | null
+          corrreo?: string | null
           telefono?: string | null
           estado_tributario?: string | null
         }
@@ -293,29 +287,44 @@ export interface Database {
       }
       perfil_usuario: {
         Row: {
-          id: string
+          id: string // UUID
           auth_id: string
-          nombre_completo: string | null
+          nombre: string | null
+          apellido: string | null
+          correo: string | null // Added
           telefono: string | null
           direccion: string | null
+          ciudad: string | null
+          estado: boolean | null // Changed to boolean
+          codigo_postal: string | null
           created_at: string | null
           updated_at: string | null
         }
         Insert: {
           id?: string
           auth_id: string
-          nombre_completo?: string | null
+          nombre?: string | null
+          apellido?: string | null
+          correo?: string | null
           telefono?: string | null
           direccion?: string | null
+          ciudad?: string | null
+          estado?: boolean | null
+          codigo_postal?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
         Update: {
           id?: string
           auth_id?: string
-          nombre_completo?: string | null
+          nombre?: string | null
+          apellido?: string | null
+          correo?: string | null
           telefono?: string | null
           direccion?: string | null
+          ciudad?: string | null
+          estado?: boolean | null
+          codigo_postal?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -355,31 +364,84 @@ export interface Database {
       }
       roles_usuario: {
         Row: {
-          id: string
+          id: string // UUID
           user_id: string
-          role_id: string
+          rol_id: string // UUID
           created_at: string | null
           updated_at: string | null
         }
         Insert: {
           id?: string
           user_id: string
-          role_id: string
+          rol_id: string
           created_at?: string | null
           updated_at?: string | null
         }
         Update: {
           id?: string
           user_id?: string
-          role_id?: string
+          rol_id?: string
           created_at?: string | null
           updated_at?: string | null
+        }
+      }
+      solicitudes_talleres: {
+        Row: {
+          id: number
+          user_auth_id: string | null
+          nombre_taller: string
+          direccion: string
+          ciudad: string
+          estado: string
+          codigo_postal: string
+          nombre_contacto: string
+          telefono: string
+          email: string
+          descripcion: string | null
+          modulos_seleccionados: string[]
+          estado_solicitud: "pendiente" | "aprobada" | "rechazada"
+          fecha_solicitud: string
+          fecha_actualizacion: string | null
+        }
+        Insert: {
+          id?: number
+          user_auth_id?: string | null
+          nombre_taller: string
+          direccion: string
+          ciudad: string
+          estado: string
+          codigo_postal: string
+          nombre_contacto: string
+          telefono: string
+          email: string
+          descripcion?: string | null
+          modulos_seleccionados?: string[]
+          estado_solicitud?: "pendiente" | "aprobada" | "rechazada"
+          fecha_solicitud?: string
+          fecha_actualizacion?: string | null
+        }
+        Update: {
+          id?: number
+          user_auth_id?: string | null
+          nombre_taller?: string
+          direccion?: string
+          ciudad?: string
+          estado?: string
+          codigo_postal?: string
+          nombre_contacto?: string
+          telefono?: string
+          email?: string
+          descripcion?: string | null
+          modulos_seleccionados?: string[]
+          estado_solicitud?: "pendiente" | "aprobada" | "rechazada"
+          fecha_solicitud?: string
+          fecha_actualizacion?: string | null
         }
       }
       talleres: {
         Row: {
           id: string
-          user_id: string | null
+          user_id: string | null // This is the gerente_id
           nombre: string
           direccion: string | null
           telefono: string | null
@@ -457,7 +519,38 @@ export interface Database {
       }
     }
     Views: {
-      [_ in never]: never
+      users_with_roles: {
+        Row: {
+          user_auth_id: string | null
+          user_email: string | null
+          user_created_at: string | null
+          perfil_id: string | null
+          perfil_nombre: string | null
+          perfil_apellido: string | null
+          perfil_correo: string | null
+          perfil_telefono: string | null
+          perfil_direccion: string | null
+          perfil_estado: boolean | null
+          perfil_actualizado: string | null
+          role_id: string | null
+          role_name: string | null
+          role_description: string | null
+        }
+      }
+      talleres_completos: {
+        Row: {
+          id: string | null
+          nombre: string | null
+          direccion: string | null
+          telefono: string | null
+          email: string | null
+          descripcion: string | null
+          gerente_id: string | null
+          fecha_registro_taller: string | null
+          estado_solicitud: "pendiente" | "aprobada" | "rechazada" | null
+          solicitud_enviada: string | null // Renamed from fecha_solicitud_original
+        }
+      }
     }
     Functions: {
       [_ in never]: never
