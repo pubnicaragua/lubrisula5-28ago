@@ -28,7 +28,6 @@ export type UserType = {
 const USER_SERVICE = {
     async GET_ALL_USERS(): Promise<UserType[]> {
         const res: UserType[] = await AxiosGet({ path: '/perfil_usuario' })
-        const res: UserType[] = await AxiosGet({ path: '/roles' })
         console.log('GET_ALL_USERS', res);
         return res;
     },
