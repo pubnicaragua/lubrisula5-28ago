@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
-  signOut: async () => {},
+  signOut: async () => { },
 })
 
 // Función para normalizar roles (convertir SuperAdmin a superadmin, etc.)
@@ -136,9 +136,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    router.push("/auth/login")
+    try {
+
+      console.log("Signing out...")
+     const res = await supabase.auth.signOut()
+     console.log(res)
+      console.log("Signing out...")
+      setUser(null)
+      console.log("Signing out...")
+      // router.push("/auth/login")
+      console.log("Signing out...")
+    } catch (error) {
+      console.log("Error signing out:", error.message)
+    }
   }
 
   const value = {

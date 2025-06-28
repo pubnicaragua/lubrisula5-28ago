@@ -7,10 +7,18 @@ export async function middleware(request: NextRequest) {
   const supabase = createMiddlewareClient({ req: request, res })
 
   // Verificar sesión
+  // try {
+  //   await supabase.auth.signOut()
+
+  // } catch (error) {
+  //   console.error("Error al verificar sesión:", error)
+  // }
   const {
     data: { session },
   } = await supabase.auth.getSession()
+  console.log("Middleware - Session:", session)
 
+  console.log('no hay session===>', session)
   // Rutas públicas que no requieren autenticación
   const publicRoutes = [
     "/",
@@ -31,18 +39,17 @@ export async function middleware(request: NextRequest) {
     "/initialize-database",
     "/admin/sync-roles",
   ]
-
+  console.log(request.nextUrl.pathname, "Middleware - Request Pathname")
   const isPublicRoute = publicRoutes.some(
-    (route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route),
+    (route) => request.nextUrl.pathname === route,
   )
+
+  console.log("Middleware - Is Public Route:", isPublicRoute)
 
   // Si no hay sesión y no es ruta pública, redirigir a login
   if (
     !session &&
-    !isPublicRoute &&
-    !request.nextUrl.pathname.startsWith("/_next") &&
-    !request.nextUrl.pathname.startsWith("/api") &&
-    !request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
+    isPublicRoute === false
   ) {
     return NextResponse.redirect(new URL("/auth/login", request.url))
   }

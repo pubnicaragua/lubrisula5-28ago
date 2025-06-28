@@ -12,14 +12,17 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/supabase/auth"
 
 export function UserNav() {
+  const router = useRouter()
   const { user, signOut } = useAuth()
 
   const handleSignOut = async () => {
     try {
       await signOut()
+      // router.push("/auth/login")
     } catch (error) {
       console.error("Error al cerrar sesión:", error)
     }
