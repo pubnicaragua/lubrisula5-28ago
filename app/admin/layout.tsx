@@ -49,13 +49,13 @@ export default async function AdminLayout({
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         </div>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-12 lg:col-span-3 space-y-4">
+        <div className="grid grid-cols-12 gap-4 h-screen">
+          <div className="col-span-12 lg:col-span-3 space-y-4 h-screen overflow-y-auto">
             <AdminNav />
           </div>
-          <div className="col-span-12 lg:col-span-9 space-y-4">{children}</div>
+          <div className="col-span-12 lg:col-span-9 space-y-4 h-screen">{children}</div>
         </div>
-      </div>
+      </div>  
     </div>
   )
 }

@@ -24,28 +24,20 @@ import { AxiosGet } from "./AxiosServices";
 //     profile?: UserProfile,
 //     role?: UserRole
 // };
-export type UserType = {
-    user_auth_id: string;
-    user_email: string;
-    user_created_at: string;
-    perfil_id: string;
-    perfil_nombre: string | null;
-    perfil_apellido: string | null;
-    perfil_correo: string | null;
-    perfil_telefono: string | null;
-    perfil_estado: string | null;
-    perfil_actualizado: string | null;
-    role_id: number | null;
-    role_name: string | null;
-    role_description: string | null;
-}
+export type TallerType = {
+    id: string;
+    nombre: string;
+    direccion: string;
+    telefono: string;
+    gerente_id: string;
+};
 
-const USER_SERVICE = {
-    async GET_ALL_USERS(): Promise<UserType[]> {
-        const UsuariosData: UserType[] = await AxiosGet({ path: '/users_with_roles' })
+const TALLER_SERVICES = {
+    async GET_ALL_TALLERES(): Promise<TallerType[]> {
+        const TalleresData: TallerType[] = await AxiosGet({ path: '/talleres' })
 
-        console.log('GET_ALL_USERS', UsuariosData);
-        return UsuariosData;
+        console.log('GET ALL TALLERES', TalleresData);
+        return TalleresData;
     },
     async getUserById(userId: string) {
         const res = await AxiosGet({ path: '/users' })
@@ -61,4 +53,4 @@ const USER_SERVICE = {
     },
 };
 
-export default USER_SERVICE
+export default TALLER_SERVICES

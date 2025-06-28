@@ -78,7 +78,8 @@ export default function UsuariosPage() {
         throw new Error(result.error)
       }
 
-      setUsers(result.data)
+      // setUsers(result.data)
+      setUsers([])
     } catch (error) {
       console.error("Error al obtener usuarios:", error)
       setError("Error al cargar los usuarios. Por favor, inténtelo de nuevo.")
@@ -187,13 +188,13 @@ export default function UsuariosPage() {
     const headers = ["Nombre", "Apellido", "Email", "Teléfono", "Rol", "Fecha de Registro", "Estado"]
 
     const csvData = filteredUsers.map((user) => [
-      user.profile?.nombre || "",
-      user.profile?.apellido || "",
-      user.correo,
-      user.profile?.telefono || "",
-      user?.role?.nombre,
-      new Date(user.created_at).toLocaleDateString(),
-      user.is_active ? "Activo" : "Inactivo",
+      user.perfil_nombre || "",
+      user.perfil_apellido || "",
+      user?.perfil_correo,
+      user.perfil_telefono || "",
+      user.role_name,
+      new Date(user.user_created_at).toLocaleDateString(),
+      user.perfil_estado ? "Activo" : "Inactivo",
     ])
 
     const csvContent = [headers.join(","), ...csvData.map((row) => row.join(","))].join("\n")
@@ -212,17 +213,17 @@ export default function UsuariosPage() {
   const filteredUsers = UsersData.filter((user) => {
     // Filtro de búsqueda
     const matchesSearch =
-      user.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.profile?.nombre && user.profile.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.profile?.apellido && user.profile.apellido.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      user?.role?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      user?.perfil_correo?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      (user?.perfil_nombre && user?.perfil_nombre?.toLowerCase().includes(searchTerm?.toLowerCase())) ||
+      (user?.perfil_apellido && user?.perfil_apellido?.toLowerCase().includes(searchTerm?.toLowerCase())) ||
+      user?.role_name?.toLowerCase().includes(searchTerm?.toLowerCase())
 
     // Filtro de rol
-    const matchesRole = !roleFilter || user?.role?.nombre === roleFilter
+    const matchesRole = !roleFilter || user.role_name === roleFilter
 
     // Filtro de estado
     const matchesStatus =
-      !statusFilter || (statusFilter === "activo" && user.is_active) || (statusFilter === "inactivo" && !user.is_active)
+      !statusFilter || (statusFilter === "activo" && user.perfil_estado) || (statusFilter === "inactivo" && !user.perfil_estado)
 
     return matchesSearch && matchesRole && matchesStatus
   })
@@ -353,47 +354,47 @@ export default function UsuariosPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Rol</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Último Acceso</TableHead>
+                    {/* <TableHead>Último Acceso</TableHead> */}
                     <TableHead>Fecha de Registro</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.perfil_id}>
                       <TableCell>
-                        {user.profile ? (
+                        {user.perfil_id ? (
                           <div className="font-medium">
-                            {user.profile.nombre} {user.profile.apellido}
-                            {user.profile.telefono && (
-                              <div className="text-xs text-muted-foreground mt-1">Tel: {user.profile.telefono}</div>
+                            {user?.perfil_nombre} {user.perfil_apellido}
+                            {user.perfil_telefono && (
+                              <div className="text-xs text-muted-foreground mt-1">Tel: {user.perfil_telefono}</div>
                             )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">Sin perfil</span>
                         )}
                       </TableCell>
-                      <TableCell>{user.correo}</TableCell>
+                      <TableCell>{user?.perfil_correo}</TableCell>
                       <TableCell>
                         <Badge
                           //className={getRoleBadgeColor(user.role?.nombre)}
                           variant="outline"
                         >
-                          {user?.role?.nombre}
+                          {user.role_name}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={user.is_active ? "outline" : "destructive"}
-                          className={user.is_active ? "bg-green-50 text-green-700" : ""}
+                          variant={user.perfil_estado ? "outline" : "destructive"}
+                          className={user.perfil_estado ? "bg-green-50 text-green-700" : ""}
                         >
-                          {user.is_active ? "Activo" : "Inactivo"}
+                          {user.perfil_estado ? "Activo" : "Inactivo"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         {user?.last_sign_in_at ? new Date(user?.last_sign_in_at).toLocaleDateString() : "Nunca"}
-                      </TableCell>
-                      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                      </TableCell> */}
+                      <TableCell>{new Date(user.user_created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -406,15 +407,17 @@ export default function UsuariosPage() {
                             <DropdownMenuSeparator />
                             <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
                               <DropdownMenuItem asChild>
-                                <Link href={`/admin/usuarios/${user.id}`} className="cursor-pointer">
+                                <Link href={`/admin/usuarios/${user.perfil_id}`} className="cursor-pointer">
                                   <Edit className="mr-2 h-4 w-4" />
                                   Editar
                                 </Link>
                               </DropdownMenuItem>
                             </Can>
                             <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
-                              <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.is_active)}>
-                                {user.is_active ? (
+                              <DropdownMenuItem onClick={() => handleToggleUserStatus(user.perfil_id, 
+                                true//user.perfil_estado
+                                )}>
+                                {user.perfil_estado ? (
                                   <>
                                     <XCircle className="mr-2 h-4 w-4" />
                                     Desactivar
@@ -428,7 +431,7 @@ export default function UsuariosPage() {
                               </DropdownMenuItem>
                             </Can>
                             <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
-                              <DropdownMenuItem onClick={() => handleSendPasswordReset(user.correo)}>
+                              <DropdownMenuItem onClick={() => handleSendPasswordReset(user?.perfil_correo)}>
                                 <Mail className="mr-2 h-4 w-4" />
                                 Restablecer contraseña
                               </DropdownMenuItem>
@@ -494,7 +497,9 @@ export default function UsuariosPage() {
               Ingrese los datos del nuevo usuario. Se enviará un correo de confirmación.
             </DialogDescription>
           </DialogHeader>
-          <RegisterForm isAdmin={true} />
+          <RegisterForm
+          //isAdmin={true}
+          />
         </DialogContent>
       </Dialog>
 
@@ -511,13 +516,13 @@ export default function UsuariosPage() {
             {userToDelete && (
               <div className="space-y-2">
                 <p>
-                  <strong>Usuario:</strong> {userToDelete.profile?.nombre} {userToDelete.profile?.apellido}
+                  <strong>Usuario:</strong> {userToDelete.perfil_nombre} {userToDelete.perfil_apellido}
                 </p>
                 <p>
-                  <strong>Email:</strong> {userToDelete.correo}
+                  <strong>Email:</strong> {userToDelete.perfil_correo}
                 </p>
                 <p>
-                  <strong>Rol:</strong> {userToDelete.role.nombre}
+                  <strong>Rol:</strong> {userToDelete.role_name}
                 </p>
               </div>
             )}

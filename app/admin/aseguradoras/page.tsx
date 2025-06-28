@@ -1,11 +1,13 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+// import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AseguradorasPage } from "@/components/aseguradoras/aseguradoras-page"
-
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 export const dynamic = "force-dynamic"
 
 async function fetchAseguradoras() {
-  const supabaseClient = createServerSupabaseClient()
+
+  const supabaseClient = createServerComponentClient({ cookies })
 
   // Verificar si el usuario está autenticado
   const {
