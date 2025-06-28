@@ -49,8 +49,9 @@ import {
   sendPasswordResetEmail,
   type UserWithDetails,
 } from "@/lib/actions/users"
+import USER_SERVICE, { UserType } from "@/services/USER_SERVICES"
 
-interface User extends UserWithDetails {}
+interface User extends UserWithDetails { }
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -61,10 +62,11 @@ export default function UsuariosPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [userToDelete, setUserToDelete] = useState<UserType | null>(null)
   const [pageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const { toast } = useToast()
+  const [UsersData, SetUsersData] = useState<UserType[]>([])
 
   // Memoized fetch function to prevent unnecessary re-renders
   const fetchUsers = useCallback(async () => {
@@ -84,10 +86,19 @@ export default function UsuariosPage() {
       setLoading(false)
     }
   }, [])
+  const Fn_GET_USERS = async () => {
+    const res = await USER_SERVICE.GET_ALL_USERS()
+    console.log(res)
+    SetUsersData(res)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+    Fn_GET_USERS()
+  }, [])
+  // useEffect(() => {
+  //   fetchUsers()
+  // }, [fetchUsers])
 
   const handleDeleteUser = async () => {
     if (!userToDelete) return
@@ -178,9 +189,9 @@ export default function UsuariosPage() {
     const csvData = filteredUsers.map((user) => [
       user.profile?.nombre || "",
       user.profile?.apellido || "",
-      user.email,
+      user.correo,
       user.profile?.telefono || "",
-      user.role.nombre,
+      user?.role?.nombre,
       new Date(user.created_at).toLocaleDateString(),
       user.is_active ? "Activo" : "Inactivo",
     ])
@@ -198,16 +209,16 @@ export default function UsuariosPage() {
   }
 
   // Filtrar usuarios
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = UsersData.filter((user) => {
     // Filtro de búsqueda
     const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.profile?.nombre && user.profile.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.profile?.apellido && user.profile.apellido.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      user.role.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      user?.role?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
 
     // Filtro de rol
-    const matchesRole = !roleFilter || user.role.nombre === roleFilter
+    const matchesRole = !roleFilter || user?.role?.nombre === roleFilter
 
     // Filtro de estado
     const matchesStatus =
@@ -218,9 +229,9 @@ export default function UsuariosPage() {
 
   // Paginación
   const totalPages = Math.ceil(filteredUsers.length / pageSize)
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const paginatedUsers: UserType[] = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role?: string) => {
     switch (role.toLowerCase()) {
       case "admin":
       case "super administrador":
@@ -362,10 +373,13 @@ export default function UsuariosPage() {
                           <span className="text-muted-foreground">Sin perfil</span>
                         )}
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.correo}</TableCell>
                       <TableCell>
-                        <Badge className={getRoleBadgeColor(user.role.nombre)} variant="outline">
-                          {user.role.nombre}
+                        <Badge
+                          //className={getRoleBadgeColor(user.role?.nombre)}
+                          variant="outline"
+                        >
+                          {user?.role?.nombre}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -377,7 +391,7 @@ export default function UsuariosPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : "Nunca"}
+                        {user?.last_sign_in_at ? new Date(user?.last_sign_in_at).toLocaleDateString() : "Nunca"}
                       </TableCell>
                       <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
@@ -414,7 +428,7 @@ export default function UsuariosPage() {
                               </DropdownMenuItem>
                             </Can>
                             <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
-                              <DropdownMenuItem onClick={() => handleSendPasswordReset(user.email)}>
+                              <DropdownMenuItem onClick={() => handleSendPasswordReset(user.correo)}>
                                 <Mail className="mr-2 h-4 w-4" />
                                 Restablecer contraseña
                               </DropdownMenuItem>
@@ -500,7 +514,7 @@ export default function UsuariosPage() {
                   <strong>Usuario:</strong> {userToDelete.profile?.nombre} {userToDelete.profile?.apellido}
                 </p>
                 <p>
-                  <strong>Email:</strong> {userToDelete.email}
+                  <strong>Email:</strong> {userToDelete.correo}
                 </p>
                 <p>
                   <strong>Rol:</strong> {userToDelete.role.nombre}

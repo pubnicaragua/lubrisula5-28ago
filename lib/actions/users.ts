@@ -63,6 +63,7 @@ export async function getUsers() {
         is_active: !user.banned_until,
       }
     })
+    console.log(combinedUsers)
 
     return { success: true, data: combinedUsers }
   } catch (error) {

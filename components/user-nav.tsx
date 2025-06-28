@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/supabase/auth"
+// import supabase from "@/lib/supabase/client"
+// import { useAuth } from "@/lib/supabase/auth"
 
 export function UserNav() {
   const router = useRouter()
@@ -21,8 +23,13 @@ export function UserNav() {
 
   const handleSignOut = async () => {
     try {
+      // await signOut()
+      console.log('entra')
+      // await supabase.auth.signOut()
       await signOut()
-      // router.push("/auth/login")
+      console.log('pasa')
+      router.push("/auth/login")
+      console.log('pasa')
     } catch (error) {
       console.error("Error al cerrar sesión:", error)
     }

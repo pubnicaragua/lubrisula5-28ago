@@ -19,10 +19,10 @@ export default function SupabaseConnectionStatus() {
     try {
       // Llamar a la ruta de API en el servidor para verificar la conexión
       const response = await fetch("/api/check-supabase-connection")
-      const data = await response.json()
+      const data = response
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Error al conectar con Supabase")
+      if (!response.ok || data.status !== 200) {
+        throw new Error(data.statusText || "Error al conectar con Supabase")
       }
 
       setStatus("connected")
