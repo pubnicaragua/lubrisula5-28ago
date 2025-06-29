@@ -63,7 +63,7 @@ export function AdminNav() {
         Usuarios
       </Link>
       <Link
-        href="/solicitudes"
+        href="/admin/solicitudes"
         className={cn(
           "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           pathname === "/admin/talleres" ? "bg-accent" : "transparent",

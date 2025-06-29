@@ -1,55 +1,46 @@
 import { AxiosGet } from "./AxiosServices";
-// type UserProfile = {
-//     auth_id?: number,
-//     nombre?: string,
-//     apellido?: string,
-//     telefono?: string
-// };
-// type UserRole = {
-//     id?: number;
-//     nombre?: string;
-// };
-// export type UserType = {
-//     id: string;
-//     created_at: string;
-//     nombre: string;
-//     apellido: string;
-//     correo: string;
-//     telefono: string;
-//     estado: string | null;
-//     actualizado: string;
-//     auth_id: string;
-//     last_sign_in_at: string,
-//     is_active: boolean,
-//     profile?: UserProfile,
-//     role?: UserRole
-// };
-export type TallerType = {
-    id: string;
-    nombre: string;
-    direccion: string;
-    telefono: string;
-    gerente_id: string;
-};
 
+// export type SolicitudesTalleresType = {
+//     id: number
+//     user_auth_id: string | null
+//     nombre_taller: string
+//     direccion: string
+//     ciudad: string
+//     estado: string
+//     codigo_postal: string
+//     nombre_contacto: string
+//     telefono: string
+//     email: string
+//     descripcion: string | null
+//     modulos_seleccionados: string[]
+//     estado_solicitud: "pendiente" | "aprobada" | "rechazada"
+//     fecha_solicitud: string
+//     fecha_actualizacion: string | null
+// }
+
+export type TallerSolicitudType = {
+    id: number;
+    user_auth_id: string;
+    nombre_taller: string;
+    direccion: string;
+    ciudad: string;
+    estado: string;
+    codigo_postal: string;
+    nombre_contacto: string;
+    telefono: string;
+    email: string;
+    descripcion: string;
+    modulos_seleccionados: string[];
+    estado_solicitud: "pendiente" | "aprobada" | "rechazada";
+    fecha_solicitud: string;
+    fecha_actualizacion: string;
+}
 const TALLER_SERVICES = {
-    async GET_ALL_TALLERES(): Promise<TallerType[]> {
-        const TalleresData: TallerType[] = await AxiosGet({ path: '/talleres' })
+    async GET_ALL_TALLERES(): Promise<TallerSolicitudType[]> {
+        const TalleresData: TallerSolicitudType[] = await AxiosGet({ path: '/solicitudes_talleres' })
 
         console.log('GET ALL TALLERES', TalleresData);
         return TalleresData;
-    },
-    async getUserById(userId: string) {
-        const res = await AxiosGet({ path: '/users' })
-        return res;
-    },
-
-    async updateUser(userId: string, updates: Record<string, any>) {
-        return 1
-    },
-
-    async deleteUser(userId: string) {
-        return 1
     },
 };
 
