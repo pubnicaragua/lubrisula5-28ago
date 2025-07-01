@@ -19,7 +19,7 @@ export function Can({ children, perform, roles = [] }: CanProps) {
 
   // SuperAdmin siempre tiene acceso a todo
   if (user.role === "superadmin") {
-    return <>{children}</>
+    // return <>{children}</>
   }
 
   // Verificar si el rol del usuario está en los roles permitidos
@@ -31,7 +31,7 @@ export function Can({ children, perform, roles = [] }: CanProps) {
   // Implementar lógica de permisos específicos si es necesario
   // Por ahora, simplemente verificamos el rol
 
-  return <>{children}</>
+  // return <>{children}</>
 }
 
 export default Can

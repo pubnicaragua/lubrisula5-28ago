@@ -29,7 +29,7 @@ import {
   Mail,
   Loader2,
 } from "lucide-react"
-import { Can } from "@/components/auth/can"
+// import { Can } from "@/components/auth/can"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { RegisterForm } from "@/components/auth/register-form"
@@ -259,12 +259,12 @@ export default function UsuariosPage() {
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">Administra los usuarios del sistema</p>
         </div>
-        <Can perform="create:users" roles={["admin", "superadmin", "taller"]}>
           <Button onClick={() => setShowCreateDialog(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Nuevo Usuario
           </Button>
-        </Can>
+        {/* <Can perform="create:users" roles={["admin", "superadmin", "taller"]}>
+        </Can> */}
       </div>
 
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
