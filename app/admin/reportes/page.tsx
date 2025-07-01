@@ -1,5 +1,5 @@
-import Reportes from "@/app/reportes/page";
+import { ReportesPage } from "@/components/reportes/reportes-page";
 
 export default function AdminReportesPage(){
-    return <Reportes />
+    return <ReportesPage />
 }

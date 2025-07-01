@@ -60,11 +60,11 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     // Simular delay de procesamiento
     await new Promise((resolve) => setTimeout(resolve, 1000))
-
+    
     onSubmit(formData)
+    console.log(formData)
 
     // Limpiar formulario si no es edición
     if (!clienteExistente) {

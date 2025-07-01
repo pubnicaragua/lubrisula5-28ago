@@ -71,7 +71,9 @@ export function CotizacionesPage({ initialCotizaciones = [], tablesExist = false
     setLoading(true)
     try {
       const { success, data, error: quotationsError, isTableMissing } = await getQuotations()
-
+      console.log(success)
+      console.log(data)
+      console.log(isTableMissing)
       if (isTableMissing) {
         setError("La base de datos no está configurada correctamente. Las tablas necesarias no existen.")
       } else if (!success) {
@@ -81,7 +83,7 @@ export function CotizacionesPage({ initialCotizaciones = [], tablesExist = false
       }
     } catch (err) {
       setError("Error al conectar con la base de datos")
-      console.error("Error loading quotations:", err)
+      console.error("Error loading quotations:", err.message)
     } finally {
       setLoading(false)
     }

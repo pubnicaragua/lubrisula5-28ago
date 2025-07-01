@@ -1,10 +1,10 @@
 "use server"
 
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getAseguradoras() {
-  const supabaseClient = createServerSupabaseClient()
+  const supabaseClient = await getServerClient()
 
   try {
     const { data, error } = await supabaseClient
@@ -29,7 +29,7 @@ export async function getAseguradoras() {
 }
 
 export async function getAseguradoraById(id: number) {
-  const supabaseClient = createServerSupabaseClient()
+  const supabaseClient = await getServerClient()
 
   try {
     const { data, error } = await supabaseClient
@@ -63,7 +63,7 @@ interface AseguradoraData {
 }
 
 export async function crearAseguradora(data: AseguradoraData) {
-  const supabaseClient = createServerSupabaseClient()
+  const supabaseClient = await getServerClient()
 
   try {
     const { data: newAseguradora, error } = await supabaseClient.from("aseguradoras").insert([data]).select()
@@ -82,8 +82,9 @@ export async function crearAseguradora(data: AseguradoraData) {
 }
 
 export async function actualizarAseguradora(id: number, data: AseguradoraData) {
-  const supabaseClient = createServerSupabaseClient()
-
+  const supabaseClient = await getServerClient()
+  console.log(id)
+  console.log(data)
   try {
     const { data: updatedAseguradora, error } = await supabaseClient
       .from("aseguradoras")
@@ -105,7 +106,7 @@ export async function actualizarAseguradora(id: number, data: AseguradoraData) {
 }
 
 export async function eliminarAseguradora(id: number) {
-  const supabaseClient = createServerSupabaseClient()
+  const supabaseClient = await getServerClient()
 
   try {
     // Verificar si hay clientes o siniestros asociados a esta aseguradora

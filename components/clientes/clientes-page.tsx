@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES"
 
 interface Cliente {
   id: string
@@ -85,41 +86,43 @@ const clientesIniciales: Cliente[] = [
 ]
 
 export function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [State_Clientes, setState_Clientes] = useState<ClienteType[]>([])
   const [open, setOpen] = useState(false)
-  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
+  const [editingCliente, setEditingCliente] = useState<ClienteType | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
+  const [clienteToDelete, setClienteToDelete] = useState<ClienteType | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
+  const FN_GET_CLIENTS = async () => {
+    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
+    console.log(res)
+    setState_Clientes(res)
+    console.log('GET CLIENTS', res);
+  }
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
-    const savedClientes = localStorage.getItem("clientes")
-    if (savedClientes) {
-      setClientes(JSON.parse(savedClientes))
-    } else {
-      setClientes(clientesIniciales)
-      localStorage.setItem("clientes", JSON.stringify(clientesIniciales))
-    }
+    FN_GET_CLIENTS()
   }, [])
 
   // Guardar en localStorage cuando cambie el estado
   useEffect(() => {
-    if (clientes.length > 0) {
-      localStorage.setItem("clientes", JSON.stringify(clientes))
+    console.log(State_Clientes)
+    if (State_Clientes.length > 0) {
+      localStorage.setItem("clientes", JSON.stringify(State_Clientes))
     }
-  }, [clientes])
+  }, [State_Clientes])
 
   const handleAddCliente = (nuevoCliente: Omit<Cliente, "id" | "fechaRegistro" | "estado">) => {
-    const cliente: Cliente = {
+    console.log(nuevoCliente)
+    const VarCliente: ClienteType = {
       ...nuevoCliente,
       id: Date.now().toString(),
-      fechaRegistro: new Date().toISOString().split("T")[0],
-      estado: "Activo",
+      created_at: new Date().toISOString().split("T")[0],
+      status: "Activo",
     }
 
-    setClientes((prev) => [...prev, cliente])
+    setState_Clientes((prev) => [...prev, VarCliente])
     setOpen(false)
 
     toast({
@@ -131,12 +134,12 @@ export function ClientesPage() {
   const handleEditCliente = (clienteEditado: Omit<Cliente, "id" | "fechaRegistro" | "estado">) => {
     if (!editingCliente) return
 
-    const clienteActualizado: Cliente = {
+    const clienteActualizado: ClienteType = {
       ...editingCliente,
       ...clienteEditado,
     }
 
-    setClientes((prev) => prev.map((c) => (c.id === editingCliente.id ? clienteActualizado : c)))
+    setState_Clientes((prev) => prev.map((c) => (c.id === editingCliente.id ? clienteActualizado : c)))
     setEditingCliente(null)
     setOpen(false)
 
@@ -149,7 +152,7 @@ export function ClientesPage() {
   const handleDeleteCliente = () => {
     if (!clienteToDelete) return
 
-    setClientes((prev) => prev.filter((c) => c.id !== clienteToDelete.id))
+    setState_Clientes((prev) => prev.filter((c) => c.id !== clienteToDelete.id))
     setDeleteDialogOpen(false)
     setClienteToDelete(null)
 
@@ -159,25 +162,25 @@ export function ClientesPage() {
     })
   }
 
-  const openEditDialog = (cliente: Cliente) => {
+  const openEditDialog = (cliente: ClienteType) => {
     setEditingCliente(cliente)
     setOpen(true)
   }
 
-  const openDeleteDialog = (cliente: Cliente) => {
+  const openDeleteDialog = (cliente: ClienteType) => {
     setClienteToDelete(cliente)
     setDeleteDialogOpen(true)
   }
 
-  const filteredClientes = clientes.filter(
+  const filteredClientes = State_Clientes.filter(
     (cliente) =>
-      cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cliente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cliente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (cliente.empresa && cliente.empresa.toLowerCase().includes(searchTerm.toLowerCase())),
+      (cliente.company && cliente.company.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
-  const getEstadoBadge = (estado: Cliente["estado"]) => {
+  const getEstadoBadge = (estado: "Activo" | "Inactivo") => {
     return estado === "Activo" ? (
       <Badge className="bg-green-500 hover:bg-green-600">{estado}</Badge>
     ) : (
@@ -185,7 +188,7 @@ export function ClientesPage() {
     )
   }
 
-  const getTipoClienteBadge = (tipo: Cliente["tipoCliente"]) => {
+  const getTipoClienteBadge = (tipo: string) => {
     const colors = {
       Individual: "bg-blue-500 hover:bg-blue-600",
       Empresa: "bg-purple-500 hover:bg-purple-600",
@@ -196,15 +199,15 @@ export function ClientesPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+    <main className="container mx-auto h-full overflow-auto">
+      {/* <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
         <MainNav />
         <div className="ml-auto flex items-center gap-4">
           <ModeToggle />
           <UserNav />
         </div>
-      </header>
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+      </header> */}
+      <div className="flex-1 p-1">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Clientes</h1>
           <div className="flex items-center gap-2">
@@ -257,16 +260,16 @@ export function ClientesPage() {
           <TabsList>
             <TabsTrigger value="todos">Todos ({filteredClientes.length})</TabsTrigger>
             <TabsTrigger value="individuales">
-              Individuales ({filteredClientes.filter((c) => c.tipoCliente === "Individual").length})
+              Individuales ({filteredClientes.filter((c) => c.client_type === "Individual").length})
             </TabsTrigger>
             <TabsTrigger value="empresas">
-              Empresas ({filteredClientes.filter((c) => c.tipoCliente === "Empresa").length})
+              Empresas ({filteredClientes.filter((c) => c.client_type === "Empresa").length})
             </TabsTrigger>
             <TabsTrigger value="flotas">
-              Flotas ({filteredClientes.filter((c) => c.tipoCliente === "Flota").length})
+              Flotas ({filteredClientes.filter((c) => c.client_type === "Flota").length})
             </TabsTrigger>
             <TabsTrigger value="aseguradoras">
-              Aseguradoras ({filteredClientes.filter((c) => c.tipoCliente === "Aseguradora").length})
+              Aseguradoras ({filteredClientes.filter((c) => c.client_type === "Aseguradora").length})
             </TabsTrigger>
           </TabsList>
 
@@ -295,14 +298,14 @@ export function ClientesPage() {
                     {filteredClientes.map((cliente) => (
                       <TableRow key={cliente.id}>
                         <TableCell className="font-medium">
-                          {cliente.nombre} {cliente.apellido}
-                          {cliente.empresa && <div className="text-sm text-muted-foreground">{cliente.empresa}</div>}
+                          {cliente.name} 
+                          {cliente.company && <div className="text-sm text-muted-foreground">{cliente.company}</div>}
                         </TableCell>
                         <TableCell>{cliente.email}</TableCell>
-                        <TableCell>{cliente.telefono}</TableCell>
-                        <TableCell>{getTipoClienteBadge(cliente.tipoCliente)}</TableCell>
-                        <TableCell>{getEstadoBadge(cliente.estado)}</TableCell>
-                        <TableCell>{cliente.fechaRegistro}</TableCell>
+                        <TableCell>{cliente.phone}</TableCell>
+                        <TableCell>{getTipoClienteBadge(cliente.client_type)}</TableCell>
+                        <TableCell>{getEstadoBadge(cliente.status)}</TableCell>
+                        <TableCell>{cliente.created_at}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button
@@ -340,7 +343,7 @@ export function ClientesPage() {
               aseguradoras: "Aseguradora",
             }
             const tipo = tipoMap[tab as keyof typeof tipoMap] as Cliente["tipoCliente"]
-            const clientesFiltrados = filteredClientes.filter((c) => c.tipoCliente === tipo)
+            const clientesFiltrados = filteredClientes.filter((c) => c.client_type === tipo)
 
             return (
               <TabsContent key={tab} value={tab}>
@@ -367,15 +370,15 @@ export function ClientesPage() {
                         {clientesFiltrados.map((cliente) => (
                           <TableRow key={cliente.id}>
                             <TableCell className="font-medium">
-                              {cliente.nombre} {cliente.apellido}
-                              {cliente.empresa && (
-                                <div className="text-sm text-muted-foreground">{cliente.empresa}</div>
+                              {cliente.name} 
+                              {cliente.company && (
+                                <div className="text-sm text-muted-foreground">{cliente.company}</div>
                               )}
                             </TableCell>
                             <TableCell>{cliente.email}</TableCell>
-                            <TableCell>{cliente.telefono}</TableCell>
-                            <TableCell>{getEstadoBadge(cliente.estado)}</TableCell>
-                            <TableCell>{cliente.fechaRegistro}</TableCell>
+                            <TableCell>{cliente.phone}</TableCell>
+                            <TableCell>{getEstadoBadge(cliente.status)}</TableCell>
+                            <TableCell>{cliente.created_at}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
                                 <Button
@@ -416,7 +419,7 @@ export function ClientesPage() {
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará permanentemente el cliente{" "}
               <strong>
-                {clienteToDelete?.nombre} {clienteToDelete?.apellido}
+                {clienteToDelete?.name}
               </strong>{" "}
               del sistema.
             </AlertDialogDescription>
@@ -427,6 +430,6 @@ export function ClientesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   )
 }

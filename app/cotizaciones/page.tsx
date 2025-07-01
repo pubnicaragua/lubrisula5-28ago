@@ -5,7 +5,7 @@ export default async function CotizacionesRoute() {
   const supabase = createClient()
 
   // Verificar si las tablas necesarias existen
-  const { data: tablesExist, error: tablesError } = await supabase.rpc("execute_sql", {
+  const { data: tablesExist, error: tablesError } = await (await supabase).rpc("execute_sql", {
     sql_query: `
       SELECT 
         EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'quotations') AS quotations_exists,
@@ -27,7 +27,7 @@ export default async function CotizacionesRoute() {
   // Si todas las tablas existen, obtener las cotizaciones
   let cotizaciones = []
   if (allTablesExist) {
-    const { data, error } = await supabase
+    const { data, error } = await (await supabase)
       .from("quotations")
       .select(`*, client:clients(name), vehicle:vehicles(make, model, year)`)
       .order("created_at", { ascending: false })

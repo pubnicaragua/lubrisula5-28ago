@@ -99,16 +99,17 @@ export async function deleteUser(userId: string) {
 // Cambiar estado de un usuario (activar/desactivar)
 export async function toggleUserStatus(userId: string, isCurrentlyActive: boolean) {
   try {
+    console.log(userId, isCurrentlyActive)
     if (isCurrentlyActive) {
       // Desactivar usuario
       const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-        banned_until: "2100-01-01T00:00:00Z",
+        ban_duration: "2100-01-01T00:00:00Z",
       })
 
       if (error) throw error
     } else {
       // Activar usuario
-      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { banned_until: null })
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { ban_duration: null })
 
       if (error) throw error
     }

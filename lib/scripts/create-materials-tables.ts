@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { getServerClient } from "@/lib/supabase/server"
 
 export async function createMaterialsTables() {
-  const supabase = createClient()
+  const supabase = await getServerClient()
 
   console.log("Iniciando creación de tablas de materiales y procesos...")
 

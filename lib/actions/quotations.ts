@@ -1,6 +1,6 @@
 "use server"
 
-import { getSupabaseServer } from "@/lib/supabase/server"
+import { getServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 // Tipo para la parte de cotización
@@ -37,7 +37,7 @@ type QuotationInput = {
 
 // Obtener todas las cotizaciones
 export async function getQuotations() {
-  const supabase = getSupabaseServer()
+  const supabase = await getServerClient()
 
   try {
     const { data, error } = await supabase
@@ -79,7 +79,7 @@ export async function getQuotations() {
 
 // Crear una nueva cotización
 export async function createQuotation(data: QuotationInput) {
-  const supabase = getSupabaseServer()
+  const supabase = await getServerClient()
 
   try {
     // 1. Crear la cotización principal
@@ -167,7 +167,7 @@ export async function createQuotation(data: QuotationInput) {
 // Reemplazar la función getQuotationById con esta versión actualizada:
 
 export async function getQuotationById(id: string) {
-  const supabase = getSupabaseServer()
+  const supabase = await getServerClient()
 
   try {
     // 1. Obtener la cotización principal
@@ -251,7 +251,7 @@ export async function getQuotationById(id: string) {
 
 // Actualizar una cotización
 export async function updateQuotation(id: string, data: Partial<QuotationInput>) {
-  const supabase = getSupabaseServer()
+  const supabase = await getServerClient()
 
   try {
     // 1. Actualizar la cotización principal
@@ -352,7 +352,7 @@ export async function updateQuotation(id: string, data: Partial<QuotationInput>)
 
 // Eliminar una cotización
 export async function deleteQuotation(id: string) {
-  const supabase = getSupabaseServer()
+  const supabase = await getServerClient()
 
   try {
     // 1. Eliminar las partes de la cotización

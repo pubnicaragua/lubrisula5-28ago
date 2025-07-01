@@ -38,6 +38,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -137,7 +138,8 @@ export default function UsuariosPage() {
     try {
       setLoading(true)
       const result = await toggleUserStatus(userId, isCurrentlyActive)
-
+      console.log(result)
+      console.log(userId, isCurrentlyActive)
       if (!result.success) {
         throw new Error(result.error)
       }
@@ -251,7 +253,7 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="container py-10">
+    <div className="container mx-auto h-full overflow-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
@@ -374,7 +376,7 @@ export default function UsuariosPage() {
                           <span className="text-muted-foreground">Sin perfil</span>
                         )}
                       </TableCell>
-                      <TableCell>{user?.perfil_correo}</TableCell>
+                      <TableCell>{user?.user_email}</TableCell>
                       <TableCell>
                         <Badge
                           //className={getRoleBadgeColor(user.role?.nombre)}
@@ -394,29 +396,37 @@ export default function UsuariosPage() {
                       {/* <TableCell>
                         {user?.last_sign_in_at ? new Date(user?.last_sign_in_at).toLocaleDateString() : "Nunca"}
                       </TableCell> */}
-                      <TableCell>{new Date(user.user_created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(user.user_created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger >
                             <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
-                              <DropdownMenuItem asChild>
+                          <DropdownMenuPortal>
+
+                            <DropdownMenuContent>
+                              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>
                                 <Link href={`/admin/usuarios/${user.perfil_id}`} className="cursor-pointer">
                                   <Edit className="mr-2 h-4 w-4" />
                                   Editar
                                 </Link>
+                                {/* <Can
+                                  perform="edit:users"
+                                  children={<DropdownMenuItem >
+
+                                  </DropdownMenuItem>}
+                                  roles={["admin", "superadmin", "taller"]}
+                                /> */}
                               </DropdownMenuItem>
-                            </Can>
-                            <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
-                              <DropdownMenuItem onClick={() => handleToggleUserStatus(user.perfil_id, 
+                              <DropdownMenuItem onClick={() => handleToggleUserStatus(user.perfil_id,
                                 true//user.perfil_estado
-                                )}>
+                              )}>
                                 {user.perfil_estado ? (
                                   <>
                                     <XCircle className="mr-2 h-4 w-4" />
@@ -429,14 +439,15 @@ export default function UsuariosPage() {
                                   </>
                                 )}
                               </DropdownMenuItem>
-                            </Can>
-                            <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
+                              {/* <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
+
+                              </Can> */}
                               <DropdownMenuItem onClick={() => handleSendPasswordReset(user?.perfil_correo)}>
                                 <Mail className="mr-2 h-4 w-4" />
                                 Restablecer contraseña
                               </DropdownMenuItem>
-                            </Can>
-                            <Can perform="delete:users" roles={["superadmin"]}>
+                              {/* <Can perform="edit:users" roles={["admin", "superadmin", "taller"]}>
+                              </Can> */}
                               <DropdownMenuItem
                                 className="text-red-600"
                                 onClick={() => {
@@ -447,8 +458,11 @@ export default function UsuariosPage() {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Eliminar
                               </DropdownMenuItem>
-                            </Can>
-                          </DropdownMenuContent>
+                              {/* <Can perform="delete:users" roles={["superadmin"]}>
+                              </Can> */}
+                            </DropdownMenuContent>
+                          </DropdownMenuPortal>
+
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
