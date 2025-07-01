@@ -1,10 +1,10 @@
 "use server"
 
-import { getServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getAseguradoras() {
-  const supabaseClient = await getServerClient()
+  const supabaseClient = await createClient()
 
   try {
     const { data, error } = await supabaseClient
@@ -29,7 +29,7 @@ export async function getAseguradoras() {
 }
 
 export async function getAseguradoraById(id: number) {
-  const supabaseClient = await getServerClient()
+  const supabaseClient = await createClient()
 
   try {
     const { data, error } = await supabaseClient
@@ -55,7 +55,7 @@ export async function getAseguradoraById(id: number) {
 }
 
 interface AseguradoraData {
-  nombre: string
+  nombre?: string
   corrreo?: string
   telefono?: string
   estado_tributario?: string
@@ -63,7 +63,7 @@ interface AseguradoraData {
 }
 
 export async function crearAseguradora(data: AseguradoraData) {
-  const supabaseClient = await getServerClient()
+  const supabaseClient = await createClient()
 
   try {
     const { data: newAseguradora, error } = await supabaseClient.from("aseguradoras").insert([data]).select()
@@ -81,24 +81,23 @@ export async function crearAseguradora(data: AseguradoraData) {
   }
 }
 
-export async function actualizarAseguradora(id: number, data: AseguradoraData) {
-  const supabaseClient = await getServerClient()
+export async function actualizarAseguradora(id: number, NewData: AseguradoraData) {
+  const supabaseClient = await createClient()
   console.log(id)
-  console.log(data)
+  console.log(NewData)
   try {
-    const { data: updatedAseguradora, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from("aseguradoras")
-      .update(data)
+      .update(NewData)
       .eq("id", id)
-      .select()
 
     if (error) {
       console.error(`Error al actualizar aseguradora con ID ${id}:`, error.message)
       throw new Error(error.message)
     }
 
-    revalidatePath("/admin/aseguradoras")
-    return updatedAseguradora[0]
+    console.log("====================================>>>>>>>>>>>")
+    // revalidatePath("/admin/aseguradoras")
   } catch (error) {
     console.error(`Error al actualizar aseguradora con ID ${id}:`, error)
     throw error
@@ -106,7 +105,7 @@ export async function actualizarAseguradora(id: number, data: AseguradoraData) {
 }
 
 export async function eliminarAseguradora(id: number) {
-  const supabaseClient = await getServerClient()
+  const supabaseClient = await createClient()
 
   try {
     // Verificar si hay clientes o siniestros asociados a esta aseguradora

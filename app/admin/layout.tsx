@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { AdminNav } from "@/components/admin/admin-nav"
 import { UserNav } from "@/components/user-nav"
 import { ModeToggle } from "@/components/mode-toggle"
+import { createClient } from "@/lib/actions/clients"
 
 export default async function AdminLayout({
   children,
@@ -15,9 +16,9 @@ export default async function AdminLayout({
   // const supabase = createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
   console.log(session)
-  if (!session) {
-    redirect('/auth/login')
-  }
+  // if (!session) {
+  //   redirect('/auth/login')
+  // }
 
   // const { data: user } = await supabase
   //   .from('roles_usuario')
@@ -25,8 +26,8 @@ export default async function AdminLayout({
   //   .eq('user_id', session.user.id)
   //   .single()
 
-  console.log(session.user.user_metadata)
-  const rol = session.user.user_metadata?.role
+  // console.log(session.user.user_metadata)
+  const rol = session?.user?.user_metadata?.role
   console.log('Rol:', rol)
   if (rol !== 'admin' && rol !== 'superadmin') {
     redirect('/dashboard')

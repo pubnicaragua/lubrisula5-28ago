@@ -1,4 +1,4 @@
-import { AxiosGet } from "./AxiosServices";
+import { AxiosGet } from "./AxiosServices.module";
 
 export type UserType = {
     user_auth_id: string;

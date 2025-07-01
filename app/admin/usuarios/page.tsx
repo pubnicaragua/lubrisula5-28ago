@@ -259,10 +259,10 @@ export default function UsuariosPage() {
           <h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">Administra los usuarios del sistema</p>
         </div>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Nuevo Usuario
-          </Button>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Nuevo Usuario
+        </Button>
         {/* <Can perform="create:users" roles={["admin", "superadmin", "taller"]}>
         </Can> */}
       </div>
@@ -362,8 +362,8 @@ export default function UsuariosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedUsers.map((user) => (
-                    <TableRow key={user.perfil_id}>
+                  {paginatedUsers.map((user, index) => (
+                    <TableRow key={index}>
                       <TableCell>
                         {user.perfil_id ? (
                           <div className="font-medium">

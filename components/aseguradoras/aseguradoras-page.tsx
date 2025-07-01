@@ -185,8 +185,9 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
                   title: "Aseguradora actualizada",
                   description: "La aseguradora ha sido actualizada correctamente",
                 })
+                console.log('Aseguradora actualizada:', currentAseguradora)
                 // Recargar la página para actualizar la lista
-                window.location.reload()
+                // window.location.reload()
               }}
             />
           )}

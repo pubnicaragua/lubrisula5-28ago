@@ -1,4 +1,4 @@
-import { AxiosGet } from "./AxiosServices";
+import { AxiosGet } from "./AxiosServices.module";
 
 // export type SolicitudesTalleresType = {
 //     id: number

@@ -11,9 +11,9 @@ export async function AxiosGet({ path }: { path: string }) {
     )
     return res.data
 }
-export function AxiosPost({ path, payload }: { path: string, payload: any }) {
+export async function AxiosPost({ path, payload }: { path: string, payload: any }) {
 
-    axios.post(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/res/v1/${path}`, payload, {
+    await axios.post(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/res/v1${path}`, payload, {
         headers: {
             "Content-Type": "application/json",
             apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
@@ -22,15 +22,23 @@ export function AxiosPost({ path, payload }: { path: string, payload: any }) {
     )
 }
 
-export function AxiosPatch({ path, payload }: { path: string, payload: any }) {
+export async function AxiosPatch({ path, payload }: { path: string, payload: any }) {
+    console.log("AxiosPatch", path, payload)
+    try {
 
-    axios.patch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/res/v1/${path}`, payload, {
-        headers: {
-            "Content-Type": "application/json",
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+        const res = await axios.patch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/res/v1${path}`, payload, {
+            headers: {
+                "Content-Type": "application/json",
+                apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+                Prefer: "return=representation",
+            }
         }
+        )
+        console.log(res)
+        return res.data
+    } catch (error) {
+        console.log(error.message)
     }
-    )
 }
 
 export function AxiosDelete({ path, payload }: { path: string, payload: any }) {
