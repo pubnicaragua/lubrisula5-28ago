@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -19,21 +19,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { NuevaAseguradoraForm } from "./nueva-aseguradora-form"
 import { EditarAseguradoraForm } from "./editar-aseguradora-form"
 import { eliminarAseguradora } from "@/lib/actions/aseguradoras"
-
-interface Aseguradora {
-  id: number
-  nombre: string | null
-  corrreo: string | null
-  telefono: string | null
-  estado_tributario: string | null
-  nivel_tarifa: string | null
-  created_at: string
-  clientes?: any[]
-  flotas?: any[]
-}
+import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
 
 interface AseguradorasPageProps {
-  aseguradoras: Aseguradora[]
+  aseguradoras: AseguradoraType[]
   error: string | null
 }
 
@@ -41,22 +30,43 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
   const { toast } = useToast()
   const [isCreating, setIsCreating] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [currentAseguradora, setCurrentAseguradora] = useState<Aseguradora | null>(null)
+  const [currentAseguradora, setCurrentAseguradora] = useState<AseguradoraType | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [aseguradoraToDelete, setAseguradoraToDelete] = useState<Aseguradora | null>(null)
+  const [aseguradoraToDelete, setAseguradoraToDelete] = useState<AseguradoraType | null>(null)
+  const [State_Aseguradoras, SetState_Aseguradoras] = useState<AseguradoraType[]>([])
 
+
+  const Fn_GET_ASEGURADORAS = async () => {
+    const res: AseguradoraType[] = await ASEGURADORA_SERVICE.GET_ASEGURADORAS()
+    SetState_Aseguradoras(res)
+  }
+  const Fn_UPDATE_ASEGURADORA = (NewDataAseguradora: AseguradoraType) => {
+    SetState_Aseguradoras([...State_Aseguradoras.filter((aseguradora) => aseguradora.id !== NewDataAseguradora.id), NewDataAseguradora])
+  }
+  const Fn_AGREGAR_ASEGURADORA = (NewDataAseguradora: AseguradoraType) => {
+    console.log("Nueva aseguradora agregada:", NewDataAseguradora)
+    SetState_Aseguradoras([...State_Aseguradoras, NewDataAseguradora])
+  }
+  const Fn_ELIMINAR_ASEGURADORA = (id: number) => {
+    SetState_Aseguradoras(State_Aseguradoras.filter((aseguradora) => aseguradora.id !== id))
+  }
+  useEffect(() => {
+    SetState_Aseguradoras(aseguradoras)
+  }, [aseguradoras])
+
+  // Inicializar el estado con las aseguradoras pasadas como props
   const handleDelete = async (id: number) => {
     try {
       setIsDeleting(true)
-      await eliminarAseguradora(id)
+      await ASEGURADORA_SERVICE.DELETE_ASEGURADORA(id)
+      Fn_ELIMINAR_ASEGURADORA(id)
       toast({
         title: "Aseguradora eliminada",
-        description: "La aseguradora ha sido eliminada correctamente",
+        description: "La aseguradora ha sido eliminada correctamente.",
+        variant: "success",
       })
       setIsDeleting(false)
       setAseguradoraToDelete(null)
-      // Recargar la página para actualizar la lista
-      window.location.reload()
     } catch (error) {
       console.error("Error al eliminar aseguradora:", error)
       toast({
@@ -84,14 +94,9 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
               <DialogTitle>Crear Nueva Aseguradora</DialogTitle>
             </DialogHeader>
             <NuevaAseguradoraForm
-              onSuccess={() => {
+              onSuccess={(NewData) => {
                 setIsCreating(false)
-                toast({
-                  title: "Aseguradora creada",
-                  description: "La aseguradora ha sido creada correctamente",
-                })
-                // Recargar la página para actualizar la lista
-                window.location.reload()
+                Fn_AGREGAR_ASEGURADORA(NewData)
               }}
             />
           </DialogContent>
@@ -112,7 +117,7 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
           <CardDescription>Lista de todas las aseguradoras registradas en el sistema.</CardDescription>
         </CardHeader>
         <CardContent>
-          {aseguradoras.length === 0 ? (
+          {State_Aseguradoras.length === 0 ? (
             <div className="text-center py-4">
               <p className="text-muted-foreground">No hay aseguradoras registradas</p>
             </div>
@@ -130,10 +135,10 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {aseguradoras.map((aseguradora) => (
+                {State_Aseguradoras.map((aseguradora) => (
                   <TableRow key={aseguradora.id}>
                     <TableCell className="font-medium">{aseguradora.nombre || "N/A"}</TableCell>
-                    <TableCell>{aseguradora.corrreo || "N/A"}</TableCell>
+                    <TableCell>{aseguradora.correo || "N/A"}</TableCell>
                     <TableCell>{aseguradora.telefono || "N/A"}</TableCell>
                     <TableCell>{aseguradora.estado_tributario || "N/A"}</TableCell>
                     <TableCell>{aseguradora.nivel_tarifa || "N/A"}</TableCell>
@@ -169,6 +174,7 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
         </CardContent>
       </Card>
 
+
       {/* Diálogo para editar aseguradora */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="sm:max-w-[600px]">
@@ -178,16 +184,11 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
           {currentAseguradora && (
             <EditarAseguradoraForm
               aseguradora={currentAseguradora}
-              onSuccess={() => {
+              onSuccess={(data) => {
+                console.log(data)
                 setIsEditing(false)
                 setCurrentAseguradora(null)
-                toast({
-                  title: "Aseguradora actualizada",
-                  description: "La aseguradora ha sido actualizada correctamente",
-                })
-                console.log('Aseguradora actualizada:', currentAseguradora)
-                // Recargar la página para actualizar la lista
-                // window.location.reload()
+                Fn_UPDATE_ASEGURADORA(data)
               }}
             />
           )}
@@ -218,6 +219,7 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </>
   )
 }

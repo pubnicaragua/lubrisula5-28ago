@@ -1,52 +1,74 @@
 "use client"
 
 import { useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { crearAseguradora } from "@/lib/actions/aseguradoras"
 import { Loader2 } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-const formSchema = z.object({
-  nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  corrreo: z.string().email("Correo electrónico inválido").optional().or(z.literal("")),
-  telefono: z.string().min(8, "El teléfono debe tener al menos 8 caracteres").optional().or(z.literal("")),
-  estado_tributario: z.string().optional(),
-  nivel_tarifa: z.string().optional(),
-})
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
 
 interface NuevaAseguradoraFormProps {
-  onSuccess: () => void
+  onSuccess: (NewData: AseguradoraType) => void
 }
 
 export function NuevaAseguradoraForm({ onSuccess }: NuevaAseguradoraFormProps) {
+  const [nombre, setNombre] = useState("")
+  const [corrreo, setCorrreo] = useState("")
+  const [telefono, setTelefono] = useState("")
+  const [estadoTributario, setEstadoTributario] = useState("")
+  const [nivelTarifa, setNivelTarifa] = useState("")
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      nombre: "",
-      corrreo: "",
-      telefono: "",
-      estado_tributario: "",
-      nivel_tarifa: "",
-    },
-  })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Validaciones básicas
+    if (nombre.trim().length < 2) {
+      setError("El nombre debe tener al menos 2 caracteres")
+      return
+    }
+
+    if (corrreo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(corrreo)) {
+      setError("Correo electrónico inválido")
+      return
+    }
+
+    if (telefono && telefono.length < 8) {
+      setError("El teléfono debe tener al menos 8 caracteres")
+      return
+    }
+
     try {
       setIsSubmitting(true)
       setError(null)
 
-      await crearAseguradora(values)
-      onSuccess()
-    } catch (error) {
-      console.error("Error al crear aseguradora:", error)
+      // await crearAseguradora({
+      //   nombre,
+      //   corrreo,
+      //   telefono,
+      //   estado_tributario: estadoTributario,
+      //   nivel_tarifa: nivelTarifa,
+      // })
+      const NewData = {
+        nombre,
+        correo: corrreo,
+        telefono,
+        estado_tributario: estadoTributario,
+        nivel_tarifa: nivelTarifa,
+      }
+      await ASEGURADORA_SERVICE.INSERT_ASEGURADORA(NewData)
+      onSuccess(NewData)
+    } catch (err) {
+      console.error("Error al crear aseguradora:", err)
       setError("No se pudo crear la aseguradora. Intente nuevamente.")
     } finally {
       setIsSubmitting(false)
@@ -54,105 +76,70 @@ export function NuevaAseguradoraForm({ onSuccess }: NuevaAseguradoraFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="nombre"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nombre</FormLabel>
-              <FormControl>
-                <Input placeholder="Nombre de la aseguradora" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium">Nombre</label>
+        <Input
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Nombre de la aseguradora"
         />
+      </div>
 
-        <FormField
-          control={form.control}
-          name="corrreo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Correo Electrónico</FormLabel>
-              <FormControl>
-                <Input placeholder="correo@ejemplo.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      <div>
+        <label className="block text-sm font-medium">Correo Electrónico</label>
+        <Input
+          value={corrreo}
+          onChange={(e) => setCorrreo(e.target.value)}
+          placeholder="correo@ejemplo.com"
         />
+      </div>
 
-        <FormField
-          control={form.control}
-          name="telefono"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Teléfono</FormLabel>
-              <FormControl>
-                <Input placeholder="Teléfono" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      <div>
+        <label className="block text-sm font-medium">Teléfono</label>
+        <Input
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          placeholder="Teléfono"
         />
+      </div>
 
-        <FormField
-          control={form.control}
-          name="estado_tributario"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Estado Tributario</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un estado tributario" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Exento">Exento</SelectItem>
-                  <SelectItem value="Contribuyente">Contribuyente</SelectItem>
-                  <SelectItem value="Pequeño Contribuyente">Pequeño Contribuyente</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div>
+        <label className="block text-sm font-medium">Estado Tributario</label>
+        <Select value={estadoTributario} onValueChange={setEstadoTributario}>
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un estado tributario" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Exento">Exento</SelectItem>
+            <SelectItem value="Contribuyente">Contribuyente</SelectItem>
+            <SelectItem value="Pequeño Contribuyente">Pequeño Contribuyente</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <FormField
-          control={form.control}
-          name="nivel_tarifa"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nivel de Tarifa</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione un nivel de tarifa" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Básico">Básico</SelectItem>
-                  <SelectItem value="Estándar">Estándar</SelectItem>
-                  <SelectItem value="Premium">Premium</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div>
+        <label className="block text-sm font-medium">Nivel de Tarifa</label>
+        <Select value={nivelTarifa} onValueChange={setNivelTarifa}>
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un nivel de tarifa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Básico">Básico</SelectItem>
+            <SelectItem value="Estándar">Estándar</SelectItem>
+            <SelectItem value="Premium">Premium</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Crear Aseguradora
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Crear Aseguradora
+        </Button>
+      </div>
+    </form>
   )
 }
