@@ -42,7 +42,7 @@ export async function AxiosPatch({ path, payload }: { path: string, payload: any
     }
 }
 
-export async function AxiosDelete({ path, payload }: { path: string, payload: any }) {
+export async function AxiosDelete({ path, payload }: { path: string, payload?: any }) {
 
     const res = await axios.delete(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1${path}`, {
         headers: {

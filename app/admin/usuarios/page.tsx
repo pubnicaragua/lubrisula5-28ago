@@ -51,6 +51,7 @@ import {
   type UserWithDetails,
 } from "@/lib/actions/users"
 import USER_SERVICE, { UserType } from "@/services/USER_SERVICES"
+import EditUsersForm from "./form-edit-users"
 
 interface User extends UserWithDetails { }
 
@@ -62,8 +63,10 @@ export default function UsuariosPage() {
   const [roleFilter, setRoleFilter] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [State_EditDialog, SetState_EditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [userToDelete, setUserToDelete] = useState<UserType | null>(null)
+  const [State_UserToEdit, SetState_UserToEdit] = useState<UserType | null>(null)
   const [pageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const { toast } = useToast()
@@ -107,7 +110,7 @@ export default function UsuariosPage() {
 
     try {
       setLoading(true)
-      const result = await deleteUser(userToDelete.id)
+      const result = await deleteUser(userToDelete.user_auth_id)
 
       if (!result.success) {
         throw new Error(result.error)
@@ -286,12 +289,12 @@ export default function UsuariosPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los roles</SelectItem>
-              <SelectItem value="Cliente">Cliente</SelectItem>
-              <SelectItem value="Taller">Taller</SelectItem>
-              <SelectItem value="Aseguradora">Aseguradora</SelectItem>
-              <SelectItem value="Tecnico">Técnico</SelectItem>
-              <SelectItem value="Admin">Admin</SelectItem>
-              <SelectItem value="Super Administrador">Super Admin</SelectItem>
+              <SelectItem value="cliente">Cliente</SelectItem>
+              <SelectItem value="taller">Taller</SelectItem>
+              <SelectItem value="aseguradora">Aseguradora</SelectItem>
+              <SelectItem value="tecnico">Técnico</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="superadmin">Super Admin</SelectItem>
             </SelectContent>
           </Select>
 
@@ -411,11 +414,17 @@ export default function UsuariosPage() {
                             <DropdownMenuContent>
                               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                <Link href={`/admin/usuarios/${user.perfil_id}`} className="cursor-pointer">
+                              <DropdownMenuItem onClick={() => {
+                                SetState_UserToEdit(user)
+                                SetState_EditDialog(true)
+                              }
+                              }>
+
+                                <Edit className="mr-2 h-4 w-4" /> Editar
+                                {/* <Link href={`/admin/usuarios/${user.perfil_id}`} className="cursor-pointer">
                                   <Edit className="mr-2 h-4 w-4" />
                                   Editar
-                                </Link>
+                                </Link> */}
                                 {/* <Can
                                   perform="edit:users"
                                   children={<DropdownMenuItem >
@@ -516,6 +525,21 @@ export default function UsuariosPage() {
           />
         </DialogContent>
       </Dialog>
+      {/* Diálogo para editar usuario */}
+      <Dialog open={State_EditDialog} onOpenChange={SetState_EditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Usuario</DialogTitle>
+            <DialogDescription>
+              Modifique los datos del usuario seleccionado. Asegúrese de que la información sea correcta.
+            </DialogDescription>
+          </DialogHeader>
+          <EditUsersForm
+            CurrentDataUSer={State_UserToEdit}
+          //isAdmin={true}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Diálogo para confirmar eliminación */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -530,14 +554,14 @@ export default function UsuariosPage() {
             {userToDelete && (
               <div className="space-y-2">
                 <p>
-                  <strong>Usuario:</strong> {userToDelete.perfil_nombre} {userToDelete.perfil_apellido}
-                </p>
-                <p>
-                  <strong>Email:</strong> {userToDelete.perfil_correo}
+                  <strong>Usuario:</strong> {userToDelete.user_email}
                 </p>
                 <p>
                   <strong>Rol:</strong> {userToDelete.role_name}
                 </p>
+                {/* <p>
+                  <strong>Email:</strong> {userToDelete.role_name}
+                </p> */}
               </div>
             )}
           </div>

@@ -36,6 +36,7 @@ const formSchema = z
 
 export function RegisterForm() {
   const { signUp } = useAuth()
+  
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -56,6 +57,7 @@ export function RegisterForm() {
     setError(null)
     setSuccess(null)
 
+    console.log("Formulario de registro enviado:", values )
     try {
       await signUp(values.email, values.password, values.role)
       setSuccess("Registro exitoso. Por favor verifica tu correo electrónico para confirmar tu cuenta.")

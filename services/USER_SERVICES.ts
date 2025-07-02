@@ -1,4 +1,4 @@
-import { AxiosGet } from "./AxiosServices.module";
+import { AxiosDelete, AxiosGet } from "./AxiosServices.module";
 
 export type UserType = {
     user_auth_id: string;
@@ -22,6 +22,17 @@ const USER_SERVICE = {
 
         console.log('GET_ALL_USERS', UsuariosData);
         return UsuariosData;
+    },
+    async INSERT_USER(): Promise<UserType[]> {
+        const UsuariosData: UserType[] = await AxiosGet({ path: '/usarios' })
+
+        console.log('GET_ALL_USERS', UsuariosData);
+        return UsuariosData;
+    },
+    async DELETE_USER() {
+        const res: UserType[] = await AxiosDelete({ path: '/usarios' })
+        console.log('DELETE_USER', res);
+        return res;
     }
 };
 
