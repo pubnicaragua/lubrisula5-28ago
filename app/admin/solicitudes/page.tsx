@@ -6,15 +6,34 @@ import { Badge } from "@/components/ui/badge"
 import TALLER_SERVICES, { TallerSolicitudType } from "@/services/TALLER_SERVICES"
 import { useEffect, useState } from "react"
 import ButtonAlert from "@/components/ui/ButtonAlert"
-
+import { Toast } from "@radix-ui/react-toast";
 export default function SolicitudesPage() {
 
   const [State_DataTalleres, SetState_DataTalleres] = useState<TallerSolicitudType[]>([])
+  const [State_Toast, SetState_Toast] = useState<boolean>(false)
   const GET_TALLERES = async () => {
     const res = await TALLER_SERVICES.GET_ALL_TALLERES();
-    console.log('Solicitudes de Talleres:', res)
     SetState_DataTalleres(res)
-
+  }
+  const APROBAR_SOLICITUD = async (id: number) => {
+    await TALLER_SERVICES.APROBAR_SOLICITUD(id)
+    SetState_DataTalleres(prev => prev.map(taller => taller.id === id ? { ...taller, estado: 'aprobada' } : taller))
+  };
+  const RECHAZAR_SOLICITUD = async (id: number) => {
+    await TALLER_SERVICES.RECHAZAR_SOLICITUD(id)
+    SetState_DataTalleres(prev => prev.map(taller => taller.id === id ? { ...taller, estado: 'rechazada' } : taller))
+  }
+  const FN_RENDER_ESTADO = (estado: string) => {
+    switch (estado) {
+      case 'pendiente':
+        return <Badge variant="outline" className="bg-yellow-300 text-black">Pendiente</Badge>
+      case 'aprobada':
+        return <Badge variant="outline" className="bg-green-300 text-black">Aprobada</Badge>
+      case 'rechazada':
+        return <Badge variant="outline" className="bg-red-300 text-black">Rechazada</Badge>
+      default:
+        return <Badge variant="outline" className="bg-gray-300 text-black">Desconocido</Badge>
+    }
   }
   useEffect(() => {
     GET_TALLERES()
@@ -34,9 +53,7 @@ export default function SolicitudesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     {taller.nombre_taller}
-                    <Badge variant="outline" className="bg-amber-100 text-black">
-                      {taller.estado_solicitud}
-                    </Badge>
+                    {FN_RENDER_ESTADO(taller.estado)}
                   </CardTitle>
                   <CardDescription>Solicitud recibida: {taller.fecha_solicitud}</CardDescription>
                 </CardHeader>
@@ -57,15 +74,15 @@ export default function SolicitudesPage() {
                     <div className="flex space-x-2 pt-4">
                       <ButtonAlert
                         LabelButton="Aprobar"
-                        Onconfirm={() => console.log('Solicitud aprobada')}
-                        title="Aprobar Solicitud de Taller"
+                        Onconfirm={() => APROBAR_SOLICITUD(taller.id)}
+                        title="Aprobar Solicitud de Taller✅"
                         description="Esta solicitud de taller sera aprobada y el taller podra operar. ¿seguro quedesea continuar?"
                         variantButton="default"
                       />
                       <ButtonAlert
                         LabelButton="Rechazar"
-                        Onconfirm={() => console.log('Solicitud rechazada')}
-                        title="Rechazar Solicitud de Taller"
+                        Onconfirm={() => RECHAZAR_SOLICITUD(taller.id)}
+                        title="Rechazar Solicitud de Taller❌"
                         description="Este solicitud de taller sera rechazada y no podra ser recuperada. ¿seguro quedesea continuar?"
                         variantButton="outline"
                       />
@@ -80,6 +97,15 @@ export default function SolicitudesPage() {
         }
 
       </div>
+      <Toast open={State_Toast} onOpenChange={(set) => SetState_Toast(set)}>
+        <div className="flex items-center justify-between p-4 bg-white shadow-md rounded-lg">
+          <div>
+            <h3 className="text-lg font-semibold">Notificación</h3>
+            <p className="text-sm text-gray-500">Solicitud aprobada exitosamente.</p>
+          </div>
+          <Button variant="secondary" onClick={() => console.log('Cerrar notificación')}>Cerrar</Button>
+        </div>
+      </Toast>
     </div>
   )
 }

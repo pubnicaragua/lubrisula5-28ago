@@ -1,4 +1,4 @@
-import { AxiosGet } from "./AxiosServices.module";
+import { AxiosGet, AxiosPatch } from "./AxiosServices.module";
 
 // export type SolicitudesTalleresType = {
 //     id: number
@@ -38,8 +38,20 @@ export type TallerSolicitudType = {
 const TALLER_SERVICES = {
     async GET_ALL_TALLERES(): Promise<TallerSolicitudType[]> {
         const TalleresData: TallerSolicitudType[] = await AxiosGet({ path: '/solicitudes_talleres' })
-
-        console.log('GET ALL TALLERES', TalleresData);
+        return TalleresData;
+    },
+    async APROBAR_SOLICITUD(Id: number): Promise<TallerSolicitudType> {
+        const TalleresData: TallerSolicitudType = await AxiosPatch({
+            path: `/solicitudes_talleres?id=eq.${Id}`,
+            payload: { estado: "aprobada" }
+        })
+        return TalleresData;
+    },
+    async RECHAZAR_SOLICITUD(Id: number): Promise<TallerSolicitudType> {
+        const TalleresData: TallerSolicitudType = await AxiosPatch({
+            path: `/solicitudes_talleres?id=eq.${Id}`,
+            payload: { estado: "rechazada" }
+        })
         return TalleresData;
     },
 };
