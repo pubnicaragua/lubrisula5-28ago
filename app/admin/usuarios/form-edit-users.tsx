@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserType } from "@/services/USER_SERVICES";
+import { UserType } from "@/services/USER_SERVICES.SERVICE";
 import React, { useEffect, useState } from "react";
 
 export default function EditUsersForm({ CurrentDataUSer }: { CurrentDataUSer?: UserType }) {

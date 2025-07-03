@@ -50,7 +50,7 @@ import {
   sendPasswordResetEmail,
   type UserWithDetails,
 } from "@/lib/actions/users"
-import USER_SERVICE, { UserType } from "@/services/USER_SERVICES"
+import USER_SERVICE, { UserType } from "@/services/USER_SERVICES.SERVICE"
 import EditUsersForm from "./form-edit-users"
 
 interface User extends UserWithDetails { }

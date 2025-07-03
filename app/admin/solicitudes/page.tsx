@@ -3,7 +3,7 @@ import { Heading } from "@/components/ui/heading"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import TALLER_SERVICES, { TallerSolicitudType } from "@/services/TALLER_SERVICES"
+import TALLER_SERVICES, { TallerSolicitudType } from "@/services/TALLER_SERVICES.SERVICE"
 import { useEffect, useState } from "react"
 import ButtonAlert from "@/components/ui/ButtonAlert"
 import { Toast } from "@radix-ui/react-toast";

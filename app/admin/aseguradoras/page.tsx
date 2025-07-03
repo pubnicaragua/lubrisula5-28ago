@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { AseguradorasPage } from "@/components/aseguradoras/aseguradoras-page"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
+import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.SERVICE"
 import { useEffect, useState } from "react"
 export const dynamic = "force-dynamic"
 

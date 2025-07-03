@@ -31,59 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES"
-
-interface Cliente {
-  id: string
-  nombre: string
-  apellido: string
-  empresa?: string
-  telefono: string
-  email: string
-  tipoCliente: "Individual" | "Empresa" | "Flota" | "Aseguradora"
-  fechaRegistro: string
-  ultimaVisita?: string
-  estado: "Activo" | "Inactivo"
-}
-
-// Datos mock iniciales
-const clientesIniciales: Cliente[] = [
-  {
-    id: "1",
-    nombre: "Juan",
-    apellido: "Pérez",
-    empresa: "Transportes ABC",
-    telefono: "9876-5432",
-    email: "juan.perez@transportesabc.com",
-    tipoCliente: "Empresa",
-    fechaRegistro: "2023-01-15",
-    ultimaVisita: "2023-04-10",
-    estado: "Activo",
-  },
-  {
-    id: "2",
-    nombre: "María",
-    apellido: "González",
-    telefono: "8765-4321",
-    email: "maria.gonzalez@email.com",
-    tipoCliente: "Individual",
-    fechaRegistro: "2023-02-20",
-    ultimaVisita: "2023-04-05",
-    estado: "Activo",
-  },
-  {
-    id: "3",
-    nombre: "Carlos",
-    apellido: "Rodríguez",
-    empresa: "Seguros XYZ",
-    telefono: "7654-3210",
-    email: "carlos.rodriguez@segurosxyz.com",
-    tipoCliente: "Aseguradora",
-    fechaRegistro: "2023-03-10",
-    ultimaVisita: "2023-03-25",
-    estado: "Activo",
-  },
-]
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 
 export function ClientesPage() {
   const [State_Clientes, setState_Clientes] = useState<ClienteType[]>([])
@@ -100,39 +48,11 @@ export function ClientesPage() {
     setState_Clientes(res)
     console.log('GET CLIENTS', res);
   }
-  // Cargar datos del localStorage al iniciar
-  useEffect(() => {
-    FN_GET_CLIENTS()
-  }, [])
-
-  // Guardar en localStorage cuando cambie el estado
-  useEffect(() => {
-    console.log(State_Clientes)
-    if (State_Clientes.length > 0) {
-      localStorage.setItem("clientes", JSON.stringify(State_Clientes))
-    }
-  }, [State_Clientes])
-
-  const handleAddCliente = (nuevoCliente: Omit<Cliente, "id" | "fechaRegistro" | "estado">) => {
-    console.log(nuevoCliente)
-    const VarCliente: ClienteType = {
-      ...nuevoCliente,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString().split("T")[0],
-      status: "Activo",
-    }
-
-    setState_Clientes((prev) => [...prev, VarCliente])
-    setOpen(false)
-
-    toast({
-      title: "Cliente creado",
-      description: "El cliente ha sido registrado exitosamente",
-    })
-  }
-
-  const handleEditCliente = (clienteEditado: Omit<Cliente, "id" | "fechaRegistro" | "estado">) => {
+  const FN_UPDATE_CLIENTE = async (clienteEditado: ClienteType) => {
+    console.log(clienteEditado)
     if (!editingCliente) return
+    const res = await CLIENTS_SERVICES.UPDATE_CLIENTE(clienteEditado);
+    console.log('UPDATE CLIENTE', res);
 
     const clienteActualizado: ClienteType = {
       ...editingCliente,
@@ -148,21 +68,47 @@ export function ClientesPage() {
       description: "Los datos del cliente han sido actualizados exitosamente",
     })
   }
-
-  const handleDeleteCliente = () => {
-    if (!clienteToDelete) return
-
+  const FN_DELETE_CLIENTE = async (id: string) => {
+    console.log('DELETE CLIENTE', id);
+    await CLIENTS_SERVICES.DELETE_CLIENTE(id)
     setState_Clientes((prev) => prev.filter((c) => c.id !== clienteToDelete.id))
     setDeleteDialogOpen(false)
     setClienteToDelete(null)
-
     toast({
       title: "Cliente eliminado",
       description: "El cliente ha sido eliminado exitosamente",
     })
   }
+  const FN_ADD_NEW_CLIENTE = async (nuevoCliente: ClienteType) => {
+    console.log('ADD NEW CLIENTE', nuevoCliente);
+    console.log(nuevoCliente)
+    const NewData: ClienteType = { ...nuevoCliente, created_at: new Date().toISOString() }
+    const res = await CLIENTS_SERVICES.ADD_NEW_CLIENTE(NewData)
+    console.log('RESPONSE ADD NEW CLIENTE', res);
+    setState_Clientes((prev) => [...prev, { ...NewData, status: "Activo" }])
+    setOpen(false)
+    toast({
+      title: "Cliente creado",
+      description: "El cliente ha sido registrado exitosamente",
+    })
+  }
+
+  // Cargar datos del localStorage al iniciar
+  useEffect(() => {
+    FN_GET_CLIENTS()
+  }, [])
+
+  // Guardar en localStorage cuando cambie el estado
+  useEffect(() => {
+    console.log(State_Clientes)
+    if (State_Clientes.length > 0) {
+      localStorage.setItem("clientes", JSON.stringify(State_Clientes))
+    }
+  }, [State_Clientes])
+
 
   const openEditDialog = (cliente: ClienteType) => {
+    console.log(cliente)
     setEditingCliente(cliente)
     setOpen(true)
   }
@@ -189,6 +135,7 @@ export function ClientesPage() {
   }
 
   const getTipoClienteBadge = (tipo: string) => {
+    console.log("Tipo de cliente:", tipo)
     const colors = {
       Individual: "bg-blue-500 hover:bg-blue-600",
       Empresa: "bg-purple-500 hover:bg-purple-600",
@@ -227,7 +174,7 @@ export function ClientesPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <NuevoClienteForm
-                  onSubmit={editingCliente ? handleEditCliente : handleAddCliente}
+                  onSubmit={editingCliente ? FN_UPDATE_CLIENTE : FN_ADD_NEW_CLIENTE}
                   clienteExistente={editingCliente}
                 />
               </DialogContent>
@@ -298,7 +245,7 @@ export function ClientesPage() {
                     {filteredClientes.map((cliente) => (
                       <TableRow key={cliente.id}>
                         <TableCell className="font-medium">
-                          {cliente.name} 
+                          {cliente.name}
                           {cliente.company && <div className="text-sm text-muted-foreground">{cliente.company}</div>}
                         </TableCell>
                         <TableCell>{cliente.email}</TableCell>
@@ -342,7 +289,7 @@ export function ClientesPage() {
               flotas: "Flota",
               aseguradoras: "Aseguradora",
             }
-            const tipo = tipoMap[tab as keyof typeof tipoMap] as Cliente["tipoCliente"]
+            const tipo = tipoMap[tab as keyof typeof tipoMap] as ClienteType["client_type"]
             const clientesFiltrados = filteredClientes.filter((c) => c.client_type === tipo)
 
             return (
@@ -370,7 +317,7 @@ export function ClientesPage() {
                         {clientesFiltrados.map((cliente) => (
                           <TableRow key={cliente.id}>
                             <TableCell className="font-medium">
-                              {cliente.name} 
+                              {cliente.name}
                               {cliente.company && (
                                 <div className="text-sm text-muted-foreground">{cliente.company}</div>
                               )}
@@ -426,7 +373,7 @@ export function ClientesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCliente}>Eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={() => FN_DELETE_CLIENTE(clienteToDelete.id)}>Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

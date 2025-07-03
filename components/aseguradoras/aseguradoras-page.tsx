@@ -19,7 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { NuevaAseguradoraForm } from "./nueva-aseguradora-form"
 import { EditarAseguradoraForm } from "./editar-aseguradora-form"
 import { eliminarAseguradora } from "@/lib/actions/aseguradoras"
-import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
+import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.SERVICE"
 
 interface AseguradorasPageProps {
   aseguradoras: AseguradoraType[]

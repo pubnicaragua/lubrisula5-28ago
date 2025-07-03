@@ -1,11 +1,11 @@
 "use client"
 
+import { Action, ToastProps } from "@radix-ui/react-toast"
 // Inspired by react-hot-toast library
 import * as React from "react"
 import { useState, useEffect } from "react"
 
-import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
-
+// import type { ToastAction, ToastProps } from "@/components/ui/toast"
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
@@ -22,7 +22,7 @@ type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: Action
 }
 
 interface Toast extends ToastPropsNew {
