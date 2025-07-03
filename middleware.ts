@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
 
   // Verificar sesión
 
+  // await supabase.auth.signOut()
   const {
     data: { session },
   } = await supabase.auth.getSession()

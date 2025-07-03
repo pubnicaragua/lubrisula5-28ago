@@ -101,8 +101,8 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
   const fetchVehiculo = async () => {
     try {
       const { data: vehiculoData, error: vehiculoError } = await supabase
-        .from("vehiculos")
-        .select("*, cliente:cliente_id(*)")
+        .from("vehicles")
+        .select("*, cliente:client_id(*)") // cliente_id apunta a tabla clients
         .eq("id", vehiculoId)
         .single()
 
@@ -115,7 +115,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
       toast({
         title: "Error",
         description: "No se pudieron cargar los datos del vehículo",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -143,7 +143,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
       toast({
         title: "Error",
         description: "No se pudo cargar la inspección existente",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -213,7 +213,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
       toast({
         title: "Error",
         description: "No se pudieron subir las imágenes",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -286,7 +286,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
       toast({
         title: "Error",
         description: "No se pudo guardar la hoja de inspección",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -386,7 +386,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
       toast({
         title: "Error",
         description: "No se pudo generar el PDF",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -402,7 +402,7 @@ export default function HojaInspeccion({ vehiculoId, ordenId, readOnly = false, 
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6" id="hoja-inspeccion">
+    <div className="container mx-auto py-6 space-y-6 overflow-auto" id="hoja-inspeccion">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Hoja de Inspección de Vehículo</h1>
         <div className="flex gap-2">

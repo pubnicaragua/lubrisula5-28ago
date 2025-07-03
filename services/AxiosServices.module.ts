@@ -23,7 +23,7 @@ export async function AxiosPost({ path, payload }: { path: string, payload: any 
     return res.data
 }
 
-export async function AxiosPatch({ path, payload }: { path: string, payload: any }) {
+export async function AxiosPatch({ path, payload }: { path: string, payload?: any }) {
     console.log("AxiosPatch", path, payload)
     try {
 

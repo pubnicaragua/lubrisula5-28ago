@@ -1,103 +1,95 @@
 "use client"
-
 import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
-
-interface VehiculoForm {
-  marca: string
-  modelo: string
-  año: number
-  placa: string
-  vin: string
-  color: string
-  clienteId: string
-  estado: "Activo" | "En Servicio" | "Entregado" | "Inactivo"
-  kilometraje?: string
-}
-
-interface Client {
-  id: string
-  nombre: string
-  apellido: string
-}
+import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 
 interface NuevoVehiculoFormProps {
-  onSubmit: (vehiculo: VehiculoForm) => void
-  clients?: Client[]
-  vehiculoExistente?: any
+  onSubmit: (vehiculo: VehiculoType) => void
+  clients?: ClienteType[],
+  vehiculoExistente?: VehiculoType
 }
 
 export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }: NuevoVehiculoFormProps) {
   const currentYear = new Date().getFullYear()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [State_Clientes, SetState_Clientes] = useState<ClienteType[]>([])
+  const [State_FormData, SetState_FormData] = useState<VehiculoType | null>(null)
+  // const [State_Estado, SetState_Estado] = useState<string>('')
+  console.log(vehiculoExistente)
 
-  const [formData, setFormData] = useState<VehiculoForm>({
-    marca: "",
-    modelo: "",
-    año: currentYear,
-    placa: "",
-    vin: "",
-    color: "",
-    clienteId: "",
-    estado: "Activo",
-    kilometraje: "",
-  })
-
+  const FN_GET_CLIENTES = async () => {
+    // Aquí podrías llamar a un servicio para obtener los clientes si no se pasan como prop 
+    const DataClientes: ClienteType[] = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
+    SetState_Clientes(DataClientes)
+  }
   // Cargar datos del vehículo existente si se está editando
   useEffect(() => {
     if (vehiculoExistente) {
-      setFormData({
-        marca: vehiculoExistente.marca || "",
-        modelo: vehiculoExistente.modelo || "",
-        año: vehiculoExistente.año || currentYear,
-        placa: vehiculoExistente.placa || "",
-        vin: vehiculoExistente.vin || "",
-        color: vehiculoExistente.color || "",
-        clienteId: vehiculoExistente.clienteId || "",
-        estado: vehiculoExistente.estado || "Activo",
-        kilometraje: vehiculoExistente.kilometraje || "",
-      })
+      console.log(vehiculoExistente)
+      console.log(currentYear)
+      SetState_FormData(vehiculoExistente)
+      // SetState_Estado(vehiculoExistente.estado)
     }
-  }, [vehiculoExistente, currentYear])
+  }, [vehiculoExistente]);
+
+  useEffect(() => {
+    FN_GET_CLIENTES()
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData({
-      ...formData,
+    SetState_FormData({
+      ...State_FormData,
       [name]: name === "año" ? Number.parseInt(value) : value,
     })
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({ ...formData, [name]: value })
+    console.log(name, value)
+    SetState_FormData({ ...State_FormData, [name]: value })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simular delay de procesamiento
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log("Datos del formulario:", State_FormData)
+    //si existe un vehiculo actualizarlo si no existe entonces inserta
+    if (vehiculoExistente) {
+      const RequestData: VehiculoType = { ...State_FormData, updated_at: new Date().toISOString() }
+      console.log(RequestData)
+      const res = await VEHICULO_SERVICES.UPDATE_VEHICULO(RequestData as VehiculoType)
+      console.log("Respuesta del servicio:", res)
 
-    onSubmit(formData)
+    } else {
+      const res = await VEHICULO_SERVICES.INSERT_VEHICULO(State_FormData as VehiculoType)
+      console.log("Respuesta del servicio:", res)
+    }
+
+    const RequestData: VehiculoType = { ...State_FormData, updated_at: new Date().toISOString(), client_name: State_Clientes.find(client => client.id === State_FormData.client_id).name }
+    onSubmit(RequestData)
 
     // Limpiar formulario si no es edición
     if (!vehiculoExistente) {
-      setFormData({
+      SetState_FormData({
+        id: "",
+        client_id: "",
+        client_name: "",
         marca: "",
         modelo: "",
-        año: currentYear,
+        ano: currentYear,
+        color: "",
         placa: "",
         vin: "",
-        color: "",
-        clienteId: "",
+        kilometraje: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         estado: "Activo",
-        kilometraje: "",
       })
     }
 
@@ -109,41 +101,41 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="marca">Marca *</Label>
-          <Input id="marca" name="marca" value={formData.marca} onChange={handleInputChange} required />
+          <Input id="marca" name="marca" value={State_FormData?.marca} onChange={handleInputChange} required />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="modelo">Modelo *</Label>
-          <Input id="modelo" name="modelo" value={formData.modelo} onChange={handleInputChange} required />
+          <Input id="modelo" name="modelo" value={State_FormData?.modelo} onChange={handleInputChange} required />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="año">Año *</Label>
+          <Label htmlFor="ano">Año *</Label>
           <Input
-            id="año"
-            name="año"
+            id="ano"
+            name="ano"
             type="number"
             min="1900"
             max={currentYear + 1}
-            value={formData.año}
+            value={State_FormData?.ano}
             onChange={handleInputChange}
             required
           />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="placa">Placa *</Label>
-          <Input id="placa" name="placa" value={formData.placa} onChange={handleInputChange} required />
+          <Input id="placa" name="placa" value={State_FormData?.placa} onChange={handleInputChange} required />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="color">Color *</Label>
-          <Input id="color" name="color" value={formData.color} onChange={handleInputChange} required />
+          <Input id="color" name="color" value={State_FormData?.color} onChange={handleInputChange} required />
         </div>
       </div>
 
       <div className="grid gap-2">
         <Label htmlFor="vin">VIN *</Label>
-        <Input id="vin" name="vin" value={formData.vin} onChange={handleInputChange} required />
+        <Input id="vin" name="vin" value={State_FormData?.vin} onChange={handleInputChange} required />
       </div>
 
       <div className="grid gap-2">
@@ -151,7 +143,7 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
         <Input
           id="kilometraje"
           name="kilometraje"
-          value={formData.kilometraje}
+          value={State_FormData?.kilometraje}
           onChange={handleInputChange}
           placeholder="Ej: 45,000"
         />
@@ -159,14 +151,14 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
 
       <div className="grid gap-2">
         <Label htmlFor="clienteId">Cliente *</Label>
-        <Select onValueChange={(value) => handleSelectChange("clienteId", value)} value={formData.clienteId}>
+        <Select onValueChange={(value) => handleSelectChange("client_id", value)} value={State_FormData?.client_id} defaultValue={vehiculoExistente?.client_id}>
           <SelectTrigger id="clienteId">
             <SelectValue placeholder="Seleccionar cliente" />
           </SelectTrigger>
           <SelectContent>
-            {clients.map((client) => (
+            {State_Clientes.map((client) => (
               <SelectItem key={client.id} value={client.id}>
-                {client.nombre} {client.apellido}
+                {client.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -175,9 +167,9 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
 
       <div className="grid gap-2">
         <Label htmlFor="estado">Estado *</Label>
-        <Select onValueChange={(value) => handleSelectChange("estado", value)} value={formData.estado}>
+        <Select onValueChange={(value) => handleSelectChange("estado", value)} value={State_FormData?.estado} defaultValue={vehiculoExistente?.estado}>
           <SelectTrigger id="estado">
-            <SelectValue placeholder="Seleccionar estado" />
+            <SelectValue placeholder={vehiculoExistente?.estado} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Activo">Activo</SelectItem>

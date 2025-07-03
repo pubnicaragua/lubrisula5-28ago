@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MainNav } from "@/components/main-nav"
-import { ModeToggle } from "@/components/mode-toggle"
-import { UserNav } from "@/components/user-nav"
+// import { MainNav } from "@/components/main-nav"
+// import { ModeToggle } from "@/components/mode-toggle"
+// import { UserNav } from "@/components/user-nav"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -31,121 +31,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
+import HojaInspeccion from "./hoja-inspeccion"
 
-interface Vehiculo {
-  id: string
-  marca: string
-  modelo: string
-  año: number
-  placa: string
-  vin: string
-  color: string
-  clienteId: string
-  clienteNombre: string
-  estado: "Activo" | "En Servicio" | "Entregado" | "Inactivo"
-  fechaRegistro: string
-  kilometraje?: string
-}
 
-// Datos mock iniciales
-const vehiculosIniciales: Vehiculo[] = [
-  {
-    id: "1",
-    marca: "Toyota",
-    modelo: "Corolla",
-    año: 2020,
-    placa: "ABC-123",
-    vin: "1HGBH41JXMN109186",
-    color: "Blanco",
-    clienteId: "1",
-    clienteNombre: "Juan Pérez",
-    estado: "Activo",
-    fechaRegistro: "2023-01-15",
-    kilometraje: "45,000",
-  },
-  {
-    id: "2",
-    marca: "Honda",
-    modelo: "Civic",
-    año: 2019,
-    placa: "DEF-456",
-    vin: "2HGBH41JXMN109187",
-    color: "Negro",
-    clienteId: "2",
-    clienteNombre: "María González",
-    estado: "En Servicio",
-    fechaRegistro: "2023-02-20",
-    kilometraje: "38,500",
-  },
-  {
-    id: "3",
-    marca: "Ford",
-    modelo: "Focus",
-    año: 2021,
-    placa: "GHI-789",
-    vin: "3HGBH41JXMN109188",
-    color: "Azul",
-    clienteId: "3",
-    clienteNombre: "Carlos Rodríguez",
-    estado: "Activo",
-    fechaRegistro: "2023-03-10",
-    kilometraje: "22,100",
-  },
-]
 
 export function VehiculosPage() {
-  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([])
-  const [clientes, setClientes] = useState<any[]>([])
+  const [State_Vehiculos, SetState_Vehiculos] = useState<VehiculoType[]>([])
   const [open, setOpen] = useState(false)
-  const [editingVehiculo, setEditingVehiculo] = useState<Vehiculo | null>(null)
+  const [editingVehiculo, setEditingVehiculo] = useState<VehiculoType | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [vehiculoToDelete, setVehiculoToDelete] = useState<Vehiculo | null>(null)
+  const [vehiculoToDelete, setVehiculoToDelete] = useState<VehiculoType | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [State_DialogInspeccion, SetState_DialogInspeccion] = useState<boolean>(false)
   const { toast } = useToast()
 
-  // Cargar datos del localStorage al iniciar
-  useEffect(() => {
-    const savedVehiculos = localStorage.getItem("vehiculos")
-    const savedClientes = localStorage.getItem("clientes")
+  const FN_GET_ALL_VEHICULOS = async () => {
+    const DataVehichulos = await VEHICULO_SERVICES.GET_ALL_VEHICULOS();
+    console.log(DataVehichulos)
+    SetState_Vehiculos(DataVehichulos)
+  }
 
-    if (savedVehiculos) {
-      setVehiculos(JSON.parse(savedVehiculos))
-    } else {
-      setVehiculos(vehiculosIniciales)
-      localStorage.setItem("vehiculos", JSON.stringify(vehiculosIniciales))
-    }
+  const FN_ADD_VEHICULO = (nuevoVehiculo: VehiculoType) => {
+    // const cliente = State_Clientes.find((c) => c.id === nuevoVehiculo.client_id)
+    console.log("Nuevo Vehículo:", nuevoVehiculo)
+    // console.log("Cliente asociado:", cliente)
+    const vehiculo: VehiculoType = nuevoVehiculo
 
-    if (savedClientes) {
-      setClientes(JSON.parse(savedClientes))
-    }
-  }, [])
-
-  // Guardar en localStorage cuando cambie el estado
-  useEffect(() => {
-    if (vehiculos.length > 0) {
-      localStorage.setItem("vehiculos", JSON.stringify(vehiculos))
-    }
-  }, [vehiculos])
-
-  const handleAddVehiculo = (nuevoVehiculo: any) => {
-    const cliente = clientes.find((c) => c.id === nuevoVehiculo.clienteId)
-
-    const vehiculo: Vehiculo = {
-      id: Date.now().toString(),
-      marca: nuevoVehiculo.marca,
-      modelo: nuevoVehiculo.modelo,
-      año: nuevoVehiculo.año,
-      placa: nuevoVehiculo.placa,
-      vin: nuevoVehiculo.vin,
-      color: nuevoVehiculo.color,
-      clienteId: nuevoVehiculo.clienteId,
-      clienteNombre: cliente ? `${cliente.nombre} ${cliente.apellido}` : "Cliente no encontrado",
-      estado: nuevoVehiculo.estado || "Activo",
-      fechaRegistro: new Date().toISOString().split("T")[0],
-      kilometraje: nuevoVehiculo.kilometraje,
-    }
-
-    setVehiculos((prev) => [...prev, vehiculo])
+    SetState_Vehiculos((prev) => [...prev, vehiculo])
     setOpen(false)
 
     toast({
@@ -154,26 +68,11 @@ export function VehiculosPage() {
     })
   }
 
-  const handleEditVehiculo = (vehiculoEditado: any) => {
+  const FN_EDIT_VEHICULO = (vehiculoEditado: VehiculoType) => {
     if (!editingVehiculo) return
-
-    const cliente = clientes.find((c) => c.id === vehiculoEditado.clienteId)
-
-    const vehiculoActualizado: Vehiculo = {
-      ...editingVehiculo,
-      marca: vehiculoEditado.marca,
-      modelo: vehiculoEditado.modelo,
-      año: vehiculoEditado.año,
-      placa: vehiculoEditado.placa,
-      vin: vehiculoEditado.vin,
-      color: vehiculoEditado.color,
-      clienteId: vehiculoEditado.clienteId,
-      clienteNombre: cliente ? `${cliente.nombre} ${cliente.apellido}` : "Cliente no encontrado",
-      estado: vehiculoEditado.estado,
-      kilometraje: vehiculoEditado.kilometraje,
-    }
-
-    setVehiculos((prev) => prev.map((v) => (v.id === editingVehiculo.id ? vehiculoActualizado : v)))
+    // const cliente = State_Clientes.find((c) => c.id === vehiculoEditado.client_id)
+    console.log(vehiculoEditado)
+    SetState_Vehiculos((prev) => prev.map((v) => (v.id === vehiculoEditado.id ? vehiculoEditado : v)))
     setEditingVehiculo(null)
     setOpen(false)
 
@@ -183,10 +82,13 @@ export function VehiculosPage() {
     })
   }
 
-  const handleDeleteVehiculo = () => {
-    if (!vehiculoToDelete) return
 
-    setVehiculos((prev) => prev.filter((v) => v.id !== vehiculoToDelete.id))
+
+
+  const FN_DELETE_VEHICULO = async () => {
+    if (!vehiculoToDelete) return
+    await VEHICULO_SERVICES.DELETE_VEHICULO(vehiculoToDelete.id)
+    SetState_Vehiculos((prev) => prev.filter((v) => v.id !== vehiculoToDelete.id))
     setDeleteDialogOpen(false)
     setVehiculoToDelete(null)
 
@@ -196,25 +98,31 @@ export function VehiculosPage() {
     })
   }
 
-  const openEditDialog = (vehiculo: Vehiculo) => {
+  const openEditDialog = (vehiculo: VehiculoType) => {
+    console.log(vehiculo)
     setEditingVehiculo(vehiculo)
     setOpen(true)
   }
+  const Fn_OpenDialogHolaInspeccion = (vehiculo: VehiculoType) => {
+    // console.log(vehiculo)
+    setEditingVehiculo(vehiculo)
+    SetState_DialogInspeccion(true)
+  }
 
-  const openDeleteDialog = (vehiculo: Vehiculo) => {
+  const openDeleteDialog = (vehiculo: VehiculoType) => {
     setVehiculoToDelete(vehiculo)
     setDeleteDialogOpen(true)
   }
 
-  const filteredVehiculos = vehiculos.filter(
+  const filteredVehiculos = State_Vehiculos.filter(
     (vehiculo) =>
-      vehiculo.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehiculo.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()),
+      vehiculo?.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehiculo?.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehiculo?.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehiculo?.client_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const getEstadoBadge = (estado: Vehiculo["estado"]) => {
+  const getEstadoBadge = (estado: string) => {
     const colors = {
       Activo: "bg-green-500 hover:bg-green-600",
       "En Servicio": "bg-blue-500 hover:bg-blue-600",
@@ -223,7 +131,10 @@ export function VehiculosPage() {
     }
     return <Badge className={colors[estado]}>{estado}</Badge>
   }
-
+  // Cargar datos
+  useEffect(() => {
+    FN_GET_ALL_VEHICULOS()
+  }, [])
   return (
     <main className="container mx-auto h-full overflow-auto">
       {/* <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
@@ -253,14 +164,15 @@ export function VehiculosPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <NuevoVehiculoForm
-                  onSubmit={editingVehiculo ? handleEditVehiculo : handleAddVehiculo}
-                  clients={clientes}
+                  onSubmit={editingVehiculo ? FN_EDIT_VEHICULO : FN_ADD_VEHICULO}
                   vehiculoExistente={editingVehiculo}
+                  clients={[]}
                 />
               </DialogContent>
             </Dialog>
           </div>
         </div>
+
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -316,11 +228,10 @@ export function VehiculosPage() {
                       <TableHead>Kilometraje</TableHead>
                       <TableHead>Fecha Registro</TableHead>
                       <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                    </TableRow>                  </TableHeader>
                   <TableBody>
-                    {filteredVehiculos.map((vehiculo) => (
-                      <TableRow key={vehiculo.id}>
+                    {filteredVehiculos.map((vehiculo, index) => (
+                      <TableRow key={index}>
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-2">
                             <Car className="h-4 w-4 text-muted-foreground" />
@@ -329,16 +240,16 @@ export function VehiculosPage() {
                                 {vehiculo.marca} {vehiculo.modelo}
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                {vehiculo.año} • {vehiculo.color}
+                                {vehiculo.ano} • {vehiculo.color}
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="font-mono">{vehiculo.placa}</TableCell>
-                        <TableCell>{vehiculo.clienteNombre}</TableCell>
+                        <TableCell>{vehiculo.client_name}</TableCell>
                         <TableCell>{getEstadoBadge(vehiculo.estado)}</TableCell>
                         <TableCell>{vehiculo.kilometraje || "N/A"}</TableCell>
-                        <TableCell>{vehiculo.fechaRegistro}</TableCell>
+                        <TableCell>{vehiculo.created_at}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button
@@ -349,7 +260,9 @@ export function VehiculosPage() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="Hoja de inspección">
+                            <Button variant="ghost" size="icon" title="Hoja de inspección"
+                              onClick={() => Fn_OpenDialogHolaInspeccion(vehiculo)}
+                            >
                               <FileCheck className="h-4 w-4" />
                             </Button>
                             <Button
@@ -377,7 +290,7 @@ export function VehiculosPage() {
               servicio: "En Servicio",
               entregados: "Entregado",
             }
-            const estado = estadoMap[tab as keyof typeof estadoMap] as Vehiculo["estado"]
+            const estado = estadoMap[tab as keyof typeof estadoMap] as VehiculoType["estado"]
             const vehiculosFiltrados = filteredVehiculos.filter((v) => v.estado === estado)
 
             return (
@@ -412,15 +325,15 @@ export function VehiculosPage() {
                                     {vehiculo.marca} {vehiculo.modelo}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    {vehiculo.año} • {vehiculo.color}
+                                    {vehiculo.ano} • {vehiculo.color}
                                   </div>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell className="font-mono">{vehiculo.placa}</TableCell>
-                            <TableCell>{vehiculo.clienteNombre}</TableCell>
+                            <TableCell>{vehiculo.client_name}</TableCell>
                             <TableCell>{vehiculo.kilometraje || "N/A"}</TableCell>
-                            <TableCell>{vehiculo.fechaRegistro}</TableCell>
+                            <TableCell>{vehiculo.created_at}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
                                 <Button
@@ -431,7 +344,7 @@ export function VehiculosPage() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" title="Hoja de inspección">
+                                <Button variant="ghost" size="icon" title="Hoja de inspección" onClick={() => SetState_DialogInspeccion(true)}>
                                   <FileCheck className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -471,10 +384,27 @@ export function VehiculosPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteVehiculo}>Eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={FN_DELETE_VEHICULO}>Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+
+      <Dialog open={State_DialogInspeccion} onOpenChange={SetState_DialogInspeccion}  >
+        {/* <DialogTrigger asChild>
+          <Button onClick={() => setEditingVehiculo(null)}>
+            <Plus className="mr-2 h-4 w-4" /> hoja
+          </Button>
+        </DialogTrigger> */}
+        <DialogContent className="sm:max-w-[600px] h-[100vh]">
+          <DialogHeader>
+            <DialogTitle>Inspeccion</DialogTitle>
+            <DialogDescription>
+              Inspeccion de vehiculo
+            </DialogDescription>
+          </DialogHeader>
+          {editingVehiculo && <HojaInspeccion vehiculoId={editingVehiculo?.id} />}
+        </DialogContent>
+      </Dialog>
+    </main >
   )
 }

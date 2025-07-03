@@ -103,7 +103,7 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
 
       <div className="grid gap-2">
         <Label htmlFor="client_type">Tipo de Cliente *</Label>
-        <Select onValueChange={handleSelectChange} value={formData?.client_type} defaultValue={formData?.client_type}>
+        <Select onValueChange={handleSelectChange} value={formData?.client_type} defaultValue={clienteExistente?.client_type}>
           <SelectTrigger id="client_type">
             <SelectValue placeholder={clienteExistente?.client_type} />
           </SelectTrigger>
