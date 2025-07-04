@@ -2,9 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-// import { MainNav } from "@/components/main-nav"
-// import { ModeToggle } from "@/components/mode-toggle"
-// import { UserNav } from "@/components/user-nav"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -32,10 +29,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
-import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 import HojaInspeccion from "./hoja-inspeccion"
-
-
+import EstadoVehiculoComponent from "../ui/EstadoVehiculo"
 
 export function VehiculosPage() {
   const [State_Vehiculos, SetState_Vehiculos] = useState<VehiculoType[]>([])
@@ -54,14 +49,8 @@ export function VehiculosPage() {
   }
 
   const FN_ADD_VEHICULO = (nuevoVehiculo: VehiculoType) => {
-    // const cliente = State_Clientes.find((c) => c.id === nuevoVehiculo.client_id)
-    console.log("Nuevo Vehículo:", nuevoVehiculo)
-    // console.log("Cliente asociado:", cliente)
-    const vehiculo: VehiculoType = nuevoVehiculo
-
-    SetState_Vehiculos((prev) => [...prev, vehiculo])
+    SetState_Vehiculos((prev) => [...prev, nuevoVehiculo])
     setOpen(false)
-
     toast({
       title: "Vehículo registrado",
       description: "El vehículo ha sido registrado exitosamente",
@@ -81,9 +70,6 @@ export function VehiculosPage() {
       description: "Los datos del vehículo han sido actualizados exitosamente",
     })
   }
-
-
-
 
   const FN_DELETE_VEHICULO = async () => {
     if (!vehiculoToDelete) return
@@ -122,16 +108,7 @@ export function VehiculosPage() {
       vehiculo?.client_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const getEstadoBadge = (estado: string) => {
-    const colors = {
-      Activo: "bg-green-500 hover:bg-green-600",
-      "En Servicio": "bg-blue-500 hover:bg-blue-600",
-      Entregado: "bg-purple-500 hover:bg-purple-600",
-      Inactivo: "bg-gray-500 hover:bg-gray-600",
-    }
-    return <Badge className={colors[estado]}>{estado}</Badge>
-  }
-  // Cargar datos
+
   useEffect(() => {
     FN_GET_ALL_VEHICULOS()
   }, [])
@@ -247,7 +224,7 @@ export function VehiculosPage() {
                         </TableCell>
                         <TableCell className="font-mono">{vehiculo.placa}</TableCell>
                         <TableCell>{vehiculo.client_name}</TableCell>
-                        <TableCell>{getEstadoBadge(vehiculo.estado)}</TableCell>
+                        <TableCell><EstadoVehiculoComponent estado={vehiculo.estado} /></TableCell>
                         <TableCell>{vehiculo.kilometraje || "N/A"}</TableCell>
                         <TableCell>{vehiculo.created_at}</TableCell>
                         <TableCell>
