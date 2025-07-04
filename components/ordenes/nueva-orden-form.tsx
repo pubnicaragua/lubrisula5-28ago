@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
+import { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
 
 interface OrdenForm {
   clienteId: string
@@ -28,7 +29,7 @@ interface OrdenForm {
 }
 
 interface NuevaOrdenFormProps {
-  onSubmit: (orden: OrdenForm) => void
+  onSubmit: (orden: OrdenTrabajoType | null) => void
   ordenExistente?: any
 }
 
@@ -138,7 +139,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     // Simular delay de procesamiento
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    onSubmit(formData)
+    onSubmit(null)
 
     // Limpiar formulario si no es edición
     if (!ordenExistente) {

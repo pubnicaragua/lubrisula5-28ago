@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
 
 interface OrdenTrabajo {
   id: string
@@ -51,6 +52,7 @@ interface OrdenTrabajo {
   costoFinal?: number
   observaciones?: string
 }
+
 
 // Datos mock iniciales
 const ordenesIniciales: OrdenTrabajo[] = [
@@ -108,46 +110,46 @@ const ordenesIniciales: OrdenTrabajo[] = [
 ]
 
 export function OrdenesPage() {
-  const [ordenes, setOrdenes] = useState<OrdenTrabajo[]>([])
+  const [State_OrdenesTrabajo, SetState_OrdenesTrabajo] = useState<OrdenTrabajoType[]>([])
   const [open, setOpen] = useState(false)
-  const [editingOrden, setEditingOrden] = useState<OrdenTrabajo | null>(null)
+  const [editingOrden, setEditingOrden] = useState<OrdenTrabajoType | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [ordenToDelete, setOrdenToDelete] = useState<OrdenTrabajo | null>(null)
+  const [ordenToDelete, setOrdenToDelete] = useState<OrdenTrabajoType | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
+  const FN_GET_ALL_ORDENES_TRABAJO = async () => {
+    const data = await ORDENES_TRABAJO_SERVICES.GET_ALL_ORDENES();
+    console.log(data)
+    SetState_OrdenesTrabajo(data)
+
+  }
+
   // Cargar datos del localStorage al iniciar
   useEffect(() => {
-    const savedOrdenes = localStorage.getItem("ordenes")
-    if (savedOrdenes) {
-      setOrdenes(JSON.parse(savedOrdenes))
-    } else {
-      setOrdenes(ordenesIniciales)
-      localStorage.setItem("ordenes", JSON.stringify(ordenesIniciales))
-    }
+    FN_GET_ALL_ORDENES_TRABAJO()
   }, [])
 
-  // Guardar en localStorage cuando cambie el estado
-  useEffect(() => {
-    if (ordenes.length > 0) {
-      localStorage.setItem("ordenes", JSON.stringify(ordenes))
-    }
-  }, [ordenes])
+  // // Guardar en localStorage cuando cambie el estado
+  // useEffect(() => {
+  //   if (ordenes.length > 0) {
+  //     localStorage.setItem("ordenes", JSON.stringify(ordenes))
+  //   }
+  // }, [ordenes])
 
   const generateOrderNumber = () => {
     const year = new Date().getFullYear()
-    const orderCount = ordenes.length + 1
+    const orderCount = State_OrdenesTrabajo.length + 1
     return `ORD-${year}-${orderCount.toString().padStart(3, "0")}`
   }
 
-  const handleAddOrden = (nuevaOrden: Omit<OrdenTrabajo, "id" | "numeroOrden">) => {
-    const orden: OrdenTrabajo = {
+  const handleAddOrden = (nuevaOrden: OrdenTrabajoType) => {
+    const orden: OrdenTrabajoType = {
       ...nuevaOrden,
-      id: Date.now().toString(),
-      numeroOrden: generateOrderNumber(),
+      id: Date.now().toString()
     }
 
-    setOrdenes((prev) => [...prev, orden])
+    SetState_OrdenesTrabajo((prev) => [...prev, orden])
     setOpen(false)
 
     toast({
@@ -156,15 +158,15 @@ export function OrdenesPage() {
     })
   }
 
-  const handleEditOrden = (ordenEditada: Omit<OrdenTrabajo, "id" | "numeroOrden">) => {
-    if (!editingOrden) return
+  const handleEditOrden = (orden:OrdenTrabajoType) => {
+    // if (!editingOrden) return
 
-    const ordenActualizada: OrdenTrabajo = {
-      ...editingOrden,
-      ...ordenEditada,
-    }
+    // const ordenActualizada: OrdenTrabajo = {
+    //   ...editingOrden,
+    //   ...ordenEditada,
+    // }
 
-    setOrdenes((prev) => prev.map((o) => (o.id === editingOrden.id ? ordenActualizada : o)))
+    // SetState_OrdenesTrabajo((prev) => prev.map((o) => (o.id === editingOrden.id ? ordenActualizada : o)))
     setEditingOrden(null)
     setOpen(false)
 
@@ -177,7 +179,7 @@ export function OrdenesPage() {
   const handleDeleteOrden = () => {
     if (!ordenToDelete) return
 
-    setOrdenes((prev) => prev.filter((o) => o.id !== ordenToDelete.id))
+    SetState_OrdenesTrabajo((prev) => prev.filter((o) => o.id !== ordenToDelete.id))
     setDeleteDialogOpen(false)
     setOrdenToDelete(null)
 
@@ -187,21 +189,21 @@ export function OrdenesPage() {
     })
   }
 
-  const openEditDialog = (orden: OrdenTrabajo) => {
+  const openEditDialog = (orden: OrdenTrabajoType) => {
     setEditingOrden(orden)
     setOpen(true)
   }
 
-  const openDeleteDialog = (orden: OrdenTrabajo) => {
+  const openDeleteDialog = (orden: OrdenTrabajoType) => {
     setOrdenToDelete(orden)
     setDeleteDialogOpen(true)
   }
 
-  const filteredOrdenes = ordenes.filter(
+  const filteredOrdenes = State_OrdenesTrabajo.filter(
     (orden) =>
-      orden.numeroOrden.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orden.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orden.vehiculoInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // orden.numeroOrden.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orden.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orden.vehicle_marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
       orden.descripcion.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
@@ -216,7 +218,7 @@ export function OrdenesPage() {
     return <Badge className={colors[estado]}>{estado}</Badge>
   }
 
-  const getPrioridadBadge = (prioridad: OrdenTrabajo["prioridad"]) => {
+  const getPrioridadBadge = (prioridad: OrdenTrabajoType["prioridad"]) => {
     const colors = {
       Baja: "bg-gray-500 hover:bg-gray-600",
       Normal: "bg-blue-500 hover:bg-blue-600",
@@ -301,7 +303,7 @@ export function OrdenesPage() {
               Completadas ({filteredOrdenes.filter((o) => o.estado === "Completada").length})
             </TabsTrigger>
             <TabsTrigger value="entregadas">
-              Entregadas ({filteredOrdenes.filter((o) => o.estado === "Entregada").length})
+              Entregadas ({filteredOrdenes.filter((o) => o.estado === "Completada").length})
             </TabsTrigger>
           </TabsList>
 
@@ -329,34 +331,34 @@ export function OrdenesPage() {
                   <TableBody>
                     {filteredOrdenes.map((orden) => (
                       <TableRow key={orden.id}>
-                        <TableCell className="font-medium">{orden.numeroOrden}</TableCell>
+                        <TableCell className="font-medium">{orden.numero_orden}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <span>{orden.clienteNombre}</span>
+                            <span>{orden.client_name}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <Car className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{orden.vehiculoInfo}</span>
+                            <span className="text-sm">{orden.vehicle_marca} {orden.vehiculo_modelo}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{orden.tipoServicio}</div>
+                            <div className="font-medium">...</div>
                             <div className="text-sm text-muted-foreground truncate max-w-[200px]">
                               {orden.descripcion}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{orden.tecnicoAsignado}</TableCell>
+                        <TableCell>{orden.tecnico_name}</TableCell>
                         <TableCell>{getEstadoBadge(orden.estado)}</TableCell>
                         <TableCell>{getPrioridadBadge(orden.prioridad)}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{orden.fechaEstimadaEntrega}</span>
+                            <span className="text-sm">{orden.fecha_entrega}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -427,33 +429,33 @@ export function OrdenesPage() {
                       <TableBody>
                         {ordenesFiltradas.map((orden) => (
                           <TableRow key={orden.id}>
-                            <TableCell className="font-medium">{orden.numeroOrden}</TableCell>
+                            <TableCell className="font-medium">{orden.numero_orden}</TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <User className="h-4 w-4 text-muted-foreground" />
-                                <span>{orden.clienteNombre}</span>
+                                <span>{orden.client_name}</span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <Car className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{orden.vehiculoInfo}</span>
+                                <span className="text-sm">{orden.vehicle_marca}</span>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{orden.tipoServicio}</div>
+                                <div className="font-medium">...</div>
                                 <div className="text-sm text-muted-foreground truncate max-w-[200px]">
                                   {orden.descripcion}
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>{orden.tecnicoAsignado}</TableCell>
+                            <TableCell>{orden.tecnico_name}</TableCell>
                             <TableCell>{getPrioridadBadge(orden.prioridad)}</TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <Clock className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{orden.fechaEstimadaEntrega}</span>
+                                <span className="text-sm">{orden.fecha_entrega}</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -498,7 +500,7 @@ export function OrdenesPage() {
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará permanentemente la orden{" "}
-              <strong>{ordenToDelete?.numeroOrden}</strong> del sistema.
+              <strong>{ordenToDelete?.numero_orden}</strong> del sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
