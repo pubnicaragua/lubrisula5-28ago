@@ -16,6 +16,8 @@ export type OrdenTrabajoType = {
     vehiculo_modelo: string;
     client_name: string;
     tecnico_name: string;
+    tipo_servicio_id:string;
+    observacion:string;
 }
 
 
@@ -26,12 +28,14 @@ const ORDENES_TRABAJO_SERVICES = {
         console.log('GET_ALL_USERS', data);
         return data;
     },
-    // async INSERT_ORDENES(vehicles: OrdenTrabajoType): Promise<OrdenTrabajoType[]> {
-    //     const res: OrdenTrabajoType[] = await AxiosPost({ path: '/vehicles', payload: vehicles })
 
-    //     console.log('INSERT_USER', res);
-    //     return res;
-    // },
+    async INSERT_ORDEN(orden: OrdenTrabajoType): Promise<OrdenTrabajoType[]> {
+        console.log(orden)
+        const res: OrdenTrabajoType[] = await AxiosPost({ path: '/ordenes_trabajo', payload: orden })
+
+        console.log('INSERT_USER', res);
+        return res;
+    },
     // async UPDATE_ORDENES(vehicle: OrdenTrabajoType): Promise<OrdenTrabajoType[]> {
     //     const Id_Vehiculo = vehicle.id; // Use vehicle.id if available, otherwise use Id
     //     return vehicle

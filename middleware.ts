@@ -8,7 +8,6 @@ export async function middleware(request: NextRequest) {
 
   // Verificar sesión
 
-  // await supabase.auth.signOut()
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -94,7 +93,7 @@ export async function middleware(request: NextRequest) {
       } else if (userRole === "taller") {
         return NextResponse.redirect(new URL("/taller/dashboard", request.url))
       } else if (userRole === "aseguradora") {
-        return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
+        return NextResponse.redirect(new URL("/aseguradora/dashboards", request.url))
       } else if (userRole === "cliente") {
         return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
       } else {
@@ -118,22 +117,24 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Si el usuario está autenticado y está intentando acceder a rutas de autenticación, redirigir al dashboard según rol
-    if (request.nextUrl.pathname === "/auth/login" || request.nextUrl.pathname === "/auth/registro") {
-      if (userRole === "superadmin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
-      } else if (userRole === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
-      } else if (userRole === "taller") {
-        return NextResponse.redirect(new URL("/taller/dashboard", request.url))
-      } else if (userRole === "aseguradora") {
-        return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
-      } else if (userRole === "cliente") {
-        return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
-      } else {
-        return NextResponse.redirect(new URL("/dashboard", request.url))
-      }
-    }
+    // // Si el usuario está autenticado y está intentando acceder a rutas de autenticación, redirigir al dashboard según rol
+    // if (request.nextUrl.pathname === "/auth/login" || request.nextUrl.pathname === "/auth/registro") {
+    //   if (userRole === "superadmin") {
+    //     return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+    //   } else if (userRole === "admin") {
+    //     return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+    //   } else if (userRole === "taller") {
+    //     return NextResponse.redirect(new URL("/taller/dashboard", request.url))
+    //   } else if (userRole === "aseguradora") {
+    //     await supabase.auth.signOut()
+
+    //     return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
+    //   } else if (userRole === "cliente") {
+    //     return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
+    //   } else {
+    //     return NextResponse.redirect(new URL("/dashboard", request.url))
+    //   }
+    // }
   }
 
   return res

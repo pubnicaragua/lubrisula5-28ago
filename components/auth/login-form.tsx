@@ -49,9 +49,8 @@ export default function LoginForm() {
         router.push("/dashboard")
       } else if (data.user?.user_metadata?.role === "taller") {
         router.push("/taller/dashboard")
-      } else {
-        // Redirección por defecto si no se encuentra el rol
-        router.push("/dashboard")
+      } else if (data.user?.user_metadata?.role === 'aseguradora') {
+        router.push("/aseguradora/dashboardss")
       }
       router.refresh()
     } catch (err: any) {

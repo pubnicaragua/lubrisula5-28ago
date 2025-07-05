@@ -8,7 +8,7 @@ export default function AseguradoraCotizacionesPage() {
       <div className="container mx-auto py-6">
         <h1 className="text-3xl font-bold mb-6">Cotizaciones</h1>
         <Suspense fallback={<div>Cargando cotizaciones...</div>}>
-          <CotizacionesPage />
+          {/* <CotizacionesPage  /> */}
         </Suspense>
       </div>
     </RoleGuard>

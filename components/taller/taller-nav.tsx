@@ -15,6 +15,7 @@ import {
   UserCog,
   DollarSign,
   Package,
+  ServerIcon
 } from "lucide-react"
 
 export function TallerNav() {
@@ -55,6 +56,11 @@ export function TallerNav() {
       href: "/taller/citas",
       title: "Citas",
       icon: <Calendar className="mr-2 h-4 w-4" />,
+    },
+    {
+      href: "/taller/servicios",
+      title: "Servicios",
+      icon: <ServerIcon className="mr-2 h-4 w-4" />,
     },
     {
       href: "/taller/inventario",

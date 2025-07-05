@@ -23,6 +23,12 @@ const VEHICULO_SERVICES = {
         console.log('GET_ALL_USERS', data);
         return data;
     },
+    async GET_ALL_VEHICULOS_BY_CLIENT(client_id:string): Promise<VehiculoType[]> {
+        const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?client_id=eq.${client_id}` })
+
+        console.log('GET_ALL_USERS', data);
+        return data;
+    },
     async INSERT_VEHICULO(vehicles: VehiculoType): Promise<VehiculoType[]> {
         const res: VehiculoType[] = await AxiosPost({ path: '/vehicles', payload: vehicles })
         

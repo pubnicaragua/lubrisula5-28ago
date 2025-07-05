@@ -158,7 +158,7 @@ export function OrdenesPage() {
     })
   }
 
-  const handleEditOrden = (orden:OrdenTrabajoType) => {
+  const handleEditOrden = (orden: OrdenTrabajoType) => {
     // if (!editingOrden) return
 
     // const ordenActualizada: OrdenTrabajo = {
@@ -217,6 +217,7 @@ export function OrdenesPage() {
     }
     return <Badge className={colors[estado]}>{estado}</Badge>
   }
+
 
   const getPrioridadBadge = (prioridad: OrdenTrabajoType["prioridad"]) => {
     const colors = {
