@@ -12,7 +12,7 @@ export type TipoServicioType = {
 
 const SERVICIOS_SERVICES = {
     async GET_ALL_SERVICIOS(): Promise<TipoServicioType[]> {
-        const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_servicios' })
+        const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_operacion' })
         return data;
     },
   

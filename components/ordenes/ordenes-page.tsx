@@ -33,82 +33,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
 
-interface OrdenTrabajo {
-  id: string
-  numeroOrden: string
-  clienteId: string
-  clienteNombre: string
-  vehiculoId: string
-  vehiculoInfo: string
-  descripcion: string
-  tipoServicio: "Mantenimiento" | "Reparación" | "Diagnóstico" | "Revisión" | "Otro"
-  fechaIngreso: string
-  fechaEstimadaEntrega: string
-  fechaEntrega?: string
-  tecnicoAsignado: string
-  prioridad: "Baja" | "Normal" | "Alta" | "Urgente"
-  estado: "Pendiente" | "En Proceso" | "Completada" | "Entregada" | "Cancelada"
-  costoEstimado?: number
-  costoFinal?: number
-  observaciones?: string
-}
-
-
-// Datos mock iniciales
-const ordenesIniciales: OrdenTrabajo[] = [
-  {
-    id: "1",
-    numeroOrden: "ORD-2023-001",
-    clienteId: "1",
-    clienteNombre: "Juan Pérez",
-    vehiculoId: "1",
-    vehiculoInfo: "Toyota Corolla 2020 (ABC-123)",
-    descripcion: "Cambio de aceite y filtros",
-    tipoServicio: "Mantenimiento",
-    fechaIngreso: "2023-04-01",
-    fechaEstimadaEntrega: "2023-04-02",
-    tecnicoAsignado: "Juan Martínez",
-    prioridad: "Normal",
-    estado: "Completada",
-    costoEstimado: 1500,
-    costoFinal: 1450,
-    observaciones: "Servicio completado sin inconvenientes",
-  },
-  {
-    id: "2",
-    numeroOrden: "ORD-2023-002",
-    clienteId: "2",
-    clienteNombre: "María González",
-    vehiculoId: "2",
-    vehiculoInfo: "Honda Civic 2019 (DEF-456)",
-    descripcion: "Reparación de frenos delanteros",
-    tipoServicio: "Reparación",
-    fechaIngreso: "2023-04-03",
-    fechaEstimadaEntrega: "2023-04-05",
-    tecnicoAsignado: "Carlos Rodríguez",
-    prioridad: "Alta",
-    estado: "En Proceso",
-    costoEstimado: 3500,
-    observaciones: "Requiere cambio de pastillas y discos",
-  },
-  {
-    id: "3",
-    numeroOrden: "ORD-2023-003",
-    clienteId: "3",
-    clienteNombre: "Carlos Rodríguez",
-    vehiculoId: "3",
-    vehiculoInfo: "Ford Focus 2021 (GHI-789)",
-    descripcion: "Diagnóstico de ruido en motor",
-    tipoServicio: "Diagnóstico",
-    fechaIngreso: "2023-04-04",
-    fechaEstimadaEntrega: "2023-04-06",
-    tecnicoAsignado: "María López",
-    prioridad: "Normal",
-    estado: "Pendiente",
-    costoEstimado: 800,
-  },
-]
-
 export function OrdenesPage() {
   const [State_OrdenesTrabajo, SetState_OrdenesTrabajo] = useState<OrdenTrabajoType[]>([])
   const [open, setOpen] = useState(false)
@@ -125,48 +49,23 @@ export function OrdenesPage() {
 
   }
 
-  // Cargar datos del localStorage al iniciar
-  useEffect(() => {
-    FN_GET_ALL_ORDENES_TRABAJO()
-  }, [])
-
-  // // Guardar en localStorage cuando cambie el estado
-  // useEffect(() => {
-  //   if (ordenes.length > 0) {
-  //     localStorage.setItem("ordenes", JSON.stringify(ordenes))
-  //   }
-  // }, [ordenes])
-
   const generateOrderNumber = () => {
     const year = new Date().getFullYear()
     const orderCount = State_OrdenesTrabajo.length + 1
     return `ORD-${year}-${orderCount.toString().padStart(3, "0")}`
   }
 
-  const handleAddOrden = (nuevaOrden: OrdenTrabajoType) => {
-    const orden: OrdenTrabajoType = {
-      ...nuevaOrden,
-      id: Date.now().toString()
-    }
-
-    SetState_OrdenesTrabajo((prev) => [...prev, orden])
+  const FN_ADD_NEW_ORDEN = async (nuevaOrden: OrdenTrabajoType) => {
+    await FN_GET_ALL_ORDENES_TRABAJO()
     setOpen(false)
-
     toast({
       title: "Orden creada",
       description: "La orden de trabajo ha sido creada exitosamente",
     })
   }
 
-  const handleEditOrden = (orden: OrdenTrabajoType) => {
-    // if (!editingOrden) return
-
-    // const ordenActualizada: OrdenTrabajo = {
-    //   ...editingOrden,
-    //   ...ordenEditada,
-    // }
-
-    // SetState_OrdenesTrabajo((prev) => prev.map((o) => (o.id === editingOrden.id ? ordenActualizada : o)))
+  const FN_UPDATE_ORDEN = async (orden: OrdenTrabajoType) => {
+    await FN_GET_ALL_ORDENES_TRABAJO()
     setEditingOrden(null)
     setOpen(false)
 
@@ -176,9 +75,9 @@ export function OrdenesPage() {
     })
   }
 
-  const handleDeleteOrden = () => {
+  const FN_DELETE_ORDEN = async () => {
     if (!ordenToDelete) return
-
+    await ORDENES_TRABAJO_SERVICES.DELETE_ORDEN(ordenToDelete.id)
     SetState_OrdenesTrabajo((prev) => prev.filter((o) => o.id !== ordenToDelete.id))
     setDeleteDialogOpen(false)
     setOrdenToDelete(null)
@@ -202,12 +101,12 @@ export function OrdenesPage() {
   const filteredOrdenes = State_OrdenesTrabajo.filter(
     (orden) =>
       // orden.numeroOrden.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orden.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orden.vehicle_marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orden.descripcion.toLowerCase().includes(searchTerm.toLowerCase()),
+      orden.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orden.vehicle_marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orden.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const getEstadoBadge = (estado: OrdenTrabajo["estado"]) => {
+  const getEstadoBadge = (estado: string) => {
     const colors = {
       Pendiente: "bg-yellow-500 hover:bg-yellow-600",
       "En Proceso": "bg-blue-500 hover:bg-blue-600",
@@ -232,6 +131,11 @@ export function OrdenesPage() {
       </Badge>
     )
   }
+
+
+  useEffect(() => {
+    FN_GET_ALL_ORDENES_TRABAJO()
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -262,7 +166,7 @@ export function OrdenesPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <NuevaOrdenForm
-                  onSubmit={editingOrden ? handleEditOrden : handleAddOrden}
+                  onSubmit={editingOrden ? FN_UPDATE_ORDEN : FN_ADD_NEW_ORDEN}
                   ordenExistente={editingOrden}
                 />
               </DialogContent>
@@ -347,7 +251,7 @@ export function OrdenesPage() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">...</div>
+                            <div className="font-medium">{orden.servicio_name}</div>
                             <div className="text-sm text-muted-foreground truncate max-w-[200px]">
                               {orden.descripcion}
                             </div>
@@ -401,7 +305,7 @@ export function OrdenesPage() {
               completadas: "Completada",
               entregadas: "Entregada",
             }
-            const estado = estadoMap[tab as keyof typeof estadoMap] as OrdenTrabajo["estado"]
+            const estado = estadoMap[tab as keyof typeof estadoMap] as OrdenTrabajoType["estado"]
             const ordenesFiltradas = filteredOrdenes.filter((o) => o.estado === estado)
 
             return (
@@ -506,7 +410,7 @@ export function OrdenesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteOrden}>Eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={FN_DELETE_ORDEN}>Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

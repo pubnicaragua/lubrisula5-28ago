@@ -14,46 +14,26 @@ import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
 import TECNICO_SERVICES, { TecnicoType } from "@/services/TECNICO_SERVICES.SERVICE"
 import SERVICIOS_SERVICES, { TipoServicioType } from "@/services/SERVICIOS.SERVICE"
 
-interface OrdenForm {
-  clienteId: string
-  clienteNombre: string
-  vehiculoId: string
-  vehiculoInfo: string
-  descripcion: string
-  tipoServicio: "Mantenimiento" | "Reparación" | "Diagnóstico" | "Revisión" | "Otro"
-  fechaIngreso: string
-  fechaEstimadaEntrega: string
-  fechaEntrega?: string
-  tecnicoAsignado: string
-  prioridad: "Baja" | "Normal" | "Alta" | "Urgente"
-  estado: "Pendiente" | "En Proceso" | "Completada" | "Entregada" | "Cancelada"
-  costoEstimado?: number
-  costoFinal?: number
-  observaciones?: string
-}
 
 interface NuevaOrdenFormProps {
   onSubmit: (orden: OrdenTrabajoType | null) => void
-  ordenExistente?: any
+  ordenExistente?: OrdenTrabajoType
 }
 
 export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps) {
   const [formData, setFormData] = useState<OrdenTrabajoType | null>(null)
-
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [clientes, setClientes] = useState<any[]>([])
-  const [vehiculos, setVehiculos] = useState<any[]>([])
-  const [tecnicos, setTecnicos] = useState<any[]>([])
-
   const [State_Clientes, SetStateClientes] = useState<ClienteType[]>([])
   const [State_Vehiculos, SetState_Vehiculos] = useState<VehiculoType[]>([])
   const [State_Tecnicos, SetState_Tecnicos] = useState<TecnicoType[]>([])
   const [State_TiposServicios, SetState_TiposServicios] = useState<TipoServicioType[]>([])
   const GET_CLIENTES = async () => {
     const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
+    console.log(res)
     SetStateClientes(res)
   }
   const GET_VEHICULOS = async (client_id: string) => {
+    console.log(client_id)
     const res = await VEHICULO_SERVICES.GET_ALL_VEHICULOS_BY_CLIENT(client_id);
     SetState_Vehiculos(res)
   }
@@ -72,48 +52,21 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     GET_CLIENTES()
     GET_TECNICOS()
     GET_TIPOS_SERVICIOS()
-    const savedClientes = localStorage.getItem("clientes")
-    const savedVehiculos = localStorage.getItem("vehiculos")
-    const savedMiembros = localStorage.getItem("miembros")
-
-    if (savedClientes) {
-      setClientes(JSON.parse(savedClientes))
-    }
-    if (savedVehiculos) {
-      setVehiculos(JSON.parse(savedVehiculos))
-    }
-    if (savedMiembros) {
-      const miembros = JSON.parse(savedMiembros)
-      setTecnicos(miembros.filter((m: any) => m.cargo.includes("Técnico")))
-    }
   }, []);
 
 
   // Cargar datos de la orden existente si se está editando
-  // useEffect(() => {
-  //   if (ordenExistente) {
-  //     setFormData({
-  //       cliente_id: ordenExistente.clienteId || "",
-  //       client_name: ordenExistente.clienteNombre || "",
-  //       vehiculo_id: ordenExistente.vehiculoId || "",
-  //       vehiculoInfo: ordenExistente.vehiculoInfo || "",
-  //       descripcion: ordenExistente.descripcion || "",
-  //       tipoServicio: ordenExistente.tipoServicio || "Mantenimiento",
-  //       fechaIngreso: ordenExistente.fechaIngreso || new Date().toISOString().split("T")[0],
-  //       fechaEstimadaEntrega: ordenExistente.fechaEstimadaEntrega || "",
-  //       fechaEntrega: ordenExistente.fechaEntrega || "",
-  //       tecnicoAsignado: ordenExistente.tecnicoAsignado || "",
-  //       prioridad: ordenExistente.prioridad || "Normal",
-  //       estado: ordenExistente.estado || "Pendiente",
-  //       costoEstimado: ordenExistente.costoEstimado || 0,
-  //       costoFinal: ordenExistente.costoFinal || 0,
-  //       observaciones: ordenExistente.observaciones || "",
-  //     })
-  //   }
-  // }, [ordenExistente])
+  useEffect(() => {
+    if (ordenExistente) {
+      console.log(ordenExistente)
+      setFormData(ordenExistente)
+    }
+  }, [ordenExistente])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+    console.log(name)
+    console.log(value)
     setFormData({
       ...formData,
       [name]: name === "costoEstimado" || name === "costoFinal" ? Number.parseFloat(value) || 0 : value,
@@ -121,32 +74,29 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
   }
 
   const handleSelectChange = async (name: string, value: string) => {
+    console.log(name)
+    console.log(value)
     setFormData({ ...formData, [name]: value })
 
     // Si cambia el cliente, actualizar el nombre del cliente
-    if (name === "client_id") {
+    if (name === "client_id" && !ordenExistente) {
       await GET_VEHICULOS(value)
-      const cliente = clientes.find((c) => c.id === value)
-      if (cliente) {
-        setFormData((prev) => ({
-          ...prev,
-          clienteId: value,
-          clienteNombre: `${cliente.nombre} ${cliente.apellido}`,
-        }))
-      }
+    }
+    if (name === "client_id" && ordenExistente) {
+      await GET_VEHICULOS(formData.client_id)
     }
 
-    // Si cambia el vehículo, actualizar la info del vehículo
-    if (name === "vehiculo_id") {
-      const vehiculo = vehiculos.find((v) => v.id === value)
-      if (vehiculo) {
-        setFormData((prev) => ({
-          ...prev,
-          vehiculoId: value,
-          vehiculoInfo: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.año} (${vehiculo.placa})`,
-        }))
-      }
-    }
+    // // Si cambia el vehículo, actualizar la info del vehículo
+    // if (name === "vehiculo_id") {
+    //   const vehiculo = vehiculos.find((v) => v.id === value)
+    //   if (vehiculo) {
+    //     setFormData((prev) => ({
+    //       ...prev,
+    //       vehiculoId: value,
+    //       vehiculoInfo: `${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.año} (${vehiculo.placa})`,
+    //     }))
+    //   }
+    // }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,10 +104,39 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     setIsSubmitting(true)
 
     // Simular delay de procesamiento
-    ORDENES_TRABAJO_SERVICES.INSERT_ORDEN(formData)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log(formData)
+    if (!ordenExistente) {
+      await ORDENES_TRABAJO_SERVICES.INSERT_ORDEN({
+        client_id: formData.client_id,
+        costo: formData.costo,
+        descripcion: formData.descripcion,
+        estado: formData.estado,
+        fecha_entrega: formData.fecha_entrega,
+        fecha_ingreso: formData.fecha_ingreso,
+        observacion: formData.observacion,
+        prioridad: formData.prioridad,
+        tecnico_id: formData.tecnico_id,
+        tipo_servicio_id: formData.servicio_id,
+        vehiculo_id: formData.vehiculo_id
+      })
 
-    onSubmit(null)
+    }
+    if (ordenExistente) {
+      await ORDENES_TRABAJO_SERVICES.UPDATE_ORDEN(formData.id, {
+        client_id: formData.client_id,
+        costo: formData.costo,
+        descripcion: formData.descripcion,
+        estado: formData.estado,
+        fecha_entrega: formData.fecha_entrega,
+        fecha_ingreso: formData.fecha_ingreso,
+        observacion: formData.observacion,
+        prioridad: formData.prioridad,
+        tecnico_id: formData.tecnico_id,
+        tipo_servicio_id: formData.servicio_id,
+        vehiculo_id: formData.vehiculo_id
+      })
+    }
+    onSubmit(formData)
 
     // // Limpiar formulario si no es edición
     // if (!ordenExistente) {
@@ -188,9 +167,9 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     <form onSubmit={handleSubmit} className="grid gap-4 py-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="clienteId">Cliente *</Label>
-          <Select onValueChange={(value) => handleSelectChange("client_id", value)} value={formData?.cliente_id}>
-            <SelectTrigger id="id">
+          <Label htmlFor="client_id">Cliente *</Label>
+          <Select onValueChange={(value) => handleSelectChange("client_id", value)} value={formData?.client_id}>
+            <SelectTrigger id="client_id">
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
             <SelectContent>
@@ -207,11 +186,11 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
           <Select
             onValueChange={(value) => handleSelectChange("vehiculo_id", value)}
             value={formData?.vehiculo_id}
-            disabled={!formData?.cliente_id}
+            disabled={!formData?.client_id}
           >
             <SelectTrigger id="id">
               <SelectValue
-                placeholder={!formData?.cliente_id ? "Selecciona un cliente primero" : "Seleccionar vehículo"}
+                placeholder={!formData?.client_id ? "Selecciona un cliente primero" : "Seleccionar vehículo"}
               />
             </SelectTrigger>
             <SelectContent>
@@ -240,19 +219,15 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="tipoServicio">Tipo de Servicio *</Label>
-          <Select onValueChange={(value) => handleSelectChange("tipo_servicio_id", value)} value="Mantenimiento">
-            <SelectTrigger id="id">
-              <SelectValue placeholder="Seleccionar tipo" />
+          <Label htmlFor="servicio_id">Tipo de Servicio *</Label>
+          <Select onValueChange={(value) => handleSelectChange("servicio_id", value)} value={formData?.servicio_id}>
+            <SelectTrigger id="servicio_id">
+              <SelectValue placeholder="Seleccionar servicio" />
             </SelectTrigger>
             <SelectContent>
-              {/* <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
-              <SelectItem value="Reparación">Reparación</SelectItem>
-              <SelectItem value="Diagnóstico">Diagnóstico</SelectItem>
-              <SelectItem value="Revisión">Revisión</SelectItem>
-              <SelectItem value="Otro">Otro</SelectItem> */}
+
               {State_TiposServicios.map((serv) => (
-                <SelectItem key={serv.id} value={serv.nombre}>
+                <SelectItem key={serv.id} value={serv.id}>
                   {serv.nombre}
                 </SelectItem>
               ))}
@@ -260,17 +235,17 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="tecnicoAsignado">Técnico Asignado *</Label>
+          <Label htmlFor="tecnico_id">Técnico Asignado *</Label>
           <Select
-            onValueChange={(value) => handleSelectChange("tecnico_name", value)}
-            value={formData?.tecnico_name}
+            onValueChange={(value) => handleSelectChange("tecnico_id", value)}
+            value={formData?.tecnico_id.toString()}
           >
-            <SelectTrigger id="tecnico_name">
+            <SelectTrigger id="tecnico_id">
               <SelectValue placeholder="Seleccionar técnico" />
             </SelectTrigger>
             <SelectContent>
               {State_Tecnicos.map((tecnico) => (
-                <SelectItem key={tecnico.id} value={`${tecnico.nombre} ${tecnico.apellido}`}>
+                <SelectItem key={tecnico.id} value={tecnico.id.toString()}>
                   {tecnico.nombre} {tecnico.apellido} - {tecnico.area}
                 </SelectItem>
               ))}
@@ -281,35 +256,25 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
 
       <div className="grid grid-cols-3 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="fechaIngreso">Fecha de Ingreso *</Label>
+          <Label htmlFor="fecha_ingreso">Fecha de Ingreso *</Label>
           <Input
-            id="fechaIngreso"
-            name="fechaIngreso"
+            id="fecha_ingreso"
+            name="fecha_ingreso"
             type="date"
-            value={formData?.fecha_creacion}
+            value={ordenExistente ? formData?.fecha_ingreso?.slice(0, 10) : formData?.fecha_ingreso}
             onChange={handleInputChange}
             required
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="fechaEstimadaEntrega">Fecha Estimada de Entrega *</Label>
+          <Label htmlFor="fecha_entrega">Fecha Estimada de Entrega *</Label>
           <Input
-            id="fechaEstimadaEntrega"
-            name="fechaEstimadaEntrega"
+            id="fecha_entrega"
+            name="fecha_entrega"
             type="date"
-            value={formData?.fecha_entrega}
+            value={ordenExistente ? formData?.fecha_entrega?.slice(0, 10) : formData?.fecha_entrega}
             onChange={handleInputChange}
             required
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="fechaEntrega">Fecha de Entrega</Label>
-          <Input
-            id="fechaEntrega"
-            name="fechaEntrega"
-            type="date"
-            value={formData?.fecha_entrega || ""}
-            onChange={handleInputChange}
           />
         </div>
       </div>
@@ -345,10 +310,10 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="costoEstimado">Costo Estimado (L)</Label>
+          <Label htmlFor="costo">Costo Estimado (L)</Label>
           <Input
-            id="costoEstimado"
-            name="costoEstimado"
+            id="costo"
+            name="costo"
             type="number"
             // min="0"
             step="0.01"
@@ -357,23 +322,9 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
           />
         </div>
       </div>
-      {formData?.estado === "Completada" || formData?.estado === "En Proceso" ? (
-        <div className="grid gap-2">
-          <Label htmlFor="costoFinal">Costo Final (L)</Label>
-          <Input
-            id="costoFinal"
-            name="costoFinal"
-            type="number"
-            min="0"
-            step="0.01"
-            value={formData?.costo || 0}
-            onChange={handleInputChange}
-          />
-        </div>
-      ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor="observaciones">Observaciones</Label>
+        <Label htmlFor="observacion">Observaciones</Label>
         <Textarea
           id="observacion"
           name="observacion"
