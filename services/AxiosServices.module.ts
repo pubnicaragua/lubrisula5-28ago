@@ -16,6 +16,7 @@ export async function AxiosPost({ path, payload }: { path: string, payload: any 
     const res = await axios.post(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1${path}`, payload, {
         headers: {
             "Content-Type": "application/json",
+            Prefer: "return=representation",
             apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
         }
     }

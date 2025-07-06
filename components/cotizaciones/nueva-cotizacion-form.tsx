@@ -19,10 +19,11 @@ import { getVehiclesByClient } from "@/lib/actions/vehicles"
 import Link from "next/link"
 import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
+import COTIZACIONES_SERVICES, { ParteCotizacionType } from "@/services/COTIZACIONES.SERVICE"
 
 // Tipo para la parte de cotización
 type QuotationPart = {
-  id?: string
+  id?: string,
   category: "Estructural" | "Carrocería" | "Pintura"
   name: string
   quantity: number
@@ -314,29 +315,27 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
           parts: partes,
         })
       } else {
-        // Crear nueva cotización
-        result = await createQuotation({
-          ...formData,
-          ...totales,
-          parts: partes,
-        })
+
+        await COTIZACIONES_SERVICES.INSERT_COTIZACION({
+          quotation_number: formData.quotation_number,
+          client_id: formData.client_id,
+          vehicle_id: formData.vehicle_id,
+          date: formData.date,
+          status: formData.status,
+          total_labor: totales.total_labor,
+          total_materials: totales.total_materials,
+          total_parts: totales.total_parts,
+          total: totales.total,
+          repair_hours: totales.repair_hours,
+          estimated_days: totales.estimated_days,
+
+        },
+          partes
+        )
+        onSuccess()
       }
 
-      if (result.success) {
-        toast({
-          title: cotizacionExistente ? "Cotización actualizada" : "Cotización creada",
-          description: cotizacionExistente
-            ? "La cotización ha sido actualizada correctamente"
-            : "La cotización ha sido creada correctamente",
-        })
-        onSuccess()
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "No se pudo guardar la cotización",
-          // variant: "destructive",
-        })
-      }
+
     } catch (error) {
       toast({
         title: "Error",
