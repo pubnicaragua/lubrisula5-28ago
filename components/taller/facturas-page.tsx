@@ -24,185 +24,71 @@ import { FileSpreadsheet, FileIcon as FilePdf, Plus, Pencil, Trash2, Search, Fil
 import * as XLSX from "xlsx"
 import { jsPDF } from "jspdf"
 import "jspdf-autotable"
-
-// Mock data para clientes
-const mockClientes = [
-  { id: "1", nombre: "Juan Pérez", email: "juan.perez@email.com", telefono: "555-0001" },
-  { id: "2", nombre: "María García", email: "maria.garcia@email.com", telefono: "555-0002" },
-  { id: "3", nombre: "Carlos López", email: "carlos.lopez@email.com", telefono: "555-0003" },
-  { id: "4", nombre: "Ana Martínez", email: "ana.martinez@email.com", telefono: "555-0004" },
-  { id: "5", nombre: "Roberto Sánchez", email: "roberto.sanchez@email.com", telefono: "555-0005" },
-]
-
-// Mock data para órdenes
-const mockOrdenes = [
-  { id: "1", numero: "ORD-2024-001", cliente_id: "1" },
-  { id: "2", numero: "ORD-2024-002", cliente_id: "2" },
-  { id: "3", numero: "ORD-2024-003", cliente_id: "3" },
-  { id: "4", numero: "ORD-2024-004", cliente_id: "4" },
-  { id: "5", numero: "ORD-2024-005", cliente_id: "5" },
-]
-
-// Mock data para facturas
-const mockFacturas = [
-  {
-    id: "1",
-    numero: "FAC-2024-001",
-    fecha: "2024-06-01",
-    cliente_id: "1",
-    cliente_nombre: "Juan Pérez",
-    orden_id: "1",
-    orden_numero: "ORD-2024-001",
-    subtotal: 10000,
-    impuestos: 1500,
-    total: 11500,
-    estado: "pendiente",
-    metodo_pago: "efectivo",
-    notas: "Factura por reparación de motor",
-  },
-  {
-    id: "2",
-    numero: "FAC-2024-002",
-    fecha: "2024-06-02",
-    cliente_id: "2",
-    cliente_nombre: "María García",
-    orden_id: "2",
-    orden_numero: "ORD-2024-002",
-    subtotal: 8500,
-    impuestos: 1275,
-    total: 9775,
-    estado: "pagada",
-    metodo_pago: "tarjeta",
-    notas: "Factura por cambio de aceite y filtros",
-  },
-]
-
-interface Factura {
-  id: string
-  numero: string
-  fecha: string
-  cliente_id: string
-  cliente_nombre: string
-  orden_id: string
-  orden_numero: string
-  subtotal: number
-  impuestos: number
-  total: number
-  estado: string
-  metodo_pago: string
-  notas: string
-}
-
-interface Cliente {
-  id: string
-  nombre: string
-  email: string
-  telefono: string
-}
-
-interface Orden {
-  id: string
-  numero: string
-  cliente_id: string
-}
+import FACTURAS_SERVICES, { FacturaType, MetodoPagoType } from "@/services/FACTURAS.SERVICE"
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
+import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
 
 export function FacturasPage() {
   const { toast } = useToast()
 
-  const [facturas, setFacturas] = useState<Factura[]>([])
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [ordenes, setOrdenes] = useState<Orden[]>([])
-  const [filteredFacturas, setFilteredFacturas] = useState<Factura[]>([])
+  const [State_Facturas, SetState_Facturas] = useState<FacturaType[]>([])
+  const [State_Clientes, SetState_Clientes] = useState<ClienteType[]>([])
+  const [ordenes, SetState_OrdenesTrabajo] = useState<OrdenTrabajoType[]>([])
+  const [State_MetodosPagos, SetState_MetodosPagos] = useState<MetodoPagoType[]>([])
+
+  const [filteredFacturas, setFilteredFacturas] = useState<FacturaType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("todos")
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [currentFactura, setCurrentFactura] = useState<Factura | null>(null)
+  const [State_IsEditingMode, SetState_IsEditingMode] = useState<boolean>(false)
+  const [State_FacturaToDelete, SetState_FacturaToDelete] = useState<FacturaType | null>(null)
 
-  const [formData, setFormData] = useState({
-    numero: "",
-    fecha: new Date().toISOString().split("T")[0],
-    cliente_id: "",
-    orden_id: "",
-    subtotal: 0,
-    impuestos: 0,
-    total: 0,
-    estado: "pendiente",
-    metodo_pago: "efectivo",
-    notas: "",
-  })
+  const [formData, setFormData] = useState<FacturaType>()
 
   const estadosFactura = [
-    { value: "pendiente", label: "Pendiente" },
-    { value: "pagada", label: "Pagada" },
-    { value: "cancelada", label: "Cancelada" },
-    { value: "vencida", label: "Vencida" },
+    { value: "Pendiente", label: "Pendiente" },
+    { value: "Pagado", label: "Pagado" },
+    { value: "Cancelado", label: "Cancelado" },
+    { value: "Vencido", label: "Vencido" },
   ]
 
-  const metodosPago = [
-    { value: "efectivo", label: "Efectivo" },
-    { value: "tarjeta", label: "Tarjeta de Crédito/Débito" },
-    { value: "transferencia", label: "Transferencia Bancaria" },
-    { value: "cheque", label: "Cheque" },
-  ]
-
-  useEffect(() => {
-    loadMockData()
-  }, [])
-
-  useEffect(() => {
-    if (facturas.length > 0) {
-      filterFacturas()
-    }
-  }, [searchTerm, statusFilter, facturas])
-
-  const loadMockData = () => {
-    setIsLoading(true)
-
-    // Simular carga de datos
-    setTimeout(() => {
-      // Cargar datos desde localStorage o usar mock data
-      const savedFacturas = localStorage.getItem("mockFacturas")
-      const savedClientes = localStorage.getItem("mockClientes")
-      const savedOrdenes = localStorage.getItem("mockOrdenes")
-
-      if (savedFacturas) {
-        setFacturas(JSON.parse(savedFacturas))
-      } else {
-        setFacturas(mockFacturas)
-        localStorage.setItem("mockFacturas", JSON.stringify(mockFacturas))
-      }
-
-      if (savedClientes) {
-        setClientes(JSON.parse(savedClientes))
-      } else {
-        setClientes(mockClientes)
-        localStorage.setItem("mockClientes", JSON.stringify(mockClientes))
-      }
-
-      if (savedOrdenes) {
-        setOrdenes(JSON.parse(savedOrdenes))
-      } else {
-        setOrdenes(mockOrdenes)
-        localStorage.setItem("mockOrdenes", JSON.stringify(mockOrdenes))
-      }
-
-      setIsLoading(false)
-    }, 500)
+  const FN_GET_FACTURAS = async () => {
+    const res = await FACTURAS_SERVICES.GET_ALL_FACTURAS()
+    SetState_Facturas(res)
+    setIsLoading(false)
+  }
+  const FN_GET_ALL_CLIENTS = async () => {
+    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
+    SetState_Clientes(res)
+  }
+  const FN_GET_ORDENES_DE_TRABAJO = async () => {
+    const res = await ORDENES_TRABAJO_SERVICES.GET_ALL_ORDENES()
+    SetState_OrdenesTrabajo(res)
+  }
+  const FN_GET_METODOS_PAGO = async () => {
+    const res = await FACTURAS_SERVICES.GET_ALL_METODOS_PAGO()
+    SetState_MetodosPagos(res)
   }
 
+  useEffect(() => {
+    if (State_Facturas.length > 0) {
+      filterFacturas()
+    }
+  }, [searchTerm, statusFilter, State_Facturas])
+
   const filterFacturas = () => {
-    let filtered = facturas
+    let filtered = State_Facturas
 
     // Filtrar por término de búsqueda
     if (searchTerm) {
       filtered = filtered.filter(
         (factura) =>
-          factura.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          factura.cliente_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          factura.orden_numero.toLowerCase().includes(searchTerm.toLowerCase()),
+          factura.num_factura.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          factura.client_name.toLowerCase().includes(searchTerm.toLowerCase())
+        // factura.orden_numero.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
@@ -221,158 +107,112 @@ export function FacturasPage() {
     // Calcular total automáticamente cuando cambian subtotal o impuestos
     if (name === "subtotal" || name === "impuestos") {
       const subtotal = name === "subtotal" ? Number.parseFloat(value) || 0 : formData.subtotal
-      const impuestos = name === "impuestos" ? Number.parseFloat(value) || 0 : formData.impuestos
+      const impuestos = name === "impuestos" ? Number.parseFloat(value) || 0 : formData.impuesto
       setFormData((prev) => ({ ...prev, total: subtotal + impuestos }))
     }
   }
 
   const handleSelectChange = (name: string, value: string) => {
+    console.log(name)
+    console.log(value)
     setFormData((prev) => ({ ...prev, [name]: value }))
 
     // Si se selecciona una orden, cargar datos del cliente automáticamente
     if (name === "orden_id") {
       const orden = ordenes.find((o) => o.id === value)
       if (orden) {
-        setFormData((prev) => ({ ...prev, cliente_id: orden.cliente_id }))
+        setFormData((prev) => ({ ...prev, cliente_id: orden.client_id }))
       }
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const cliente = clientes.find((c) => c.id === formData.cliente_id)
-    const orden = ordenes.find((o) => o.id === formData.orden_id)
-
-    if (currentFactura) {
-      // Actualizar factura existente
-      const updatedFacturas = facturas.map((f) =>
-        f.id === currentFactura.id
-          ? {
-              ...f,
-              numero: formData.numero,
-              fecha: formData.fecha,
-              cliente_id: formData.cliente_id,
-              cliente_nombre: cliente?.nombre || "",
-              orden_id: formData.orden_id,
-              orden_numero: orden?.numero || "",
-              subtotal: formData.subtotal,
-              impuestos: formData.impuestos,
-              total: formData.total,
-              estado: formData.estado,
-              metodo_pago: formData.metodo_pago,
-              notas: formData.notas,
-            }
-          : f,
-      )
-
-      setFacturas(updatedFacturas)
-      localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
-
-      toast({
-        title: "Factura actualizada",
-        description: `La factura ${formData.numero} ha sido actualizada correctamente`,
-      })
-    } else {
-      // Crear nueva factura
-      const newFactura: Factura = {
-        id: Date.now().toString(),
-        numero: formData.numero,
-        fecha: formData.fecha,
-        cliente_id: formData.cliente_id,
-        cliente_nombre: cliente?.nombre || "",
-        orden_id: formData.orden_id,
-        orden_numero: orden?.numero || "",
-        subtotal: formData.subtotal,
-        impuestos: formData.impuestos,
-        total: formData.total,
-        estado: formData.estado,
-        metodo_pago: formData.metodo_pago,
-        notas: formData.notas,
-      }
-
-      const updatedFacturas = [...facturas, newFactura]
-      setFacturas(updatedFacturas)
-      localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
-
-      toast({
-        title: "Factura creada",
-        description: `La factura ${formData.numero} ha sido creada correctamente`,
-      })
+    console.log(formData)
+    //si no se esta editando factura entonces inserta una nueva
+    if (!State_IsEditingMode) {
+      await FACTURAS_SERVICES.INSERT_FACTURA(formData);
     }
+    if (State_IsEditingMode) {
+      await FACTURAS_SERVICES.UPDATE_FACTURA({
+        id: formData.id,
+        client_id: formData.client_id,
+        estado: formData.estado,
+        orden_trabajo_id: formData.orden_trabajo_id,
+        num_factura: formData.num_factura,
+        metodo_pago_id: formData.metodo_pago_id,
+        entidad_bancaria_id: formData.entidad_bancaria_id,
+        subtotal: formData.subtotal,
+        fecha_emision: formData.fecha_emision,
+        impuesto: formData.impuesto,
+        descuento: formData.descuento,
+        total: formData.total,
+        nota: formData.nota
+      });
+    }
+    await FN_GET_FACTURAS()
+    setIsDialogOpen(false)
+    SetState_IsEditingMode(false)
+
+    //   toast({
+    //     title: "Factura creada",
+    //     description: `La factura ${formData.numero} ha sido creada correctamente`,
+    //   })
+    // }
 
     // Cerrar diálogo y resetear formulario
-    setIsDialogOpen(false)
-    resetForm()
+    // resetForm()
   }
 
-  const handleEdit = (factura: Factura) => {
-    setCurrentFactura(factura)
-    setFormData({
-      numero: factura.numero,
-      fecha: factura.fecha,
-      cliente_id: factura.cliente_id,
-      orden_id: factura.orden_id,
-      subtotal: factura.subtotal,
-      impuestos: factura.impuestos,
-      total: factura.total,
-      estado: factura.estado,
-      metodo_pago: factura.metodo_pago,
-      notas: factura.notas,
-    })
+  const handleEdit = (factura: FacturaType) => {
+    console.log(factura)
+    // setCurrentFactura(factura)
+    FN_GET_ALL_CLIENTS()
+    FN_GET_ORDENES_DE_TRABAJO()
+    FN_GET_METODOS_PAGO()
+    SetState_IsEditingMode(true)
+    setFormData(factura)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = () => {
-    if (!currentFactura) return
 
-    const updatedFacturas = facturas.filter((f) => f.id !== currentFactura.id)
-    setFacturas(updatedFacturas)
-    localStorage.setItem("mockFacturas", JSON.stringify(updatedFacturas))
 
-    toast({
-      title: "Factura eliminada",
-      description: `La factura ${currentFactura.numero} ha sido eliminada correctamente`,
-    })
-
+  const confirmDelete = async (factura: FacturaType) => {
+    await FACTURAS_SERVICES.DELTE_FACTURA(factura.id)
+    await FN_GET_FACTURAS()
     setIsDeleteDialogOpen(false)
-    setCurrentFactura(null)
-  }
-
-  const confirmDelete = (factura: Factura) => {
-    setCurrentFactura(factura)
-    setIsDeleteDialogOpen(true)
   }
 
   const resetForm = () => {
-    setCurrentFactura(null)
+    // setCurrentFactura(null)
     setFormData({
-      numero: "",
-      fecha: new Date().toISOString().split("T")[0],
-      cliente_id: "",
-      orden_id: "",
+      num_factura: "",
+      fecha_emision: new Date().toISOString().split("T")[0],
+      client_id: "",
+      orden_trabajo_id: "",
       subtotal: 0,
-      impuestos: 0,
+      impuesto: 0,
       total: 0,
       estado: "pendiente",
-      metodo_pago: "efectivo",
-      notas: "",
+      metodo_pago_id: 0,
+      nota: ""
     })
   }
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredFacturas.map((f) => ({
-        Número: f.numero,
-        Fecha: f.fecha,
-        Cliente: f.cliente_nombre,
-        Orden: f.orden_numero,
+        Número: f.num_factura,
+        Fecha: f.fecha_emision,
+        Cliente: f.client_name,
+        Orden: "...",
         Subtotal: f.subtotal,
-        Impuestos: f.impuestos,
+        Impuestos: f.impuesto,
         Total: f.total,
         Estado: f.estado,
-        "Método de Pago": f.metodo_pago,
-        Notas: f.notas,
+        "Método de Pago": f.metodo_pago_name,
+        Notas: "....",
       })),
     )
 
@@ -395,9 +235,9 @@ export function FacturasPage() {
     // Tabla
     const tableColumn = ["Número", "Fecha", "Cliente", "Total", "Estado"]
     const tableRows = filteredFacturas.map((f) => [
-      f.numero,
-      f.fecha,
-      f.cliente_nombre,
+      f.num_factura,
+      f.fecha_emision,
+      f.client_name,
       `$${f.total.toFixed(2)}`,
       f.estado,
     ])
@@ -414,6 +254,25 @@ export function FacturasPage() {
 
     doc.save("Facturas.pdf")
   }
+  function getEstadoFacturaClass(estado: string): string {
+    switch (estado) {
+      case "Pagado":
+        return "bg-green-100 text-green-800";
+      case "Pendiente":
+        return "bg-yellow-100 text-yellow-800";
+      case "Vencido":
+        return "bg-red-100 text-red-800";
+      case "Cancelado":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  }
+
+
+  useEffect(() => {
+    FN_GET_FACTURAS()
+  }, [])
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -432,6 +291,10 @@ export function FacturasPage() {
             onClick={() => {
               resetForm()
               setIsDialogOpen(true)
+              SetState_IsEditingMode(false)
+              FN_GET_ALL_CLIENTS()
+              FN_GET_ORDENES_DE_TRABAJO()
+              FN_GET_METODOS_PAGO()
             }}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -444,8 +307,8 @@ export function FacturasPage() {
         <CardHeader>
           <CardTitle>Gestión de Facturas</CardTitle>
           <CardDescription>
-            Administra todas las facturas de tu taller automotriz (Mock Data Local - {facturas.length} facturas,{" "}
-            {clientes.length} clientes)
+            Administra todas las facturas de tu taller automotriz (Mock Data Local - {State_Facturas.length} facturas,{" "}
+            {State_Clientes.length} clientes)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -506,37 +369,33 @@ export function FacturasPage() {
                   ) : (
                     filteredFacturas.map((factura) => (
                       <TableRow key={factura.id}>
-                        <TableCell className="font-medium">{factura.numero}</TableCell>
-                        <TableCell>{new Date(factura.fecha).toLocaleDateString()}</TableCell>
-                        <TableCell>{factura.cliente_nombre}</TableCell>
-                        <TableCell>{factura.orden_numero}</TableCell>
+                        <TableCell className="font-medium">{factura.num_factura}</TableCell>
+                        <TableCell>{new Date(factura.fecha_emision).toLocaleDateString()}</TableCell>
+                        <TableCell>{factura.client_name}</TableCell>
+                        <TableCell>{factura.orden_numero} - {factura.orden_client_name} - {factura.orden_servicio_name} - {factura.orden_estado}</TableCell>
                         <TableCell className="text-right">${factura.subtotal.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${factura.impuestos.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${factura.impuesto.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-medium">${factura.total.toFixed(2)}</TableCell>
                         <TableCell>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              factura.estado === "pagada"
-                                ? "bg-green-100 text-green-800"
-                                : factura.estado === "pendiente"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : factura.estado === "vencida"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800"
-                            }`}
+                            className={"px-2 py-1 rounded-full text-xs font-medium " + getEstadoFacturaClass(factura.estado)}
                           >
-                            {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
+                            {factura.estado}
                           </span>
                         </TableCell>
                         <TableCell>
-                          {factura.metodo_pago.charAt(0).toUpperCase() + factura.metodo_pago.slice(1)}
+                          {factura.metodo_pago_name.charAt(0).toUpperCase() + factura.metodo_pago_name.slice(1)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="icon" onClick={() => handleEdit(factura)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => confirmDelete(factura)}>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                              SetState_FacturaToDelete(factura)
+                              setIsDeleteDialogOpen(true)
+                            }
+                            }>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -556,7 +415,7 @@ export function FacturasPage() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {currentFactura ? `Editar Factura ${currentFactura.numero}` : "Crear Nueva Factura"}
+              {State_IsEditingMode ? `Editar Factura ${formData.num_factura}` : "Crear Nueva Factura"}
             </DialogTitle>
             <DialogDescription>Complete los detalles de la factura y guarde los cambios.</DialogDescription>
           </DialogHeader>
@@ -571,35 +430,35 @@ export function FacturasPage() {
               <TabsContent value="detalles" className="space-y-4 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="numero">Número de Factura</Label>
-                    <Input id="numero" name="numero" value={formData.numero} onChange={handleInputChange} required />
+                    <Label htmlFor="num_factura">Número de Factura</Label>
+                    <Input id="num_factura" name="num_factura" value={formData?.num_factura} onChange={handleInputChange} required />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="fecha">Fecha</Label>
+                    <Label htmlFor="fecha_emision">Fecha Emision</Label>
                     <Input
-                      id="fecha"
-                      name="fecha"
+                      id="fecha_emision"
+                      name="fecha_emision"
                       type="date"
-                      value={formData.fecha}
+                      value={State_IsEditingMode ? formData?.fecha_emision.slice(0, 10) : formData?.fecha_emision}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cliente_id">Cliente</Label>
+                    <Label htmlFor="client_id">Cliente</Label>
                     <Select
-                      value={formData.cliente_id}
-                      onValueChange={(value) => handleSelectChange("cliente_id", value)}
+                      value={formData?.client_id}
+                      onValueChange={(value) => handleSelectChange("client_id", value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        {clientes.map((cliente) => (
+                        {State_Clientes.map((cliente) => (
                           <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.nombre}
+                            {cliente.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -607,15 +466,15 @@ export function FacturasPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="orden_id">Orden de Trabajo</Label>
-                    <Select value={formData.orden_id} onValueChange={(value) => handleSelectChange("orden_id", value)}>
+                    <Label htmlFor="orden_trabajo_id">Orden de Trabajo</Label>
+                    <Select value={formData?.orden_trabajo_id} onValueChange={(value) => handleSelectChange("orden_trabajo_id", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar orden" />
                       </SelectTrigger>
                       <SelectContent>
                         {ordenes.map((orden) => (
                           <SelectItem key={orden.id} value={orden.id}>
-                            {orden.numero}
+                            {orden.numero_orden} - {orden.client_name} - {orden.servicio_name} - {orden.estado}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -629,20 +488,20 @@ export function FacturasPage() {
                       name="subtotal"
                       type="number"
                       step="0.01"
-                      value={formData.subtotal}
+                      value={formData?.subtotal}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="impuestos">Impuestos</Label>
+                    <Label htmlFor="impuesto">Impuestos</Label>
                     <Input
-                      id="impuestos"
-                      name="impuestos"
+                      id="impuesto"
+                      name="impuesto"
                       type="number"
                       step="0.01"
-                      value={formData.impuestos}
+                      value={formData?.impuesto}
                       onChange={handleInputChange}
                       required
                     />
@@ -655,7 +514,7 @@ export function FacturasPage() {
                       name="total"
                       type="number"
                       step="0.01"
-                      value={formData.total}
+                      value={formData?.total}
                       readOnly
                       className="bg-muted"
                     />
@@ -667,7 +526,7 @@ export function FacturasPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="estado">Estado</Label>
-                    <Select value={formData.estado} onValueChange={(value) => handleSelectChange("estado", value)}>
+                    <Select value={formData?.estado} onValueChange={(value) => handleSelectChange("estado", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar estado" />
                       </SelectTrigger>
@@ -684,16 +543,16 @@ export function FacturasPage() {
                   <div className="space-y-2">
                     <Label htmlFor="metodo_pago">Método de Pago</Label>
                     <Select
-                      value={formData.metodo_pago}
-                      onValueChange={(value) => handleSelectChange("metodo_pago", value)}
+                      value={formData?.metodo_pago_id.toString()}
+                      onValueChange={(value) => handleSelectChange("metodo_pago_id", value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar método de pago" />
                       </SelectTrigger>
                       <SelectContent>
-                        {metodosPago.map((metodo) => (
-                          <SelectItem key={metodo.value} value={metodo.value}>
-                            {metodo.label}
+                        {State_MetodosPagos.map((metodo) => (
+                          <SelectItem key={metodo.id} value={metodo.id.toString()}>
+                            {metodo.nombre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -702,7 +561,7 @@ export function FacturasPage() {
 
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="notas">Notas</Label>
-                    <Textarea id="notas" name="notas" value={formData.notas} onChange={handleInputChange} rows={4} />
+                    <Textarea id="nota" name="nota" value={formData?.nota} onChange={handleInputChange} rows={4} />
                   </div>
                 </div>
               </TabsContent>
@@ -712,7 +571,7 @@ export function FacturasPage() {
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">{currentFactura ? "Actualizar Factura" : "Crear Factura"}</Button>
+              <Button type="submit">{State_IsEditingMode ? "Actualizar Factura" : "Crear Factura"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -724,14 +583,14 @@ export function FacturasPage() {
           <DialogHeader>
             <DialogTitle>Confirmar eliminación</DialogTitle>
             <DialogDescription>
-              ¿Está seguro de que desea eliminar la factura {currentFactura?.numero}? Esta acción no se puede deshacer.
+              ¿Está seguro de que desea eliminar la factura {State_FacturaToDelete?.num_factura}? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" onClick={() => confirmDelete(State_FacturaToDelete)}>
               Eliminar
             </Button>
           </DialogFooter>

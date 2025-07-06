@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import TECNICO_SERVICES, { TecnicoConDetallesType } from "@/services/TECNICO_SERVICES.SERVICE"
 
 // Mock data inicial para técnicos
 const mockTecnicosIniciales = [
@@ -112,17 +113,20 @@ const mockTecnicosIniciales = [
 export function TecnicosPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [tecnicos, setTecnicos] = useState<any[]>(mockTecnicosIniciales)
+  const [State_Tecnicos, SetState_Tecnicos] = useState<TecnicoConDetallesType[]>([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openPerfilDialog, setOpenPerfilDialog] = useState(false)
   const [openHorarioDialog, setOpenHorarioDialog] = useState(false)
   const [openEditDialog, setOpenEditDialog] = useState(false)
-  const [selectedTecnico, setSelectedTecnico] = useState<any>(null)
+  const [selectedTecnico, setSelectedTecnico] = useState<TecnicoConDetallesType>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "",
     especialidad: "",
+    cargo: "",
     experiencia: "",
     telefono: "",
     email: "",
@@ -133,7 +137,14 @@ export function TecnicosPage() {
   })
 
   // Usar useEffect para cargar datos desde localStorage solo en el cliente
+
+  const FN_GET_TECNICOS = async () => {
+    const data = await TECNICO_SERVICES.GET_ALL_DETALLE_TECNICOS();
+    console.log(data)
+    SetState_Tecnicos(data)
+  }
   useEffect(() => {
+    FN_GET_TECNICOS()
     try {
       const saved = localStorage.getItem("mockTecnicos")
       if (saved) {
@@ -155,64 +166,97 @@ export function TecnicosPage() {
     }
   }
 
-  const getAvailabilityColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "disponible":
+  const getAvailabilityColor = (status: boolean) => {
+    switch (status) {
+      case true:
         return "bg-green-100 text-green-800"
-      case "ocupado":
+      case false:
         return "bg-yellow-100 text-yellow-800"
-      case "permiso":
-        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const filteredTecnicos = tecnicos.filter(
-    (tecnico: any) =>
+  const filteredTecnicos: TecnicoConDetallesType[] = State_Tecnicos.filter(
+    (tecnico) =>
       tecnico.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tecnico.especialidad.toLowerCase().includes(searchTerm.toLowerCase()),
+      tecnico.area.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
-    const nuevoTecnico = {
-      id: Date.now(),
-      nombre: formData.nombre,
-      especialidad: formData.especialidad,
-      experiencia: formData.experiencia,
-      telefono: formData.telefono,
-      email: formData.email,
-      direccion: formData.direccion,
-      habilidades: formData.habilidades.split(",").map((h) => h.trim()),
-      certificaciones: formData.certificaciones.split(",").map((c) => c.trim()),
-      disponibilidad: formData.disponibilidad,
-      calificacion: 4.0,
-      ordenes_completadas: 0,
-      foto: `/placeholder.svg?height=100&width=100&text=${formData.nombre
-        .split(" ")
-        .map((n) => n[0])
-        .join("")}`,
-      horario: {
-        lunes: "8:00-17:00",
-        martes: "8:00-17:00",
-        miercoles: "8:00-17:00",
-        jueves: "8:00-17:00",
-        viernes: "8:00-17:00",
-        sabado: "8:00-12:00",
-        domingo: "Descanso",
-      },
+    const horario = {
+      lunes: "8:00-17:00",
+      martes: "8:00-17:00",
+      miercoles: "8:00-17:00",
+      jueves: "8:00-17:00",
+      viernes: "8:00-17:00",
+      sabado: "8:00-12:00",
+      domingo: "Descanso",
     }
-
+    const habilidades: string[] = formData.habilidades.split(",").map((h) => h.trim());
+    const certificaciones: string[] = formData.certificaciones.split(",").map((c) => c.trim());
+    // const nuevoTecnico = {
+    //   id: Date.now(),
+    //   nombre: formData.nombre,
+    //   especialidad: formData.especialidad,
+    //   experiencia: formData.experiencia,
+    //   telefono: formData.telefono,
+    //   email: formData.email,
+    //   direccion: formData.direccion,
+    //   habilidades: formData.habilidades.split(",").map((h) => h.trim()),
+    //   certificaciones: formData.certificaciones.split(",").map((c) => c.trim()),
+    //   disponibilidad: formData.disponibilidad,
+    //   calificacion: 4.0,
+    //   ordenes_completadas: 0,
+    //   foto: `/placeholder.svg?height=100&width=100&text=${formData.nombre
+    //     .split(" ")
+    //     .map((n) => n[0])
+    //     .join("")}`,
+    //   horario: {
+    //     lunes: "8:00-17:00",
+    //     martes: "8:00-17:00",
+    //     miercoles: "8:00-17:00",
+    //     jueves: "8:00-17:00",
+    //     viernes: "8:00-17:00",
+    //     sabado: "8:00-12:00",
+    //     domingo: "Descanso",
+    //   },
+    // }
+    console.log(formData)
+    const horarioArray = Object.entries(horario).map(([dia, horario]) => ({
+      // tecnico_id,
+      dia: dia.charAt(0).toUpperCase() + dia.slice(1), // Capitaliza el día
+      horario,
+    }));
+    TECNICO_SERVICES.INSERT_TECNICO({
+      info: {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        area: formData.especialidad,
+        cant_ordenes_completadas: 0,
+        cargo: formData.cargo,
+        direccion: formData.direccion,
+        disponible: true,
+        email: formData.email,
+        telefono: formData.telefono,
+        tiempo_experciencia: formData.experiencia,
+        calificacion: 5.5
+      },
+      habilidades: habilidades,
+      horarios: horarioArray,
+      certificaciones
+    })
     setTimeout(() => {
-      const newTecnicos = [...tecnicos, nuevoTecnico]
+      const newTecnicos = [...tecnicos, { ...formData, horario, habilidades, certificaciones }]
       saveTecnicos(newTecnicos)
 
       setFormData({
         nombre: "",
+        apellido: "",
         especialidad: "",
+        cargo: "",
         experiencia: "",
         telefono: "",
         email: "",
@@ -227,23 +271,26 @@ export function TecnicosPage() {
 
       toast({
         title: "Técnico agregado",
-        description: `${nuevoTecnico.nombre} ha sido agregado al equipo`,
+        description: `${formData.nombre} ha sido agregado al equipo`,
       })
     }, 1000)
   }
 
-  const handleEdit = (tecnico: any) => {
+  const handleEdit = (tecnico: TecnicoConDetallesType) => {
     setSelectedTecnico(tecnico)
     setFormData({
       nombre: tecnico.nombre,
-      especialidad: tecnico.especialidad,
-      experiencia: tecnico.experiencia,
+      apellido: tecnico.apellido,
+      cargo: tecnico.cargo,
+      especialidad: tecnico.area,
+      experiencia: tecnico.tiempo_experciencia,
       telefono: tecnico.telefono,
       email: tecnico.email,
       direccion: tecnico.direccion,
-      habilidades: tecnico.habilidades.join(", "),
-      certificaciones: tecnico.certificaciones.join(", "),
-      disponibilidad: tecnico.disponibilidad,
+      habilidades: tecnico.tecnicos_habilidades.map(hab => hab.habilidad).toString(),
+      certificaciones: tecnico.tecnicos_certificaciones.map(cert => cert.certificacion).toString(),
+      disponibilidad: tecnico.estado,
+
     })
     setOpenEditDialog(true)
   }
@@ -254,17 +301,17 @@ export function TecnicosPage() {
     const updatedTecnicos = tecnicos.map((t: any) =>
       t.id === selectedTecnico.id
         ? {
-            ...t,
-            nombre: formData.nombre,
-            especialidad: formData.especialidad,
-            experiencia: formData.experiencia,
-            telefono: formData.telefono,
-            email: formData.email,
-            direccion: formData.direccion,
-            habilidades: formData.habilidades.split(",").map((h) => h.trim()),
-            certificaciones: formData.certificaciones.split(",").map((c) => c.trim()),
-            disponibilidad: formData.disponibilidad,
-          }
+          ...t,
+          nombre: formData.nombre,
+          especialidad: formData.especialidad,
+          experiencia: formData.experiencia,
+          telefono: formData.telefono,
+          email: formData.email,
+          direccion: formData.direccion,
+          habilidades: formData.habilidades.split(",").map((h) => h.trim()),
+          certificaciones: formData.certificaciones.split(",").map((c) => c.trim()),
+          disponibilidad: formData.disponibilidad,
+        }
         : t,
     )
 
@@ -290,7 +337,7 @@ export function TecnicosPage() {
     }
   }
 
-  const handleVerPerfil = (tecnico: any) => {
+  const handleVerPerfil = (tecnico: TecnicoConDetallesType) => {
     setSelectedTecnico(tecnico)
     setOpenPerfilDialog(true)
   }
@@ -349,7 +396,7 @@ export function TecnicosPage() {
                 <Plus className="mr-2 h-4 w-4" /> Nuevo Técnico
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="max-w-[600px] h-[100vh] overflow-auto">
               <DialogHeader>
                 <DialogTitle>Agregar Nuevo Técnico</DialogTitle>
                 <DialogDescription>Complete los datos para agregar un nuevo técnico al equipo.</DialogDescription>
@@ -358,7 +405,7 @@ export function TecnicosPage() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="nombre">Nombre Completo</Label>
+                      <Label htmlFor="nombre">Nombre</Label>
                       <Input
                         id="nombre"
                         placeholder="Nombre y apellidos"
@@ -366,6 +413,35 @@ export function TecnicosPage() {
                         onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                         required
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="apellido">Apeliidos</Label>
+                      <Input
+                        id="apellido"
+                        placeholder="Nombre y apellidos"
+                        value={formData.apellido}
+                        onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                        required
+                      />
+                    </div>
+
+
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="especialidad">Especialidad</Label>
+                      <Select
+                        value={formData.cargo}
+                        onValueChange={(value) => setFormData({ ...formData, cargo: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar especialidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Técnico Senior">Técnico Senior</SelectItem>
+                          <SelectItem value="Técnico">Técnico</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="especialidad">Especialidad</Label>
@@ -473,22 +549,22 @@ export function TecnicosPage() {
 
         <TabsContent value="todos">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTecnicos.map((tecnico: any) => (
+            {filteredTecnicos.map((tecnico) => (
               <Card key={tecnico.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={tecnico.foto || "/placeholder.svg"} alt={tecnico.nombre} />
+                        <AvatarImage src={"/placeholder.svg"} alt={tecnico.nombre} />
                         <AvatarFallback>{tecnico.nombre.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
                         <CardTitle className="text-lg">{tecnico.nombre}</CardTitle>
-                        <CardDescription>{tecnico.especialidad}</CardDescription>
+                        <CardDescription>{tecnico.area}</CardDescription>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={getAvailabilityColor(tecnico.disponibilidad)}>{tecnico.disponibilidad}</Badge>
+                      <Badge className={getAvailabilityColor(tecnico.disponible)}>{tecnico.disponible ? 'Diponible' : 'Ocupado'}</Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -534,7 +610,7 @@ export function TecnicosPage() {
                         <span className="text-muted-foreground ml-1">/ 5.0</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">{tecnico.ordenes_completadas}</span> órdenes
+                        <span className="font-medium text-foreground">{tecnico.cant_ordenes_completadas}</span> órdenes
                         completadas
                       </div>
                     </div>
@@ -543,7 +619,7 @@ export function TecnicosPage() {
                       <div className="flex items-center text-sm">
                         <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                         <span className="text-muted-foreground">Experiencia:</span>
-                        <span className="ml-1 font-medium">{tecnico.experiencia}</span>
+                        <span className="ml-1 font-medium">{tecnico.tiempo_experciencia}</span>
                       </div>
                       <div className="flex items-center text-sm">
                         <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -562,9 +638,9 @@ export function TecnicosPage() {
                     <div>
                       <h4 className="text-sm font-medium mb-2">Habilidades:</h4>
                       <div className="flex flex-wrap gap-1">
-                        {tecnico.habilidades.map((habilidad: string, i: number) => (
-                          <Badge key={i} variant="outline">
-                            {habilidad}
+                        {tecnico?.tecnicos_habilidades?.map((habilidad, index) => (
+                          <Badge key={habilidad.id} variant="outline">
+                            {habilidad.habilidad}
                           </Badge>
                         ))}
                       </div>
@@ -588,22 +664,22 @@ export function TecnicosPage() {
         <TabsContent value="disponibles">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTecnicos
-              .filter((tecnico: any) => tecnico.disponibilidad.toLowerCase() === "disponible")
-              .map((tecnico: any) => (
+              .filter((tecnico) => tecnico.disponible === true)
+              .map((tecnico) => (
                 <Card key={tecnico.id} className="overflow-hidden">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={tecnico.foto || "/placeholder.svg"} alt={tecnico.nombre} />
+                          <AvatarImage src={"/placeholder.svg"} alt={tecnico.nombre} />
                           <AvatarFallback>{tecnico.nombre.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
                           <CardTitle className="text-lg">{tecnico.nombre}</CardTitle>
-                          <CardDescription>{tecnico.especialidad}</CardDescription>
+                          <CardDescription>{tecnico.area}</CardDescription>
                         </div>
                       </div>
-                      <Badge className={getAvailabilityColor(tecnico.disponibilidad)}>{tecnico.disponibilidad}</Badge>
+                      <Badge className={getAvailabilityColor(tecnico.disponible)}>{tecnico.disponible ? 'Disponible' : 'Ocupado'}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -615,7 +691,7 @@ export function TecnicosPage() {
                           <span className="text-muted-foreground ml-1">/ 5.0</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">{tecnico.ordenes_completadas}</span> órdenes
+                          <span className="font-medium text-foreground">{tecnico.cant_ordenes_completadas}</span> órdenes
                         </div>
                       </div>
                       <Button className="w-full" onClick={() => handleAsignarOrden(tecnico)}>
@@ -632,25 +708,22 @@ export function TecnicosPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTecnicos
               .filter(
-                (tecnico: any) =>
-                  tecnico.disponibilidad.toLowerCase() === "ocupado" ||
-                  tecnico.disponibilidad.toLowerCase() === "permiso",
-              )
-              .map((tecnico: any) => (
+                (tecnico) => tecnico.disponible === false)
+              .map((tecnico) => (
                 <Card key={tecnico.id} className="overflow-hidden">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={tecnico.foto || "/placeholder.svg"} alt={tecnico.nombre} />
+                          <AvatarImage src={"/placeholder.svg"} alt={tecnico.nombre} />
                           <AvatarFallback>{tecnico.nombre.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
                           <CardTitle className="text-lg">{tecnico.nombre}</CardTitle>
-                          <CardDescription>{tecnico.especialidad}</CardDescription>
+                          <CardDescription>{tecnico.area}</CardDescription>
                         </div>
                       </div>
-                      <Badge className={getAvailabilityColor(tecnico.disponibilidad)}>{tecnico.disponibilidad}</Badge>
+                      <Badge className={getAvailabilityColor(tecnico.disponible)}>Ocupado</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -662,7 +735,7 @@ export function TecnicosPage() {
                           <span className="text-muted-foreground ml-1">/ 5.0</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">{tecnico.ordenes_completadas}</span> órdenes
+                          <span className="font-medium text-foreground">{tecnico.cant_ordenes_completadas}</span> órdenes
                         </div>
                       </div>
                       <Button
@@ -687,41 +760,50 @@ export function TecnicosPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {tecnicos.map((tecnico: any) => (
+                {State_Tecnicos.map((tecnico) => (
                   <div key={tecnico.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={tecnico.foto || "/placeholder.svg"} alt={tecnico.nombre} />
+                          <AvatarImage src={"/placeholder.svg"} alt={tecnico.nombre} />
                           <AvatarFallback>{tecnico.nombre.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
                           <h4 className="text-sm font-medium">{tecnico.nombre}</h4>
-                          <p className="text-xs text-muted-foreground">{tecnico.especialidad}</p>
+                          <p className="text-xs text-muted-foreground">{tecnico.area}</p>
                         </div>
                       </div>
-                      <Badge className={getAvailabilityColor(tecnico.disponibilidad)}>{tecnico.disponibilidad}</Badge>
+                      <Badge className={getAvailabilityColor(tecnico.disponible)}>{tecnico.disponible ? 'Disponible' : 'ocupado'}</Badge>
                     </div>
                     <div className="bg-muted p-2 rounded-md">
                       <div className="grid grid-cols-7 gap-1 text-xs text-center">
-                        <div className="font-medium">Lun</div>
-                        <div className="font-medium">Mar</div>
+                        {
+                          tecnico.tecnicos_horarios.map(horario => (
+                            <aside key={horario.id}>
+
+                              <div className="font-medium">{horario.dia}</div>
+                              <div className={`${horario.horario === 'Descanso' ? 'bg-red-100' : 'bg-green-100'} rounded p-1 text-black`}>{horario.horario}</div>
+                            </aside>
+
+                          ))
+                        }
+                        {/* <div className="font-medium">Mar</div>
                         <div className="font-medium">Mié</div>
                         <div className="font-medium">Jue</div>
                         <div className="font-medium">Vie</div>
                         <div className="font-medium">Sáb</div>
                         <div className="font-medium">Dom</div>
-                        <div className="bg-green-100 rounded p-1">{tecnico.horario?.lunes || "8-17"}</div>
                         <div className="bg-green-100 rounded p-1">{tecnico.horario?.martes || "8-17"}</div>
                         <div className="bg-green-100 rounded p-1">{tecnico.horario?.miercoles || "8-17"}</div>
                         <div className="bg-green-100 rounded p-1">{tecnico.horario?.jueves || "8-17"}</div>
                         <div className="bg-green-100 rounded p-1">{tecnico.horario?.viernes || "8-17"}</div>
                         <div className="bg-yellow-100 rounded p-1">{tecnico.horario?.sabado || "8-12"}</div>
-                        <div className="bg-red-100 rounded p-1">{tecnico.horario?.domingo || "OFF"}</div>
+                        <div className="bg-red-100 rounded p-1">{tecnico.horario?.domingo || "OFF"}</div> */}
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <div className="flex items-center gap-4">
+
                         <div className="flex items-center">
                           <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
                           <span>Disponible</span>
@@ -750,7 +832,7 @@ export function TecnicosPage() {
 
       {/* Diálogo de perfil del técnico */}
       <Dialog open={openPerfilDialog} onOpenChange={setOpenPerfilDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-3xl">
           <DialogHeader>
             <DialogTitle>Perfil del Técnico</DialogTitle>
           </DialogHeader>
@@ -758,14 +840,14 @@ export function TecnicosPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={selectedTecnico.foto || "/placeholder.svg"} alt={selectedTecnico.nombre} />
+                  <AvatarImage src={"/placeholder.svg"} alt={selectedTecnico.nombre} />
                   <AvatarFallback>{selectedTecnico.nombre.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-xl font-bold">{selectedTecnico.nombre}</h3>
-                  <p className="text-muted-foreground">{selectedTecnico.especialidad}</p>
-                  <Badge className={getAvailabilityColor(selectedTecnico.disponibilidad)}>
-                    {selectedTecnico.disponibilidad}
+                  <p className="text-muted-foreground">{selectedTecnico.area}</p>
+                  <Badge className={getAvailabilityColor(selectedTecnico.disponible)}>
+                    {selectedTecnico.disponible ? 'Disponible' : 'Ocupado'}
                   </Badge>
                 </div>
               </div>
@@ -794,7 +876,7 @@ export function TecnicosPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Experiencia:</span>
-                      <span className="font-medium">{selectedTecnico.experiencia}</span>
+                      <span className="font-medium">{selectedTecnico.tiempo_experciencia}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Calificación:</span>
@@ -805,7 +887,7 @@ export function TecnicosPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Órdenes completadas:</span>
-                      <span className="font-medium">{selectedTecnico.ordenes_completadas}</span>
+                      <span className="font-medium">{selectedTecnico.cant_ordenes_completadas}</span>
                     </div>
                   </div>
                 </div>
@@ -814,9 +896,9 @@ export function TecnicosPage() {
               <div>
                 <h4 className="font-medium mb-2">Habilidades</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedTecnico.habilidades.map((habilidad: string, i: number) => (
-                    <Badge key={i} variant="secondary">
-                      {habilidad}
+                  {selectedTecnico.tecnicos_habilidades.map((habilidad) => (
+                    <Badge key={habilidad.id} variant="secondary">
+                      {habilidad.habilidad}
                     </Badge>
                   ))}
                 </div>
@@ -825,9 +907,9 @@ export function TecnicosPage() {
               <div>
                 <h4 className="font-medium mb-2">Certificaciones</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedTecnico.certificaciones.map((cert: string, i: number) => (
-                    <Badge key={i} variant="outline">
-                      {cert}
+                  {selectedTecnico?.tecnicos_certificaciones?.map((cert) => (
+                    <Badge key={cert.id} variant="outline">
+                      {cert.certificacion}
                     </Badge>
                   ))}
                 </div>
@@ -846,10 +928,10 @@ export function TecnicosPage() {
           {selectedTecnico && (
             <div className="space-y-4">
               <div className="grid gap-3">
-                {Object.entries(selectedTecnico.horario || {}).map(([dia, horario]) => (
-                  <div key={dia} className="flex justify-between items-center p-2 border rounded">
-                    <span className="font-medium capitalize">{dia}</span>
-                    <span className="text-muted-foreground">{horario}</span>
+                {selectedTecnico.tecnicos_horarios.map(horario => (
+                  <div key={horario.dia} className="flex justify-between items-center p-2 border rounded">
+                    <span className="font-medium capitalize">{horario.dia}</span>
+                    <span className="text-muted-foreground">{horario.horario}</span>
                   </div>
                 ))}
               </div>
@@ -872,7 +954,7 @@ export function TecnicosPage() {
 
       {/* Diálogo de edición del técnico */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="max-w-[600px] h-[100vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Editar Técnico</DialogTitle>
             <DialogDescription>Modifica la información del técnico.</DialogDescription>
