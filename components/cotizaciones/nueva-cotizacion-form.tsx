@@ -17,6 +17,8 @@ import { createQuotation, updateQuotation } from "@/lib/actions/quotations"
 import { getClients } from "@/lib/actions/clients"
 import { getVehiclesByClient } from "@/lib/actions/vehicles"
 import Link from "next/link"
+import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
+import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
 
 // Tipo para la parte de cotización
 type QuotationPart = {
@@ -94,8 +96,8 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
   const { toast } = useToast()
 
   // Estados para clientes y vehículos
-  const [clients, setClients] = useState<Client[]>([])
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [clients, setClients] = useState<ClienteType[]>([])
+  const [vehicles, setVehicles] = useState<VehiculoType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -130,22 +132,10 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
   // Cargar clientes al montar el componente
   useEffect(() => {
     async function loadClients() {
-      try {
-        const { success, data, error: clientsError } = await getClients()
-
-        if (clientsError && clientsError.includes("relation") && clientsError.includes("does not exist")) {
-          setError("La base de datos no está configurada correctamente. Las tablas necesarias no existen.")
-        } else if (!success) {
-          setError(clientsError || "Error al cargar los clientes")
-        } else if (success && data) {
-          setClients(data)
-        }
-      } catch (err) {
-        setError("Error al conectar con la base de datos")
-        console.error("Error loading clients:", err)
-      } finally {
-        setLoading(false)
-      }
+      // const data = await getClients()
+      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
+      setClients(data)
+      setLoading(false)
     }
 
     loadClients()
@@ -154,12 +144,13 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
   // Cargar vehículos cuando cambia el cliente
   useEffect(() => {
     async function loadVehicles() {
+      console.log('ejecuta')
+      console.log(formData.client_id)
       if (formData.client_id) {
         try {
-          const { success, data } = await getVehiclesByClient(formData.client_id)
-          if (success && data) {
-            setVehicles(data)
-          }
+          // const data = await getVehiclesByClient(formData.client_id)
+          const data = await VEHICULO_SERVICES.GET_ALL_VEHICULOS_BY_CLIENT(formData?.client_id)
+          setVehicles(data)
         } catch (err) {
           console.error("Error loading vehicles:", err)
         }
@@ -232,10 +223,10 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
       ...nuevaParte,
       [name]:
         name === "quantity" ||
-        name === "repair_hours" ||
-        name === "labor_cost" ||
-        name === "materials_cost" ||
-        name === "parts_cost"
+          name === "repair_hours" ||
+          name === "labor_cost" ||
+          name === "materials_cost" ||
+          name === "parts_cost"
           ? Number(value)
           : value,
     })
@@ -297,7 +288,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
       toast({
         title: "Error",
         description: "Debes seleccionar un cliente y un vehículo",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }
@@ -306,16 +297,15 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
       toast({
         title: "Error",
         description: "Debes agregar al menos una parte a la cotización",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }
 
     const totales = calcularTotales()
-
+    console.log(totales)
     try {
       let result
-
       if (cotizacionExistente?.id) {
         // Actualizar cotización existente
         result = await updateQuotation(cotizacionExistente.id, {
@@ -344,14 +334,14 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
         toast({
           title: "Error",
           description: result.error || "No se pudo guardar la cotización",
-          variant: "destructive",
+          // variant: "destructive",
         })
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Ocurrió un error al guardar la cotización",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -467,7 +457,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                   <SelectContent>
                     {vehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
-                        {`${vehicle.brand} ${vehicle.model} (${vehicle.year})`}
+                        {`${vehicle.marca} ${vehicle.modelo} (${vehicle.ano})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -504,27 +494,27 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <Label className="text-sm text-muted-foreground">Marca</Label>
-                              <p className="font-medium">{vehicle.brand}</p>
+                              <p className="font-medium">{vehicle.marca}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Modelo</Label>
-                              <p className="font-medium">{vehicle.model}</p>
+                              <p className="font-medium">{vehicle.modelo}</p>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <Label className="text-sm text-muted-foreground">Año</Label>
-                              <p className="font-medium">{vehicle.year}</p>
+                              <p className="font-medium">{vehicle.ano}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Tipo</Label>
-                              <p className="font-medium">{vehicle.vehicle_type}</p>
+                              <p className="font-medium">...</p>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <Label className="text-sm text-muted-foreground">Placa</Label>
-                              <p className="font-medium">{vehicle.plate || "N/A"}</p>
+                              <p className="font-medium">{vehicle.placa || "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">VIN</Label>
@@ -673,7 +663,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                     name="repair_hours"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="0.5"
                     value={nuevaParte.repair_hours}
                     onChange={handleNuevaParteChange}
                     required
@@ -687,7 +677,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                     name="labor_cost"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="0.5"
                     value={nuevaParte.labor_cost}
                     onChange={handleNuevaParteChange}
                     required
@@ -701,7 +691,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                     name="materials_cost"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="0.5"
                     value={nuevaParte.materials_cost}
                     onChange={handleNuevaParteChange}
                     required
@@ -715,7 +705,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                     name="parts_cost"
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="0.5"
                     value={nuevaParte.parts_cost}
                     onChange={handleNuevaParteChange}
                     required
@@ -814,19 +804,19 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
                   <div className="space-y-2">
                     <div className="grid grid-cols-2">
                       <span className="font-medium">Marca:</span>
-                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.brand || "No seleccionado"}</span>
+                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.marca || "No seleccionado"}</span>
                     </div>
                     <div className="grid grid-cols-2">
                       <span className="font-medium">Modelo:</span>
-                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.model || "No seleccionado"}</span>
+                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.modelo || "No seleccionado"}</span>
                     </div>
                     <div className="grid grid-cols-2">
                       <span className="font-medium">Año:</span>
-                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.year || "No seleccionado"}</span>
+                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.ano || "No seleccionado"}</span>
                     </div>
                     <div className="grid grid-cols-2">
                       <span className="font-medium">Placa:</span>
-                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.plate || "No disponible"}</span>
+                      <span>{vehicles.find((v) => v.id === formData.vehicle_id)?.placa || "No disponible"}</span>
                     </div>
                   </div>
                 </div>

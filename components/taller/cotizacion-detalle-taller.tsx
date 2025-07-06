@@ -19,13 +19,14 @@ import { useToast } from "@/hooks/use-toast"
 import { getQuotationById, updateQuotation } from "@/lib/actions/quotations"
 import { NuevaCotizacionForm } from "@/components/cotizaciones/nueva-cotizacion-form"
 import Link from "next/link"
+import COTIZACIONES_SERVICES, { CotizacionesType, DetalleCotyzacionesType } from "@/services/COTIZACIONES.SERVICE"
 
 interface CotizacionDetalleTallerProps {
   id: string
 }
 
 export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
-  const [cotizacion, setCotizacion] = useState<any>(null)
+  const [cotizacion, setCotizacion] = useState<DetalleCotyzacionesType>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -33,24 +34,12 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
 
   const loadCotizacion = async () => {
     setLoading(true)
-    try {
-      const { success, data, error: quotationError, isTableMissing } = await getQuotationById(id)
-
-      if (isTableMissing) {
-        setError("La tabla de cotizaciones no existe. Por favor, inicialice la base de datos.")
-      } else if (!success) {
-        setError(quotationError || "Error al cargar la cotización")
-      } else if (success && data) {
-        setCotizacion(data)
-      }
-    } catch (err) {
-      setError("Error al conectar con la base de datos")
-      console.error("Error loading quotation:", err)
-    } finally {
-      setLoading(false)
-    }
+    // const { succe, data, error: quotationError, isTableMissing } = await getQuotationById(id)
+    const data = await COTIZACIONES_SERVICES.GET_DETALLE_COTIZACIONES_BY_ID(id)
+    console.log(data)
+    setCotizacion(data)
+    setLoading(false)
   }
-
   useEffect(() => {
     loadCotizacion()
   }, [id])
@@ -80,14 +69,14 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
         toast({
           title: "Error",
           description: updateError || "No se pudo actualizar el estado de la cotización",
-          variant: "destructive",
+          // variant: "destructive",
         })
       }
     } catch (err) {
       toast({
         title: "Error",
         description: "Ocurrió un error al actualizar el estado de la cotización",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
@@ -198,7 +187,7 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold">Cotización {cotizacion.quotation_number}</h1>
+          <h1 className="text-3xl font-bold">Cotización {cotizacion.cotizacion?.quotation_number}</h1>
         </div>
         <div className="flex gap-2">
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -212,7 +201,7 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
                 <DialogTitle>Editar Cotización</DialogTitle>
                 <DialogDescription>Modifica los detalles de esta cotización.</DialogDescription>
               </DialogHeader>
-              <NuevaCotizacionForm onSuccess={handleEditSuccess} cotizacionExistente={cotizacion} />
+              {/* <NuevaCotizacionForm onSuccess={handleEditSuccess} cotizacionExistente={cotizacion} /> */}
             </DialogContent>
           </Dialog>
           <Button variant="outline" onClick={handlePrint}>
@@ -248,16 +237,16 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
           <CardContent>
             <div className="space-y-2">
               <div>
-                <span className="font-medium">Marca:</span> {cotizacion.vehicle?.brand || "No disponible"}
+                <span className="font-medium">Marca:</span> {cotizacion.vehiculo?.marca || "No disponible"}
               </div>
               <div>
-                <span className="font-medium">Modelo:</span> {cotizacion.vehicle?.model || "No disponible"}
+                <span className="font-medium">Modelo:</span> {cotizacion.vehiculo?.modelo || "No disponible"}
               </div>
               <div>
-                <span className="font-medium">Año:</span> {cotizacion.vehicle?.year || "No disponible"}
+                <span className="font-medium">Año:</span> {cotizacion.vehiculo?.ano || "No disponible"}
               </div>
               <div>
-                <span className="font-medium">Placa:</span> {cotizacion.vehicle?.plate || "No disponible"}
+                <span className="font-medium">Placa:</span> {cotizacion.vehiculo?.placa || "No disponible"}
               </div>
             </div>
           </CardContent>
@@ -270,18 +259,18 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
           <CardContent>
             <div className="space-y-2">
               <div>
-                <span className="font-medium">Número:</span> {cotizacion.quotation_number}
+                <span className="font-medium">Número:</span> {cotizacion.cotizacion?.quotation_number}
               </div>
               <div>
-                <span className="font-medium">Fecha:</span> {formatDate(cotizacion.date)}
+                <span className="font-medium">Fecha:</span> {formatDate(cotizacion.cotizacion?.date)}
               </div>
               <div>
                 <span className="font-medium">Estado:</span>{" "}
-                <Badge variant={getBadgeVariant(cotizacion.status)}>{cotizacion.status}</Badge>
+                <Badge variant={getBadgeVariant(cotizacion.cotizacion?.status)}>{cotizacion.cotizacion?.status}</Badge>
               </div>
               <div>
-                <span className="font-medium">Tiempo estimado:</span> {cotizacion.estimated_days.toFixed(1)} días (
-                {cotizacion.repair_hours.toFixed(1)} horas)
+                <span className="font-medium">Tiempo estimado:</span> {cotizacion.cotizacion?.estimated_days.toFixed(1)} días (
+                {cotizacion.cotizacion?.repair_hours.toFixed(1)} horas)
               </div>
             </div>
           </CardContent>
@@ -310,8 +299,8 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cotizacion.parts && cotizacion.parts.length > 0 ? (
-                cotizacion.parts.map((parte: any, index: number) => (
+              {cotizacion.partesCotizacion && cotizacion.partesCotizacion.length > 0 ? (
+                cotizacion.partesCotizacion.map((parte: any, index: number) => (
                   <TableRow key={parte.id || index}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{parte.quantity}</TableCell>
@@ -348,27 +337,27 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
               <div className="space-y-2">
                 <div className="grid grid-cols-2">
                   <span className="font-medium">Mano de Obra:</span>
-                  <span>L {cotizacion.total_labor.toFixed(2)}</span>
+                  <span>L {cotizacion.cotizacion?.total_labor.toFixed(2)}</span>
                 </div>
                 <div className="grid grid-cols-2">
                   <span className="font-medium">Materiales:</span>
-                  <span>L {cotizacion.total_materials.toFixed(2)}</span>
+                  <span>L {cotizacion.cotizacion?.total_materials.toFixed(2)}</span>
                 </div>
                 <div className="grid grid-cols-2">
                   <span className="font-medium">Repuestos:</span>
-                  <span>L {cotizacion.total_parts.toFixed(2)}</span>
+                  <span>L {cotizacion.cotizacion?.total_parts.toFixed(2)}</span>
                 </div>
                 <Separator className="my-2" />
                 <div className="grid grid-cols-2">
                   <span className="font-medium text-lg">Total:</span>
-                  <span className="font-bold text-lg">L {cotizacion.total.toFixed(2)}</span>
+                  <span className="font-bold text-lg">L {cotizacion.cotizacion?.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold mb-4">Acciones</h3>
-              {cotizacion.status === "Pendiente" && (
+              {cotizacion.cotizacion?.status === "Pendiente" && (
                 <div className="flex gap-2">
                   <Button onClick={() => handleStatusChange("Aprobada")} className="flex-1">
                     <CheckCircle className="mr-2 h-4 w-4" /> Aprobar
@@ -378,7 +367,7 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
                   </Button>
                 </div>
               )}
-              {cotizacion.status === "Aprobada" && (
+              {cotizacion.cotizacion?.status === "Aprobada" && (
                 <div className="flex gap-2">
                   <Button onClick={() => handleStatusChange("Convertida a Orden")} className="flex-1">
                     <FileText className="mr-2 h-4 w-4" /> Convertir a Orden
@@ -388,12 +377,12 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
                   </Button>
                 </div>
               )}
-              {cotizacion.status === "Rechazada" && (
+              {cotizacion.cotizacion?.status === "Rechazada" && (
                 <Button onClick={() => handleStatusChange("Pendiente")} variant="outline" className="w-full">
                   Marcar como Pendiente
                 </Button>
               )}
-              {cotizacion.status === "Convertida a Orden" && (
+              {cotizacion.cotizacion?.status === "Convertida a Orden" && (
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <p className="text-green-800">
                     Esta cotización ha sido convertida a una orden de trabajo. Ya no se puede modificar su estado.

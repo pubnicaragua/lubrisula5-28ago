@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getQuotations } from "@/lib/actions/quotations"
 import { NuevaCotizacionForm } from "@/components/cotizaciones/nueva-cotizacion-form"
 import Link from "next/link"
+import COTIZACIONES_SERVICES, { CotizacionesType } from "@/services/COTIZACIONES.SERVICE"
 
 type Quotation = {
   id: string
@@ -51,23 +52,26 @@ type Quotation = {
 
 export function CotizacionesTallerPage() {
   const [cotizaciones, setCotizaciones] = useState<Quotation[]>([])
+  const [State_Cotizaciones, SetState_Cotizaciones] = useState<CotizacionesType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const loadCotizaciones = async () => {
-    setLoading(true)
     try {
-      const { success, data, error: quotationsError, isTableMissing } = await getQuotations()
-
-      if (isTableMissing) {
-        setError("La tabla de cotizaciones no existe. Por favor, inicialice la base de datos.")
-      } else if (!success) {
-        setError(quotationsError || "Error al cargar las cotizaciones")
-      } else if (success && data) {
-        setCotizaciones(data)
-      }
+      setLoading(true)
+      // const data = await getQuotations()
+      const data = await COTIZACIONES_SERVICES.GET_ALL_COTIZACIONES()
+      console.log(data)
+      SetState_Cotizaciones(data)
+      // if (isTableMissing) {
+      //   setError("La tabla de cotizaciones no existe. Por favor, inicialice la base de datos.")
+      // } else if (!success) {
+      //   setError(quotationsError || "Error al cargar las cotizaciones")
+      // } else if (success && data) {
+      //   setCotizaciones(data)
+      // }
     } catch (err) {
       setError("Error al conectar con la base de datos")
       console.error("Error loading quotations:", err)
@@ -151,7 +155,7 @@ export function CotizacionesTallerPage() {
               <Plus className="mr-2 h-4 w-4" /> Nueva Cotización
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-5xl h-[100vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Nueva Cotización</DialogTitle>
               <DialogDescription>Crea una nueva cotización para un cliente.</DialogDescription>
@@ -194,20 +198,20 @@ export function CotizacionesTallerPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cotizaciones.length === 0 ? (
+                    {State_Cotizaciones.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center">
                           No hay cotizaciones registradas
                         </TableCell>
                       </TableRow>
                     ) : (
-                      cotizaciones.map((cotizacion) => (
+                      State_Cotizaciones.map((cotizacion) => (
                         <TableRow key={cotizacion.id}>
                           <TableCell>{cotizacion.quotation_number}</TableCell>
-                          <TableCell>{cotizacion.client?.name || "Cliente no disponible"}</TableCell>
+                          <TableCell>{cotizacion.client_name || "Cliente no disponible"}</TableCell>
                           <TableCell>
-                            {cotizacion.vehicle
-                              ? `${cotizacion.vehicle.brand} ${cotizacion.vehicle.model} (${cotizacion.vehicle.year})`
+                            {cotizacion.vehiculo_marca
+                              ? `${cotizacion.vehiculo_marca} ${cotizacion.vehiculo_modelo} (${cotizacion.vehiculo_year})`
                               : "Vehículo no disponible"}
                           </TableCell>
                           <TableCell>{formatDate(cotizacion.date)}</TableCell>
@@ -251,22 +255,22 @@ export function CotizacionesTallerPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cotizaciones.filter((c) => c.status === "Pendiente").length === 0 ? (
+                  {State_Cotizaciones.filter((c) => c.status === "Pendiente").length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center">
                         No hay cotizaciones pendientes
                       </TableCell>
                     </TableRow>
                   ) : (
-                    cotizaciones
+                    State_Cotizaciones
                       .filter((c) => c.status === "Pendiente")
                       .map((cotizacion) => (
                         <TableRow key={cotizacion.id}>
                           <TableCell>{cotizacion.quotation_number}</TableCell>
-                          <TableCell>{cotizacion.client?.name || "Cliente no disponible"}</TableCell>
+                          <TableCell>{cotizacion.client_name || "Cliente no disponible"}</TableCell>
                           <TableCell>
-                            {cotizacion.vehicle
-                              ? `${cotizacion.vehicle.brand} ${cotizacion.vehicle.model} (${cotizacion.vehicle.year})`
+                            {cotizacion.vehiculo_marca
+                              ? `${cotizacion.vehiculo_marca} ${cotizacion.vehiculo_modelo} (${cotizacion.vehiculo_year})`
                               : "Vehículo no disponible"}
                           </TableCell>
                           <TableCell>{formatDate(cotizacion.date)}</TableCell>
@@ -306,22 +310,22 @@ export function CotizacionesTallerPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cotizaciones.filter((c) => c.status === "Aprobada").length === 0 ? (
+                  {State_Cotizaciones.filter((c) => c.status === "Aprobada").length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center">
                         No hay cotizaciones aprobadas
                       </TableCell>
                     </TableRow>
                   ) : (
-                    cotizaciones
+                    State_Cotizaciones
                       .filter((c) => c.status === "Aprobada")
                       .map((cotizacion) => (
                         <TableRow key={cotizacion.id}>
                           <TableCell>{cotizacion.quotation_number}</TableCell>
-                          <TableCell>{cotizacion.client?.name || "Cliente no disponible"}</TableCell>
+                          <TableCell>{cotizacion.client_name || "Cliente no disponible"}</TableCell>
                           <TableCell>
-                            {cotizacion.vehicle
-                              ? `${cotizacion.vehicle.brand} ${cotizacion.vehicle.model} (${cotizacion.vehicle.year})`
+                            {cotizacion.vehiculo_marca
+                              ? `${cotizacion.vehiculo_marca} ${cotizacion.vehiculo_modelo} (${cotizacion.vehiculo_year})`
                               : "Vehículo no disponible"}
                           </TableCell>
                           <TableCell>{formatDate(cotizacion.date)}</TableCell>
@@ -361,22 +365,22 @@ export function CotizacionesTallerPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cotizaciones.filter((c) => c.status === "Rechazada").length === 0 ? (
+                  {State_Cotizaciones.filter((c) => c.status === "Rechazada").length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center">
                         No hay cotizaciones rechazadas
                       </TableCell>
                     </TableRow>
                   ) : (
-                    cotizaciones
+                    State_Cotizaciones
                       .filter((c) => c.status === "Rechazada")
                       .map((cotizacion) => (
                         <TableRow key={cotizacion.id}>
                           <TableCell>{cotizacion.quotation_number}</TableCell>
-                          <TableCell>{cotizacion.client?.name || "Cliente no disponible"}</TableCell>
+                          <TableCell>{cotizacion.client_name || "Cliente no disponible"}</TableCell>
                           <TableCell>
-                            {cotizacion.vehicle
-                              ? `${cotizacion.vehicle.brand} ${cotizacion.vehicle.model} (${cotizacion.vehicle.year})`
+                            {cotizacion.vehiculo_marca
+                              ? `${cotizacion.vehiculo_marca} ${cotizacion.vehiculo_modelo} (${cotizacion.vehiculo_year})`
                               : "Vehículo no disponible"}
                           </TableCell>
                           <TableCell>{formatDate(cotizacion.date)}</TableCell>

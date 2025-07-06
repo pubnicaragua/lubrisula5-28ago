@@ -50,6 +50,8 @@ export async function getQuotations() {
       `,
       )
       .order("created_at", { ascending: false })
+      console.log(data)
+      console.log(error)
 
     if (error) {
       // Verificar si el error es porque la tabla no existe
@@ -63,6 +65,7 @@ export async function getQuotations() {
       }
       throw error
     }
+    console.log('pasa')
 
     return { success: true, data }
   } catch (error) {
@@ -80,6 +83,7 @@ export async function getQuotations() {
 // Crear una nueva cotización
 export async function createQuotation(data: QuotationInput) {
   const supabase = await getServerClient()
+  console.log(data)
 
   try {
     // 1. Crear la cotización principal

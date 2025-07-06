@@ -16,9 +16,13 @@ export type ClienteType = {
 const CLIENTS_SERVICES = {
     async GET_ALL_CLIENTS(): Promise<ClienteType[]> {
         const UsuariosData: ClienteType[] = await AxiosGet({ path: '/view_clients' })
-
-        console.log('GET_ALL_USERS', UsuariosData);
         return UsuariosData;
+    },
+    async GET_CLIENTS_BY_ID(Id:string): Promise<ClienteType> {
+        console.log(Id)
+        const UsuariosData: ClienteType[] = await AxiosGet({ path: `/view_clients?id=eq.${Id}` })
+        console.log(UsuariosData)
+        return UsuariosData[0];
     },
     async ADD_NEW_CLIENTE(cliente: ClienteType): Promise<ClienteType[]> {
         console.log('ADD_NEW_CLIENTE', cliente);
