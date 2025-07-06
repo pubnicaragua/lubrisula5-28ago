@@ -27,6 +27,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
   const [State_Vehiculos, SetState_Vehiculos] = useState<VehiculoType[]>([])
   const [State_Tecnicos, SetState_Tecnicos] = useState<TecnicoType[]>([])
   const [State_TiposServicios, SetState_TiposServicios] = useState<TipoServicioType[]>([])
+  // const [State_EstadoOrden, SetState_EstadoOrden] = useState<TipoServicioType[]>([])
   const GET_CLIENTES = async () => {
     const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
     console.log(res)
@@ -47,21 +48,10 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     SetState_TiposServicios(res)
   }
 
-  // Cargar datos del localStorage
-  useEffect(() => {
-    GET_CLIENTES()
-    GET_TECNICOS()
-    GET_TIPOS_SERVICIOS()
-  }, []);
 
 
-  // Cargar datos de la orden existente si se está editando
-  useEffect(() => {
-    if (ordenExistente) {
-      console.log(ordenExistente)
-      setFormData(ordenExistente)
-    }
-  }, [ordenExistente])
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -159,16 +149,28 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
 
     setIsSubmitting(false)
   }
+  // Cargar datos
+  useEffect(() => {
+    GET_CLIENTES()
+    GET_TECNICOS()
+    GET_TIPOS_SERVICIOS()
+  }, []);
+    // Cargar datos de la orden existente si se está editando
+  useEffect(() => {
+    if (ordenExistente) {
+      console.log(ordenExistente)
+      setFormData(ordenExistente)
+      GET_VEHICULOS(ordenExistente?.client_id)
+    }
+  }, [ordenExistente])
 
-  // Filtrar vehículos por cliente seleccionado
-  // const vehiculosFiltrados = vehiculos.filter((v) => v.clienteId === formData.clienteId)
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 py-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="client_id">Cliente *</Label>
-          <Select onValueChange={(value) => handleSelectChange("client_id", value)} value={formData?.client_id}>
+          <Select onValueChange={(value) => handleSelectChange("client_id", value)} value={formData?.client_id} defaultValue={ordenExistente?.client_id}>
             <SelectTrigger id="client_id">
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
@@ -187,6 +189,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
             onValueChange={(value) => handleSelectChange("vehiculo_id", value)}
             value={formData?.vehiculo_id}
             disabled={!formData?.client_id}
+            defaultValue={ordenExistente?.vehiculo_id}
           >
             <SelectTrigger id="id">
               <SelectValue
@@ -220,7 +223,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="servicio_id">Tipo de Servicio *</Label>
-          <Select onValueChange={(value) => handleSelectChange("servicio_id", value)} value={formData?.servicio_id}>
+          <Select onValueChange={(value) => handleSelectChange("servicio_id", value)} value={formData?.servicio_id} defaultValue={ordenExistente?.servicio_id}>
             <SelectTrigger id="servicio_id">
               <SelectValue placeholder="Seleccionar servicio" />
             </SelectTrigger>
@@ -238,7 +241,8 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
           <Label htmlFor="tecnico_id">Técnico Asignado *</Label>
           <Select
             onValueChange={(value) => handleSelectChange("tecnico_id", value)}
-            value={formData?.tecnico_id.toString()}
+            value={formData?.tecnico_id?.toString()}
+            defaultValue={ordenExistente?.tecnico_id.toString()}
           >
             <SelectTrigger id="tecnico_id">
               <SelectValue placeholder="Seleccionar técnico" />
@@ -282,7 +286,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
       <div className="grid grid-cols-3 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="prioridad">Prioridad *</Label>
-          <Select onValueChange={(value) => handleSelectChange("prioridad", value)} value={formData?.prioridad}>
+          <Select onValueChange={(value) => handleSelectChange("prioridad", value)} value={formData?.prioridad} defaultValue={ordenExistente?.prioridad}>
             <SelectTrigger id="prioridad">
               <SelectValue placeholder="Seleccionar prioridad" />
             </SelectTrigger>
@@ -296,7 +300,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
         </div>
         <div className="grid gap-2">
           <Label htmlFor="estado">Estado *</Label>
-          <Select onValueChange={(value) => handleSelectChange("estado", value)} value={formData?.estado}>
+          <Select onValueChange={(value) => handleSelectChange("estado", value)} value={formData?.estado} defaultValue={ordenExistente?.estado}>
             <SelectTrigger id="estado">
               <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
