@@ -32,87 +32,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import TECNICO_SERVICES, { TecnicoConDetallesType } from "@/services/TECNICO_SERVICES.SERVICE"
-
-// Mock data inicial para técnicos
-const mockTecnicosIniciales = [
-  {
-    id: 1,
-    nombre: "Carlos Rodríguez",
-    especialidad: "Mecánica General",
-    experiencia: "8 años",
-    calificacion: 4.8,
-    ordenes_completadas: 245,
-    disponibilidad: "Disponible",
-    telefono: "+52 555 123 4567",
-    email: "carlos.rodriguez@autoflowx.com",
-    direccion: "Calle Principal #123, Ciudad de México",
-    foto: "/placeholder.svg?height=100&width=100&text=CR",
-    habilidades: ["Diagnóstico", "Reparación de motores", "Sistemas eléctricos"],
-    certificaciones: ["ASE Master Technician", "Toyota Certified"],
-    horario: {
-      lunes: "8:00-17:00",
-      martes: "8:00-17:00",
-      miercoles: "8:00-17:00",
-      jueves: "8:00-17:00",
-      viernes: "8:00-17:00",
-      sabado: "8:00-12:00",
-      domingo: "Descanso",
-    },
-  },
-  {
-    id: 2,
-    nombre: "Ana Martínez",
-    especialidad: "Electrónica Automotriz",
-    experiencia: "6 años",
-    calificacion: 4.7,
-    ordenes_completadas: 189,
-    disponibilidad: "Ocupado",
-    telefono: "+52 555 234 5678",
-    email: "ana.martinez@autoflowx.com",
-    direccion: "Av. Secundaria #456, Ciudad de México",
-    foto: "/placeholder.svg?height=100&width=100&text=AM",
-    habilidades: ["Diagnóstico electrónico", "Programación de ECU", "Sistemas de infoentretenimiento"],
-    certificaciones: ["ASE Electronics Systems", "Honda Certified"],
-    horario: {
-      lunes: "8:00-17:00",
-      martes: "8:00-17:00",
-      miercoles: "8:00-17:00",
-      jueves: "8:00-17:00",
-      viernes: "8:00-17:00",
-      sabado: "Descanso",
-      domingo: "Descanso",
-    },
-  },
-  {
-    id: 3,
-    nombre: "Miguel Sánchez",
-    especialidad: "Carrocería y Pintura",
-    experiencia: "10 años",
-    calificacion: 4.9,
-    ordenes_completadas: 312,
-    disponibilidad: "Disponible",
-    telefono: "+52 555 345 6789",
-    email: "miguel.sanchez@autoflowx.com",
-    direccion: "Blvd. Principal #789, Ciudad de México",
-    foto: "/placeholder.svg?height=100&width=100&text=MS",
-    habilidades: ["Reparación de carrocería", "Pintura automotriz", "Restauración"],
-    certificaciones: ["PPG Certified", "I-CAR Platinum"],
-    horario: {
-      lunes: "8:00-17:00",
-      martes: "8:00-17:00",
-      miercoles: "8:00-17:00",
-      jueves: "8:00-17:00",
-      viernes: "8:00-17:00",
-      sabado: "8:00-12:00",
-      domingo: "Descanso",
-    },
-  },
-]
+import TECNICO_SERVICES, { TecnicoCertificacionType, TecnicoConDetallesType, TecnicoHabilidadType } from "@/services/TECNICO_SERVICES.SERVICE"
 
 export function TecnicosPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [tecnicos, setTecnicos] = useState<any[]>(mockTecnicosIniciales)
+  const [tecnicos, setTecnicos] = useState<any[]>([])
   const [State_Tecnicos, SetState_Tecnicos] = useState<TecnicoConDetallesType[]>([])
   const [openDialog, setOpenDialog] = useState(false)
   const [openPerfilDialog, setOpenPerfilDialog] = useState(false)
@@ -120,6 +44,7 @@ export function TecnicosPage() {
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedTecnico, setSelectedTecnico] = useState<TecnicoConDetallesType>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -133,29 +58,15 @@ export function TecnicosPage() {
     direccion: "",
     habilidades: "",
     certificaciones: "",
-    disponibilidad: "Disponible",
+    disponibilidad: "Disponible"
   })
-
-  // Usar useEffect para cargar datos desde localStorage solo en el cliente
 
   const FN_GET_TECNICOS = async () => {
     const data = await TECNICO_SERVICES.GET_ALL_DETALLE_TECNICOS();
     console.log(data)
     SetState_Tecnicos(data)
   }
-  useEffect(() => {
-    FN_GET_TECNICOS()
-    try {
-      const saved = localStorage.getItem("mockTecnicos")
-      if (saved) {
-        setTecnicos(JSON.parse(saved))
-      } else {
-        localStorage.setItem("mockTecnicos", JSON.stringify(mockTecnicosIniciales))
-      }
-    } catch (error) {
-      console.error("Error accediendo a localStorage:", error)
-    }
-  }, [])
+
 
   const saveTecnicos = (newTecnicos: any[]) => {
     setTecnicos(newTecnicos)
@@ -183,7 +94,7 @@ export function TecnicosPage() {
       tecnico.area.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     const horario = {
@@ -230,7 +141,7 @@ export function TecnicosPage() {
       dia: dia.charAt(0).toUpperCase() + dia.slice(1), // Capitaliza el día
       horario,
     }));
-    TECNICO_SERVICES.INSERT_TECNICO({
+    await TECNICO_SERVICES.INSERT_TECNICO({
       info: {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -248,93 +159,104 @@ export function TecnicosPage() {
       horarios: horarioArray,
       certificaciones
     })
-    setTimeout(() => {
-      const newTecnicos = [...tecnicos, { ...formData, horario, habilidades, certificaciones }]
-      saveTecnicos(newTecnicos)
+    await FN_GET_TECNICOS()
+    setFormData({
+      nombre: "",
+      apellido: "",
+      especialidad: "",
+      cargo: "",
+      experiencia: "",
+      telefono: "",
+      email: "",
+      direccion: "",
+      habilidades: "",
+      certificaciones: "",
+      disponibilidad: "Disponible"
 
-      setFormData({
-        nombre: "",
-        apellido: "",
-        especialidad: "",
-        cargo: "",
-        experiencia: "",
-        telefono: "",
-        email: "",
-        direccion: "",
-        habilidades: "",
-        certificaciones: "",
-        disponibilidad: "Disponible",
-      })
+    })
 
-      setOpenDialog(false)
-      setIsLoading(false)
-
-      toast({
-        title: "Técnico agregado",
-        description: `${formData.nombre} ha sido agregado al equipo`,
-      })
-    }, 1000)
+    setOpenDialog(false)
+    setIsLoading(false)
   }
 
-  const handleEdit = (tecnico: TecnicoConDetallesType) => {
-    setSelectedTecnico(tecnico)
+  const handleEdit = (tecnicoData: TecnicoConDetallesType) => {
+    console.log(tecnicoData)
+    setSelectedTecnico(tecnicoData)
     setFormData({
-      nombre: tecnico.nombre,
-      apellido: tecnico.apellido,
-      cargo: tecnico.cargo,
-      especialidad: tecnico.area,
-      experiencia: tecnico.tiempo_experciencia,
-      telefono: tecnico.telefono,
-      email: tecnico.email,
-      direccion: tecnico.direccion,
-      habilidades: tecnico.tecnicos_habilidades.map(hab => hab.habilidad).toString(),
-      certificaciones: tecnico.tecnicos_certificaciones.map(cert => cert.certificacion).toString(),
-      disponibilidad: tecnico.estado,
-
+      nombre: tecnicoData.nombre,
+      apellido: tecnicoData.apellido,
+      cargo: tecnicoData.cargo,
+      especialidad: tecnicoData.area,
+      experiencia: tecnicoData.tiempo_experciencia,
+      telefono: tecnicoData.telefono,
+      email: tecnicoData.email,
+      direccion: tecnicoData.direccion,
+      habilidades: tecnicoData.tecnicos_habilidades.map(hab => hab.habilidad).toString(),
+      certificaciones: tecnicoData.tecnicos_certificaciones.map(cert => cert.certificacion).toString(),
+      disponibilidad: tecnicoData.estado
     })
     setOpenEditDialog(true)
   }
 
-  const handleUpdateTecnico = (e: React.FormEvent) => {
+  const handleUpdateTecnico = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const updatedTecnicos = tecnicos.map((t: any) =>
-      t.id === selectedTecnico.id
-        ? {
-          ...t,
-          nombre: formData.nombre,
-          especialidad: formData.especialidad,
-          experiencia: formData.experiencia,
-          telefono: formData.telefono,
-          email: formData.email,
-          direccion: formData.direccion,
-          habilidades: formData.habilidades.split(",").map((h) => h.trim()),
-          certificaciones: formData.certificaciones.split(",").map((c) => c.trim()),
-          disponibilidad: formData.disponibilidad,
-        }
-        : t,
-    )
-
-    saveTecnicos(updatedTecnicos)
+    const horario = {
+      lunes: "8:00-17:00",
+      martes: "8:00-17:00",
+      miercoles: "8:00-17:00",
+      jueves: "8:00-17:00",
+      viernes: "8:00-17:00",
+      sabado: "8:00-12:00",
+      domingo: "Descanso",
+    }
+    setIsLoading(true)
+    const horarioArray = Object.entries(horario).map(([dia, horario]) => ({
+      // tecnico_id,
+      dia: dia.charAt(0).toUpperCase() + dia.slice(1), // Capitaliza el día
+      horario,
+    }));
+    const habilidades: string[] = formData.habilidades.split(",").map((h) => h.trim());
+    const certificaciones: string[] = formData.certificaciones.split(",").map((c) => c.trim());
+    const NewHabilidades: TecnicoHabilidadType[] = habilidades.map(hab => ({ tecnico_id: selectedTecnico.id, habilidad: hab }))
+    const NewCertificaciones: TecnicoCertificacionType[] = certificaciones.map(cert => ({ tecnico_id: selectedTecnico.id, certificacion: cert }))
+    await TECNICO_SERVICES.UPDATE_TECNICO({
+      info: {
+        id: selectedTecnico.id,
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        area: formData.especialidad,
+        cant_ordenes_completadas: 0,
+        cargo: formData.cargo,
+        direccion: formData.direccion,
+        disponible: true,
+        email: formData.email,
+        telefono: formData.telefono,
+        tiempo_experciencia: formData.experiencia,
+        calificacion: 5.5
+      },
+      habilidades: NewHabilidades,
+      horarios: horarioArray,
+      certificaciones: NewCertificaciones
+    }, selectedTecnico)
+    await FN_GET_TECNICOS()
     setOpenEditDialog(false)
-    setSelectedTecnico(null)
-
+    setIsLoading(false)
     toast({
       title: "Técnico actualizado",
       description: "La información del técnico ha sido actualizada",
     })
   }
-
-  const handleDelete = (tecnico: any) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar a ${tecnico.nombre}?`)) {
-      const updatedTecnicos = tecnicos.filter((t: any) => t.id !== tecnico.id)
-      saveTecnicos(updatedTecnicos)
-
-      toast({
-        title: "Técnico eliminado",
-        description: `${tecnico.nombre} ha sido eliminado del equipo`,
-      })
-    }
+  const FN_CONFIRM_DELETE_TECNICO = async () => {
+    setIsLoading(true)
+    await TECNICO_SERVICES.DELETE_TECNICO(selectedTecnico.id)
+    await FN_GET_TECNICOS()
+    setIsLoading(false)
+    setIsDeleteDialogOpen(false)
+  }
+  const handleDelete = (tecnico: TecnicoConDetallesType) => {
+    setIsLoading(false)
+    setSelectedTecnico(tecnico)
+    setIsDeleteDialogOpen(true)
   }
 
   const handleVerPerfil = (tecnico: TecnicoConDetallesType) => {
@@ -366,7 +288,25 @@ export function TecnicosPage() {
       description: `${tecnico.nombre} ahora está ${nuevaDisponibilidad.toLowerCase()}`,
     })
   }
+  const FN_RESET_FORM = () => {
+    setFormData({
+      nombre: "",
+      apellido: "",
+      especialidad: "",
+      cargo: "",
+      experiencia: "",
+      telefono: "",
+      email: "",
+      direccion: "",
+      habilidades: "",
+      certificaciones: "",
+      disponibilidad: "Disponible",
+    })
+  }
 
+  useEffect(() => {
+    FN_GET_TECNICOS()
+  }, [])
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
@@ -392,7 +332,7 @@ export function TecnicosPage() {
           </Button>
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
-              <Button className="rounded-full">
+              <Button className="rounded-full" onClick={FN_RESET_FORM}>
                 <Plus className="mr-2 h-4 w-4" /> Nuevo Técnico
               </Button>
             </DialogTrigger>
@@ -1067,9 +1007,28 @@ export function TecnicosPage() {
               <Button type="button" variant="outline" onClick={() => setOpenEditDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Actualizar Técnico</Button>
+              <Button type="submit" disabled={isLoading}>{isLoading ? 'Procesando' : 'Actualizar Técnico'}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Diálogo de confirmación para eliminar */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar eliminación</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro de que desea eliminar al tecnico {selectedTecnico?.nombre} {selectedTecnico?.apellido}? Esta acción aliminara habilidades, certificaciones, ordenes de trabajo y facturas relacionadas a este tecnico❌.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button disabled={isLoading} variant="destructive" onClick={() => FN_CONFIRM_DELETE_TECNICO()}>
+              {isLoading ? 'Procesando' : 'Eliminar'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
