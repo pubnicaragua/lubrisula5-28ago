@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import TECNICO_SERVICES, { TecnicoCertificacionType, TecnicoConDetallesType, TecnicoHabilidadType } from "@/services/TECNICO_SERVICES.SERVICE"
+import TECNICO_SERVICES, { TecnicoCertificacionType, TecnicoConDetallesType, TecnicoHabilidadType, TecnicoHorarioType } from "@/services/TECNICO_SERVICES.SERVICE"
 
 export function TecnicosPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -41,10 +41,12 @@ export function TecnicosPage() {
   const [openDialog, setOpenDialog] = useState(false)
   const [openPerfilDialog, setOpenPerfilDialog] = useState(false)
   const [openHorarioDialog, setOpenHorarioDialog] = useState(false)
+  const [OpenEditHorarioDialog, SetOpenEditHorarioDialog] = useState(false)
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedTecnico, setSelectedTecnico] = useState<TecnicoConDetallesType>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [State_EditHorario, SetState_EditHorario] = useState<TecnicoHorarioType[]>([])
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -237,7 +239,7 @@ export function TecnicosPage() {
       habilidades: NewHabilidades,
       horarios: horarioArray,
       certificaciones: NewCertificaciones
-    }, selectedTecnico)
+    })
     await FN_GET_TECNICOS()
     setOpenEditDialog(false)
     setIsLoading(false)
@@ -252,6 +254,14 @@ export function TecnicosPage() {
     await FN_GET_TECNICOS()
     setIsLoading(false)
     setIsDeleteDialogOpen(false)
+  }
+  const FN_UPDATE_HORARIO_TECNICO = async (horarios: TecnicoHorarioType[]) => {
+    setIsLoading(true)
+    await TECNICO_SERVICES.UPDATE_HORARIO_TECNICO(horarios);
+    await FN_GET_TECNICOS()
+    setIsLoading(false)
+    SetOpenEditHorarioDialog(false)
+    setOpenHorarioDialog(false)
   }
   const handleDelete = (tecnico: TecnicoConDetallesType) => {
     setIsLoading(false)
@@ -877,14 +887,42 @@ export function TecnicosPage() {
               </div>
               <div className="flex justify-end">
                 <Button
-                  onClick={() => {
-                    toast({
-                      title: "Editar horario",
-                      description: "Funcionalidad de edición de horario en desarrollo",
-                    })
-                  }}
+                  onClick={() => { SetOpenEditHorarioDialog(true); SetState_EditHorario(selectedTecnico.tecnicos_horarios) }}
                 >
                   Editar Horario
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* Diálogo de editar horario del técnico */}
+      <Dialog open={OpenEditHorarioDialog} onOpenChange={SetOpenEditHorarioDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Horario de {selectedTecnico?.nombre}</DialogTitle>
+          </DialogHeader>
+          {selectedTecnico && (
+            <div className="space-y-4">
+              <div className="grid gap-3">
+                {State_EditHorario.map(horario => (
+                  <div className="space-y-2" key={horario.dia}>
+                    <Label htmlFor={horario.dia}>{horario.dia}</Label>
+                    <Input
+                      id={horario.dia}
+                      placeholder={horario.dia}
+                      value={horario.horario}
+                      onChange={(e) => SetState_EditHorario((prev) => prev.map(h => h.dia === horario.dia ? { ...h, horario: e.target.value } : h))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  disabled={isLoading}
+                  onClick={() => FN_UPDATE_HORARIO_TECNICO(State_EditHorario)}
+                >
+                  {isLoading ? 'Procesando' : 'Actualizar horario'}
                 </Button>
               </div>
             </div>

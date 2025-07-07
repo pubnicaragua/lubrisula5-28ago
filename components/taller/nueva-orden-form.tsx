@@ -143,7 +143,7 @@ export function NuevaOrdenForm() {
       toast({
         title: "Error",
         description: "Por favor completa todos los campos obligatorios",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }
@@ -152,7 +152,7 @@ export function NuevaOrdenForm() {
       toast({
         title: "Error",
         description: "Debes agregar al menos un servicio o repuesto",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }
@@ -175,7 +175,7 @@ export function NuevaOrdenForm() {
       toast({
         title: "Error",
         description: "Ocurrió un error al crear la orden",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)

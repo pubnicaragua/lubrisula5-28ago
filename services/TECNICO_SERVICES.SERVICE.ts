@@ -37,6 +37,7 @@ export type TecnicoHorarioType = {
     dia: string;
     horario: string;
     created_at?: string;
+    update_at?: string;
 }
 
 
@@ -102,13 +103,8 @@ const TECNICO_SERVICES = {
         console.log(ResCertificacion)
         return true;
     },
-    async UPDATE_TECNICO(UpdateTecnicoData: UpdateTecnicoType, DataAnterior: TecnicoConDetallesType) {
-        console.log(UpdateTecnicoData)
-        const newTecnico: TecnicoType[] = await AxiosPatch({ path: `/tecnicos?id=eq.${UpdateTecnicoData.info.id}`, payload: UpdateTecnicoData.info })
-        const IdTecnico = newTecnico[0].id;
-        console.log(IdTecnico)
-        // const Habilidades: TecnicoHabilidadType[] = UpdateTecnicoData.habilidades.map(hab => ({ tecnico_id: IdTecnico, habilidad: hab }))
-        // console.log(Habilidades)
+    async UPDATE_TECNICO(UpdateTecnicoData: UpdateTecnicoType) {
+        await AxiosPatch({ path: `/tecnicos?id=eq.${UpdateTecnicoData.info.id}`, payload: UpdateTecnicoData.info })
         //eliminamos todas las habilidades que tiene actualmente el tecnico
         await AxiosDelete({ path: `/tecnicos_habilidades?tecnico_id=eq.${UpdateTecnicoData.info.id}` })
         for (let habilidad of UpdateTecnicoData.habilidades) {
@@ -116,14 +112,6 @@ const TECNICO_SERVICES = {
             const ResHabilidades: TecnicoHabilidadType[] = await AxiosPost({ path: `/tecnicos_habilidades`, payload: habilidad })
             console.log(ResHabilidades)
         }
-        // const horarios: TecnicoHorarioType[] = UpdateTecnicoData.horarios.map(h => ({ tecnico_id: IdTecnico, dia: h.dia, horario: h.horario }))
-        // console.log(horarios)
-        // await AxiosDelete({ path: `/tecnicos_habilidades?tecnico_id=eq.${UpdateTecnicoData.info.id}` })
-        // for (let horario of UpdateTecnicoData.horarios) {
-        //     const ResHorarios: TecnicoType[] = await AxiosPatch({ path: `/tecnicos_horarios?id=eq.${horario.id}`, payload: horario })
-        //     console.log(ResHorarios)
-        // }
-
         //eliminamos todas las certificaciones de ese tecnico
         await AxiosDelete({ path: `/tecnicos_certificaciones?tecnico_id=eq.${UpdateTecnicoData.info.id}` })
         for (let cert of UpdateTecnicoData.certificaciones) {
@@ -135,19 +123,14 @@ const TECNICO_SERVICES = {
         }
         return true;
     },
-    // async UPDATE_VEHICULO(vehicle: VehiculoType): Promise<VehiculoType[]> {
-    //     const Id_Vehiculo = vehicle.id; // Use vehicle.id if available, otherwise use Id
-    //     delete vehicle.id; // Remove id from payload if it's not needed for update
-    //     delete vehicle.client_name; 
-    //     console.log(vehicle)
-    //     const res: VehiculoType[] = await AxiosPatch({ path: `/vehicles?id=eq.${Id_Vehiculo}`, payload: vehicle })
-    //     return res;
-    // },
+    async UPDATE_HORARIO_TECNICO(horarios: TecnicoHorarioType[]) {
+        const update_at = new Date().toISOString()
+        for (let horario of horarios) {
+            await AxiosPatch({ path: `/tecnicos_horarios?id=eq.${horario.id}`, payload: { ...horario, update_at } })
+        }
+        return true;
+    },
     async DELETE_TECNICO(Id: number) {
-        await AxiosDelete({ path: `/tecnicos_habilidades?tecnico_id=eq.${Id}` })
-        //eliminar certificaciones
-        await AxiosDelete({ path: `/tecnicos_certificaciones?tecnico_id=eq.${Id}` })
-        //eliminar tecnico
         await AxiosDelete({ path: `/tecnicos?id=eq.${Id}` })
         return true;
     }
