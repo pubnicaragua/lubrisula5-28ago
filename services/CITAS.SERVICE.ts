@@ -1,4 +1,4 @@
-import { AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module"
+import { AxiosDelete, AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module"
 
 type Client = {
     id: string
@@ -81,6 +81,10 @@ const CITAS_SERVICES = {
         console.log('GET_CITAS', CitasData);
         return CitasData;
     },
+    async GET_CITA_BY_ID(Id: string): Promise<CitasDetalleType> {
+        const CitasData: CitasDetalleType[] = await AxiosGet({ path: `/citas?id=eq.${Id}` })
+        return CitasData[0];
+    },
     async INSERT_CITA(Data: Omit<CitaType, 'id' | 'updated_at'>): Promise<CitaType> {
         const res: CitaType[] = await AxiosPost({ path: '/citas', payload: Data })
         return res[0]
@@ -89,11 +93,10 @@ const CITAS_SERVICES = {
         const res: CitaType[] = await AxiosPatch({ path: `/citas?id=eq.${Data.id}`, payload: Data })
         return res[0]
     },
-    // async DELETE_USER() {
-    //     const res: UserType[] = await AxiosDelete({ path: '/usarios' })
-    //     console.log('DELETE_USER', res);
-    //     return res;
-    // }
+    async DELETE_CITA(cita_id: string) {
+        await AxiosDelete({ path: `/citas?id=eq.${cita_id}` })
+        return true;
+    }
 };
 
 export default CITAS_SERVICES

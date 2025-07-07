@@ -17,14 +17,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import CITAS_SERVICES, { CitasDetalleType } from "@/services/CITAS.SERVICE"
 import Form_NuevaCita from "./Form_Nueva_CIta"
+import Form_Update_Cita from "./Form-Update_Cita"
 
 export function CitasPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
-  const [openDialog, setOpenDialog] = useState(false)
+  const [State_DialogEdit, SetState_DialogEdit] = useState(false)
+  const [State_DialogDelete, SetState_DialogDelete] = useState(false)
   const [State_Citas, SetState_Citas] = useState<CitasDetalleType[]>([])
   const [State_CitaSelected, SetState_CitaSelected] = useState<CitasDetalleType>({})
   const [State_IsEditingCita, SetState_IsEditingCita] = useState<boolean>(false)
@@ -33,6 +45,11 @@ export function CitasPage() {
   const FN_GET_ALL_CITAS = async () => {
     const res = await CITAS_SERVICES.GET_ALL_CITAS()
     SetState_Citas(res)
+  }
+  const FN_DELETE_CITA = async (cita_id: string) => {
+    await CITAS_SERVICES.DELETE_CITA(cita_id)
+    SetState_DialogDelete(false)
+    FN_GET_ALL_CITAS()
   }
 
   const getStatusColor = (status: string) => {
@@ -105,7 +122,7 @@ export function CitasPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredCitas.length > 0 ? (
+            {
               filteredCitas.map((cita, index) => (
                 <Card key={index} className="overflow-hidden">
                   <CardHeader className="pb-2">
@@ -133,10 +150,10 @@ export function CitasPage() {
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem>Ver detalles</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setOpenDialog(true); SetState_CitaSelected(cita) }}>Editar cita</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { SetState_DialogEdit(true); SetState_CitaSelected(cita) }}>Editar cita</DropdownMenuItem>
                             <DropdownMenuItem>Confirmar cita</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">Cancelar cita</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={() => { SetState_DialogDelete(true); SetState_CitaSelected(cita) }} >Cancelar cita</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -184,14 +201,7 @@ export function CitasPage() {
                   </CardContent>
                 </Card>
               ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No se encontraron citas</p>
-                <Button className="mt-4" onClick={() => setOpenDialog(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Programar Cita
-                </Button>
-              </div>
-            )}
+            }
           </div>
         </CardContent>
       </Card>
@@ -217,6 +227,25 @@ export function CitasPage() {
         onSucces={FN_GET_ALL_CITAS}
       /> */}
 
+      <Form_Update_Cita open={State_DialogEdit} cita_id={State_CitaSelected.id} setOpen={SetState_DialogEdit} onSucces={FN_GET_ALL_CITAS} />
+
+
+      {/* Dialog de confirmación para eliminar */}
+      <AlertDialog open={State_DialogDelete} onOpenChange={SetState_DialogDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la cita de {State_CitaSelected?.clients?.name} para el dia
+              <strong> {State_CitaSelected?.fecha}</strong> del sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => FN_DELETE_CITA(State_CitaSelected?.id)}>Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
     // <TallerLayout>
     // </TallerLayout>
