@@ -64,7 +64,7 @@ export default function Form_Update_Cita({ cita_id, onSucces, open, setOpen }: {
         SetState_Tecnicos(res)
     }
     const FN_GET_SERVICIOS = async () => {
-        const res = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS();
+        const res = await SERVICIOS_SERVICES.GET_ALL_TIPO_SERVICIOS();
         SetState_Servicios(res)
     }
     useEffect(() => {

@@ -44,7 +44,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     SetState_Tecnicos(res)
   }
   const GET_TIPOS_SERVICIOS = async () => {
-    const res = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS();
+    const res = await SERVICIOS_SERVICES.GET_ALL_TIPO_SERVICIOS();
     SetState_TiposServicios(res)
   }
 

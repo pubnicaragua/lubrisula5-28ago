@@ -9,29 +9,61 @@ export type TipoServicioType = {
   updated_at: string // ISO 8601 con zona horaria
 }
 
+export type CategoriaServicioType = {
+  id: number;
+  nombre: string;
+  created_at: string;
+};
+
+export type ServicioType = {
+  id?: number;
+  created_at?: string;
+  nombre?: string;
+  descripcion?: string;
+  precio?: number;
+  tiempo_estimado?: number;
+  tipo_tiempo_estimado?: string;
+  categoria_servicio_id?: number;
+  estado?: boolean;
+  nivel_tarifa?: string;
+  vehiculo_id?: string;
+  materiales?: string;
+  orden_trabajo_id?: string | null;
+  categorias_servicio?: CategoriaServicioType;
+};
+
+
 
 const SERVICIOS_SERVICES = {
-    async GET_ALL_SERVICIOS(): Promise<TipoServicioType[]> {
-        const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_operacion' })
-        return data;
-    },
-  
-    // async INSERT_TECNICO(tecnico: TecnicoType): Promise<TecnicoType[]> {
-    //     const res: TecnicoType[] = await AxiosPost({ path: '/tecnicos', payload: tecnico })
-    //     return res;
-    // },
-    // async UPDATE_VEHICULO(vehicle: VehiculoType): Promise<VehiculoType[]> {
-    //     const Id_Vehiculo = vehicle.id; // Use vehicle.id if available, otherwise use Id
-    //     delete vehicle.id; // Remove id from payload if it's not needed for update
-    //     delete vehicle.client_name; 
-    //     console.log(vehicle)
-    //     const res: VehiculoType[] = await AxiosPatch({ path: `/vehicles?id=eq.${Id_Vehiculo}`, payload: vehicle })
-    //     return res;
-    // },
-    // async DELETE_VEHICULO(Id: string): Promise<VehiculoType[]> {
-    //     const res: VehiculoType[] = await AxiosDelete({ path: `/vehicles?id=eq.${Id}` })
-    //     return res;
-    // }
+  async GET_ALL_TIPO_SERVICIOS(): Promise<TipoServicioType[]> {
+    const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_operacion' })
+    return data;
+  },
+  async GET_GATEGORIAS_SERVICIO(): Promise<CategoriaServicioType[]> {
+    const data: CategoriaServicioType[] = await AxiosGet({ path: '/categorias_servicio' })
+    return data;
+  },
+  async GET_ALL_SERVICIOS(): Promise<ServicioType[]> {
+    const data: ServicioType[] = await AxiosGet({ path: '/servicios?select=*,categorias_servicio(*)' })
+    return data;
+  },
+  async GET_SERVICIO_BY_ID(servicio_id: number): Promise<ServicioType> {
+    const data: ServicioType[] = await AxiosGet({ path: `/servicios?select=*,categorias_servicio(*)&id=eq.${servicio_id}` })
+    return data[0];
+  },
+
+  async INSERT_SERVICIO(serv: ServicioType): Promise<ServicioType> {
+    const res: ServicioType[] = await AxiosPost({ path: '/servicios', payload: serv })
+    return res[0];
+  },
+  async UPDATE_SERVICIO(serv: ServicioType): Promise<ServicioType> {
+    const res: ServicioType[] = await AxiosPatch({ path: `/servicios?id=eq.${serv.id}`, payload: serv })
+    return res[0];
+  },
+  // async DELETE_VEHICULO(Id: string): Promise<VehiculoType[]> {
+  //     const res: VehiculoType[] = await AxiosDelete({ path: `/vehicles?id=eq.${Id}` })
+  //     return res;
+  // }
 };
 
 export default SERVICIOS_SERVICES
