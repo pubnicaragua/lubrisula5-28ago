@@ -93,6 +93,10 @@ const CITAS_SERVICES = {
         const res: CitaType[] = await AxiosPatch({ path: `/citas?id=eq.${Data.id}`, payload: Data })
         return res[0]
     },
+    async CONFIRMAR_CITA(cita_id: string): Promise<CitaType> {
+        const res: CitaType[] = await AxiosPatch({ path: `/citas?id=eq.${cita_id}`, payload: {estado:'Confirmada'} })
+        return res[0]
+    },
     async DELETE_CITA(cita_id: string) {
         await AxiosDelete({ path: `/citas?id=eq.${cita_id}` })
         return true;

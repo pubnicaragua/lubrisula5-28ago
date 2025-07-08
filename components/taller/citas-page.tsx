@@ -37,6 +37,7 @@ export function CitasPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [State_DialogEdit, SetState_DialogEdit] = useState(false)
   const [State_DialogDelete, SetState_DialogDelete] = useState(false)
+  const [State_DialogConfirm, SetState_DialogConfirm] = useState(false)
   const [State_Citas, SetState_Citas] = useState<CitasDetalleType[]>([])
   const [State_CitaSelected, SetState_CitaSelected] = useState<CitasDetalleType>({})
   const [State_IsEditingCita, SetState_IsEditingCita] = useState<boolean>(false)
@@ -50,6 +51,12 @@ export function CitasPage() {
     await CITAS_SERVICES.DELETE_CITA(cita_id)
     SetState_DialogDelete(false)
     FN_GET_ALL_CITAS()
+  }
+  const FN_CONFIRMAR_CITA = async (cita_id: string) => {
+    await CITAS_SERVICES.CONFIRMAR_CITA(cita_id)
+    SetState_DialogConfirm(false)
+    FN_GET_ALL_CITAS()
+
   }
 
   const getStatusColor = (status: string) => {
@@ -151,7 +158,7 @@ export function CitasPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem>Ver detalles</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { SetState_DialogEdit(true); SetState_CitaSelected(cita) }}>Editar cita</DropdownMenuItem>
-                            <DropdownMenuItem>Confirmar cita</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { SetState_DialogConfirm(true); SetState_CitaSelected(cita) }}>Confirmar cita</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600" onClick={() => { SetState_DialogDelete(true); SetState_CitaSelected(cita) }} >Cancelar cita</DropdownMenuItem>
                           </DropdownMenuContent>
@@ -243,6 +250,22 @@ export function CitasPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => FN_DELETE_CITA(State_CitaSelected?.id)}>Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={State_DialogConfirm} onOpenChange={SetState_DialogConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar Cita de {State_CitaSelected?.clients?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              se marcara esta cita como confirmada.
+            </AlertDialogDescription>
+
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => SetState_DialogConfirm(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => FN_CONFIRMAR_CITA(State_CitaSelected?.id)}>Confirmar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
