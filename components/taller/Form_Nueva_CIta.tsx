@@ -59,7 +59,7 @@ export default function Form_NuevaCita({ onSucces }: { onSucces?: () => void }) 
         SetState_Tecnicos(res)
     }
     const FN_GET_SERVICIOS = async () => {
-        const res = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS();
+        const res = await SERVICIOS_SERVICES.GET_ALL_TIPO_SERVICIOS();
         SetState_Servicios(res)
     }
     useEffect(() => {

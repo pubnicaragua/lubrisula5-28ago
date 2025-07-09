@@ -114,6 +114,7 @@ export function ClientesPage() {
   }
 
   const openDeleteDialog = (cliente: ClienteType) => {
+    console.log(cliente)
     setClienteToDelete(cliente)
     setDeleteDialogOpen(true)
   }

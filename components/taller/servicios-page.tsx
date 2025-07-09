@@ -18,20 +18,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import SERVICIOS_SERVICES, { ServicioType } from "@/services/SERVICIOS.SERVICE"
+import SERVICIOS_SERVICES, { ServicioType, PaqueteServicioType } from "@/services/SERVICIOS.SERVICE"
 import FormNuevoServicio from "./Form_Nuevo_Servicio"
 import FormActualizarServicio from "./Form_Actualizar_Servicio"
+import FormNuevoPaqueteServicio from "./Form_NuevoPaqueteServicio"
 
 export function ServiciosPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [State_OpenDIalogActualizarServ, SetState_OpenDIalogActualizarServ] = useState(false)
   const [State_Services, SetState_Services] = useState<ServicioType[]>([])
+  const [State_PaqueteServices, SetState_PaqueteServices] = useState<PaqueteServicioType[]>([])
   const [State_ServiceSelected, SetState_ServiceSelected] = useState<ServicioType>({})
 
   const FN_GET_SERVICIOS = async () => {
-    const res = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS()
-    console.log(res)
-    SetState_Services(res)
+    const servicios = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS()
+    const paquetes = await SERVICIOS_SERVICES.GET_ALL_PAQUETES_SERVICIOS()
+    SetState_PaqueteServices(paquetes)
+    console.log(servicios)
+    SetState_Services(servicios)
   }
 
   const FN_SUCCESS_NUEVO_SERVICIO = (nuevoServ: ServicioType) => {
@@ -73,7 +77,7 @@ export function ServiciosPage() {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-lg">{servicio.nombre}</CardTitle>
-                <CardDescription>{servicio.id}</CardDescription>
+                <CardDescription>SERV - {servicio.id}</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className={getCategoryColor(servicio.categorias_servicio.nombre)}>{servicio.categorias_servicio.nombre}</Badge>
@@ -144,6 +148,92 @@ export function ServiciosPage() {
     </div>
   )
 
+  const ComponentPaquetes = ({ paquetes }: { paquetes: PaqueteServicioType[] }) => {
+    return (
+      <article>
+        {
+          paquetes.map((paq) => (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{paq?.nombre}</CardTitle>
+                    <CardDescription>PKG-{paq?.id}</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-100 text-blue-800">{paq?.categorias_servicio?.nombre}</Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Editar paquete</DropdownMenuItem>
+                        <DropdownMenuItem>Ver historial</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600">Desactivar</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Paquete de mantenimiento básico que incluye cambio de aceite, revisión de niveles y
+                    diagnóstico general.
+                  </p>
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center text-sm">
+                      <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                      <span className="font-medium">${paq?.precio}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                      <span className="font-medium">{paq?.timpo_estimado} {paq?.tipo_tiempo_estimado}</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Servicios incluidos:</h4>
+                    <div className="space-y-2">
+                      {
+                        paq?.servicios?.map((serv) => (
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span>SERV - {serv.id} - {serv.nombre}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">${serv.precio}</span>
+                          </div>
+                        ))
+                      }
+
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Ahorro:</span> $200
+                </div>
+                <Button>Agregar a Orden</Button>
+              </CardFooter>
+            </Card>
+          ))
+        }
+
+      </article>
+
+    )
+  }
+
   useEffect(() => {
     FN_GET_SERVICIOS()
   }, [])
@@ -170,70 +260,8 @@ export function ServiciosPage() {
             <Filter className="h-4 w-4" />
           </Button>
           <FormNuevoServicio onSuccess={FN_SUCCESS_NUEVO_SERVICIO} />
-          {/* <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            <DialogTrigger asChild>
-              <Button className="rounded-full">
-                <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Agregar Nuevo Servicio</DialogTitle>
-                <DialogDescription>Complete los datos para agregar un nuevo servicio al catálogo.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nombre">Nombre del Servicio</Label>
-                    <Input id="nombre" placeholder="Nombre del servicio" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="categoria">Categoría</Label>
-                    <Select>
-                      <SelectTrigger id="categoria">
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                        <SelectItem value="diagnostico">Diagnóstico</SelectItem>
-                        <SelectItem value="reparacion">Reparación</SelectItem>
-                        <SelectItem value="carroceria">Carrocería</SelectItem>
-                        <SelectItem value="estetica">Estética</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="precio">Precio (MXN)</Label>
-                    <Input id="precio" type="number" placeholder="0.00" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="duracion">Duración Estimada</Label>
-                    <Input id="duracion" placeholder="Ej: 1 hora" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="descripcion">Descripción</Label>
-                  <Textarea id="descripcion" placeholder="Descripción detallada del servicio" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="materiales">Materiales Requeridos</Label>
-                  <Textarea id="materiales" placeholder="Materiales separados por comas" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch id="activo" defaultChecked />
-                  <Label htmlFor="activo">Servicio Activo</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={() => setOpenDialog(false)}>Guardar Servicio</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog> */}
+         <FormNuevoPaqueteServicio />
+
         </div>
       </div>
 
@@ -267,173 +295,18 @@ export function ServiciosPage() {
             <CardHeader>
               <CardTitle>Paquetes de Servicio</CardTitle>
               <CardDescription>Paquetes predefinidos que combinan múltiples servicios</CardDescription>
+
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">Paquete de Mantenimiento Básico</CardTitle>
-                        <CardDescription>PKG-001</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-blue-100 text-blue-800">Mantenimiento</Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>Editar paquete</DropdownMenuItem>
-                            <DropdownMenuItem>Ver historial</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">Desactivar</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Paquete de mantenimiento básico que incluye cambio de aceite, revisión de niveles y
-                        diagnóstico general.
-                      </p>
 
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center text-sm">
-                          <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">$1,200.00</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">1 hora</span>
-                        </div>
-                      </div>
+                {
+                  State_PaqueteServices.length > 0 ?
+                    <ComponentPaquetes paquetes={State_PaqueteServices} />
+                    : <div>No hay paquetes</div>
+                }
 
-                      <Separator />
 
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Servicios incluidos:</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Cambio de Aceite y Filtro</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">$800</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Diagnóstico Computarizado</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">$600</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Ahorro:</span> $200
-                    </div>
-                    <Button>Agregar a Orden</Button>
-                  </CardFooter>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">Paquete de Mantenimiento Mayor</CardTitle>
-                        <CardDescription>PKG-002</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-blue-100 text-blue-800">Mantenimiento</Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>Editar paquete</DropdownMenuItem>
-                            <DropdownMenuItem>Ver historial</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">Desactivar</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Paquete completo de mantenimiento que incluye afinación, cambio de aceite, alineación y
-                        balanceo.
-                      </p>
-
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center text-sm">
-                          <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">$2,800.00</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                          <span className="font-medium">2.5 horas</span>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Servicios incluidos:</h4>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Afinación Básica</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">$1,500</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Cambio de Aceite y Filtro</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">$800</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
-                              <span>Alineación y Balanceo</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">$950</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Ahorro:</span> $450
-                    </div>
-                    <Button>Agregar a Orden</Button>
-                  </CardFooter>
-                </Card>
-
-                <div className="flex justify-center">
-                  <Button className="rounded-full">
-                    <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Paquete
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>

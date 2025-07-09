@@ -17,7 +17,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
 import SERVICIOS_SERVICES, { ServicioType, CategoriaServicioType } from "@/services/SERVICIOS.SERVICE";
 export default function FormActualizarServicio({ servicio_id, onSuccess, openDialog = false, setOpenDialog }: { servicio_id: number, onSuccess: (NewServicio: ServicioType) => void, openDialog: boolean, setOpenDialog: (open: boolean) => void }) {
     const [State_Loadding, SetState_Loadding] = useState(false)
@@ -58,8 +57,8 @@ export default function FormActualizarServicio({ servicio_id, onSuccess, openDia
             </DialogTrigger> */}
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle>Agregar Nuevo Servicio</DialogTitle>
-                    <DialogDescription>Complete los datos para agregar un nuevo servicio al catálogo.</DialogDescription>
+                    <DialogTitle>Actualizar Servicio</DialogTitle>
+                    <DialogDescription>Actualice los datos cuidadosamente..</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
