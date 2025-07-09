@@ -22,10 +22,12 @@ import SERVICIOS_SERVICES, { ServicioType, PaqueteServicioType } from "@/service
 import FormNuevoServicio from "./Form_Nuevo_Servicio"
 import FormActualizarServicio from "./Form_Actualizar_Servicio"
 import FormNuevoPaqueteServicio from "./Form_NuevoPaqueteServicio"
+import FormAgregarServicioAPaquete from "./AgregarServicioAPaquete"
 
 export function ServiciosPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [State_OpenDIalogActualizarServ, SetState_OpenDIalogActualizarServ] = useState(false)
+  const [State_OpenDIalogAgregarPaquete, SetState_OpenDIalogAgregarPaquete] = useState(false)
   const [State_Services, SetState_Services] = useState<ServicioType[]>([])
   const [State_PaqueteServices, SetState_PaqueteServices] = useState<PaqueteServicioType[]>([])
   const [State_ServiceSelected, SetState_ServiceSelected] = useState<ServicioType>({})
@@ -54,6 +56,7 @@ export function ServiciosPage() {
     await SERVICIOS_SERVICES.ACTIVAR_DESACTIVAR_PAQUETE(paquete_id, activo)
     FN_GET_PAQUETES()
   }
+
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case "mantenimiento":
@@ -101,8 +104,8 @@ export function ServiciosPage() {
                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => { SetState_ServiceSelected(servicio); SetState_OpenDIalogActualizarServ(true) }}>Editar servicio</DropdownMenuItem>
-                    <DropdownMenuItem>Ver historial</DropdownMenuItem>
-                    <DropdownMenuItem>Agregar a paquete</DropdownMenuItem>
+                    {/* <DropdownMenuItem>Ver historial</DropdownMenuItem> */}
+                    <DropdownMenuItem onClick={() => { SetState_ServiceSelected(servicio); SetState_OpenDIalogAgregarPaquete(true) }}>Agregar a paquete</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className={servicio.activo ? "text-red-600" : "text-green-600"} onClick={() => FN_DESACTIVAR_SERVICIO(servicio.id, servicio.activo ? false : true)}>{servicio.activo ? 'Desactivar' : 'Activar'}</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -159,7 +162,7 @@ export function ServiciosPage() {
       <article>
         {
           paquetes.map((paq) => (
-            <Card>
+            <Card key={paq.id}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <div>
@@ -240,6 +243,7 @@ export function ServiciosPage() {
     )
   }
 
+
   useEffect(() => {
     FN_GET_SERVICIOS()
   }, [])
@@ -319,6 +323,7 @@ export function ServiciosPage() {
         </TabsContent>
       </Tabs>
       <FormActualizarServicio onSuccess={FN_SUCCESS_ACTUALIZAR_SERVICIO} openDialog={State_OpenDIalogActualizarServ} setOpenDialog={SetState_OpenDIalogActualizarServ} servicio_id={State_ServiceSelected.id} />
+      <FormAgregarServicioAPaquete onSuccess={() => FN_GET_PAQUETES()} servicio_id={State_ServiceSelected?.id} openDialog={State_OpenDIalogAgregarPaquete} setOpenDialog={SetState_OpenDIalogAgregarPaquete} />
     </main>
     // <TallerLayout>
 

@@ -117,7 +117,7 @@ export default function FormActualizarServicio({ servicio_id, onSuccess, openDia
                         <Textarea value={State_Form?.materiales} id="materiales" placeholder="Materiales separados por comas" onChange={(e) => SetState_Form({ ...State_Form, materiales: e.target.value })} />
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Switch id="activo" checked={State_Form?.estado} onCheckedChange={(check) => SetState_Form({ ...State_Form, estado: check })} />
+                        <Switch id="activo" checked={State_Form?.activo} onCheckedChange={(check) => SetState_Form({ ...State_Form, activo: check })} />
                         <Label htmlFor="activo">Servicio Activo</Label>
                     </div>
                 </div>

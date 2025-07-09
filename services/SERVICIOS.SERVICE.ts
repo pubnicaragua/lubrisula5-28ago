@@ -84,6 +84,10 @@ const SERVICIOS_SERVICES = {
     await AxiosPatch({ path: `/servicios?id=eq.${servicio_id}`, payload: { activo: activo } })
     return true;
   },
+  async AGREGAR_SERVICIO_AL_PAQUETE(servicio_id: number, paquete_id: number) {
+    await AxiosPatch({ path: `/servicios?id=eq.${servicio_id}`, payload: { paquete_id } })
+    return true;
+  },
   async GET_SERVICIO_BY_ID(servicio_id: number): Promise<ServicioType> {
     const data: ServicioType[] = await AxiosGet({ path: `/servicios?select=*,categorias_servicio(*)&id=eq.${servicio_id}` })
     return data[0];
