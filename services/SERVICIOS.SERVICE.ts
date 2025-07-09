@@ -17,6 +17,7 @@ export type CategoriaServicioType = {
 
 export type ServicioType = {
   id?: number;
+  paquete_id?: number;
   created_at?: string;
   nombre?: string;
   descripcion?: string;
@@ -24,7 +25,7 @@ export type ServicioType = {
   tiempo_estimado?: number;
   tipo_tiempo_estimado?: string;
   categoria_servicio_id?: number;
-  estado?: boolean;
+  activo?: boolean;
   nivel_tarifa?: string;
   vehiculo_id?: string;
   materiales?: string;
@@ -37,12 +38,12 @@ export type PaqueteServicioType = {
   nombre?: string;
   descripcion?: string;
   precio?: number;
-  timpo_estimado?: number;
+  tiempo_estimado?: number;
   activo?: boolean;
   created_at?: string;
   updated_at?: string;
   categoria_servicio_id?: number;
-  tipo_tiempo_estimado?: "horas" | "dias" | "minutos";
+  tipo_tiempo_estimado?: string;
   categorias_servicio?: CategoriaServicioType;
   servicios?: Omit<ServicioType, "categorias_servicio">[];
 }
@@ -65,6 +66,23 @@ const SERVICIOS_SERVICES = {
   async GET_ALL_PAQUETES_SERVICIOS(): Promise<PaqueteServicioType[]> {
     const data: PaqueteServicioType[] = await AxiosGet({ path: '/paquetes_servicio?select=*,categorias_servicio(*),servicios(*)' })
     return data;
+  },
+  async INSERT_PAQUETES_SERVICIOS(paquete: Omit<PaqueteServicioType, "categorias_servicio" | "servicios">, ListIdServices: number[]): Promise<Omit<PaqueteServicioType, "categorias_servicio" | "servicios">> {
+    const ResPaquete: PaqueteServicioType[] = await AxiosPost({ path: '/paquetes_servicio', payload: paquete })
+
+    for (let servId of ListIdServices) {
+      await AxiosPatch({ path: `/servicios?id=eq.${servId}`, payload: { paquete_id: ResPaquete[0].id } })
+    }
+
+    return ResPaquete[0];
+  },
+  async ACTIVAR_DESACTIVAR_PAQUETE(paquete_id: number, activo: boolean) {
+    await AxiosPatch({ path: `/paquetes_servicio?id=eq.${paquete_id}`, payload: { activo: activo } })
+    return true;
+  },
+  async ACTIVAR_DESACTIVAR_SERVICIO(servicio_id: number, activo: boolean) {
+    await AxiosPatch({ path: `/servicios?id=eq.${servicio_id}`, payload: { activo: activo } })
+    return true;
   },
   async GET_SERVICIO_BY_ID(servicio_id: number): Promise<ServicioType> {
     const data: ServicioType[] = await AxiosGet({ path: `/servicios?select=*,categorias_servicio(*)&id=eq.${servicio_id}` })

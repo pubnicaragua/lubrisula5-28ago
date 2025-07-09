@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { TallerLayout } from "./taller-layout"
-import { Search, Filter, Plus, Settings, Clock, DollarSign, MoreHorizontal, Wrench } from "lucide-react"
+import { Search, Filter, Plus, Settings, Clock, DollarSign, MoreHorizontal, Wrench, Edit } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,19 +30,29 @@ export function ServiciosPage() {
   const [State_PaqueteServices, SetState_PaqueteServices] = useState<PaqueteServicioType[]>([])
   const [State_ServiceSelected, SetState_ServiceSelected] = useState<ServicioType>({})
 
-  const FN_GET_SERVICIOS = async () => {
-    const servicios = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS()
+  const FN_GET_PAQUETES = async () => {
     const paquetes = await SERVICIOS_SERVICES.GET_ALL_PAQUETES_SERVICIOS()
     SetState_PaqueteServices(paquetes)
-    console.log(servicios)
+  }
+  const FN_GET_SERVICIOS = async () => {
+    const servicios = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS()
+    await FN_GET_PAQUETES()
     SetState_Services(servicios)
   }
 
-  const FN_SUCCESS_NUEVO_SERVICIO = (nuevoServ: ServicioType) => {
+  const FN_ONSUCCESS = (nuevoServ: ServicioType) => {
     FN_GET_SERVICIOS()
   }
   const FN_SUCCESS_ACTUALIZAR_SERVICIO = (nuevoServ: ServicioType) => {
     FN_GET_SERVICIOS()
+  }
+  const FN_DESACTIVAR_SERVICIO = async (servicio_id: number, activo: boolean) => {
+    await SERVICIOS_SERVICES.ACTIVAR_DESACTIVAR_SERVICIO(servicio_id, activo)
+    FN_GET_SERVICIOS()
+  }
+  const FN_DESACTIVAR_PAQUETE = async (paquete_id: number, activo: boolean) => {
+    await SERVICIOS_SERVICES.ACTIVAR_DESACTIVAR_PAQUETE(paquete_id, activo)
+    FN_GET_PAQUETES()
   }
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
@@ -72,7 +82,7 @@ export function ServiciosPage() {
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {serv.map((servicio) => (
-        <Card key={servicio.id} className={`overflow-hidden ${!servicio.estado ? "opacity-60" : ""}`}>
+        <Card key={servicio.id} className={`overflow-hidden ${!servicio.activo ? "opacity-60" : ""}`}>
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
@@ -94,11 +104,7 @@ export function ServiciosPage() {
                     <DropdownMenuItem>Ver historial</DropdownMenuItem>
                     <DropdownMenuItem>Agregar a paquete</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    {servicio.estado ? (
-                      <DropdownMenuItem className="text-red-600">Desactivar</DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem className="text-green-600">Activar</DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem className={servicio.activo ? "text-red-600" : "text-green-600"} onClick={() => FN_DESACTIVAR_SERVICIO(servicio.id, servicio.activo ? false : true)}>{servicio.activo ? 'Desactivar' : 'Activar'}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -137,9 +143,9 @@ export function ServiciosPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Configurar
+            <Button variant="outline" size="sm" onClick={() => { SetState_ServiceSelected(servicio); SetState_OpenDIalogActualizarServ(true) }}>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
             </Button>
             <Button size="sm">Agregar a Orden</Button>
           </CardFooter>
@@ -174,7 +180,7 @@ export function ServiciosPage() {
                         <DropdownMenuItem>Editar paquete</DropdownMenuItem>
                         <DropdownMenuItem>Ver historial</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">Desactivar</DropdownMenuItem>
+                        <DropdownMenuItem className={paq.activo ? "text-red-600" : "text-green-600"} onClick={() => FN_DESACTIVAR_PAQUETE(paq.id, paq.activo ? false : true)}>{paq.activo ? 'Desactivar' : 'Activar'}</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -194,7 +200,7 @@ export function ServiciosPage() {
                     </div>
                     <div className="flex items-center text-sm">
                       <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                      <span className="font-medium">{paq?.timpo_estimado} {paq?.tipo_tiempo_estimado}</span>
+                      <span className="font-medium">{paq?.tiempo_estimado} {paq?.tipo_tiempo_estimado}</span>
                     </div>
                   </div>
 
@@ -259,8 +265,8 @@ export function ServiciosPage() {
           <Button variant="outline" size="icon" className="rounded-full">
             <Filter className="h-4 w-4" />
           </Button>
-          <FormNuevoServicio onSuccess={FN_SUCCESS_NUEVO_SERVICIO} />
-         <FormNuevoPaqueteServicio />
+          <FormNuevoServicio onSuccess={FN_ONSUCCESS} />
+          <FormNuevoPaqueteServicio onSuccess={FN_ONSUCCESS} />
 
         </div>
       </div>
@@ -279,15 +285,15 @@ export function ServiciosPage() {
         </TabsContent>
 
         <TabsContent value="mantenimiento">
-          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "mantenimiento" && servicio.estado)} />
+          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "mantenimiento" && servicio.activo)} />
         </TabsContent>
 
         <TabsContent value="reparacion">
-          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "reparacion" && servicio.estado)} />
+          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "reparacion" && servicio.activo)} />
         </TabsContent>
 
         <TabsContent value="diagnostico">
-          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "diagnostico" && servicio.estado)} />
+          <ListItemsComponent serv={filteredServicios.filter((servicio) => servicio.categorias_servicio.nombre.toLowerCase() === "diagnostico" && servicio.activo)} />
         </TabsContent>
 
         <TabsContent value="paquetes">

@@ -18,11 +18,11 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState } from "react";
 import { Plus, Trash } from "lucide-react";
-import SERVICIOS_SERVICES, { ServicioType, CategoriaServicioType } from "@/services/SERVICIOS.SERVICE";
-export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (NewServicio: ServicioType) => void }) {
+import SERVICIOS_SERVICES, { ServicioType, CategoriaServicioType, PaqueteServicioType } from "@/services/SERVICIOS.SERVICE";
+export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (NewServicio: Omit<PaqueteServicioType, "categorias_servicio" | "servicios">) => void }) {
     const [openDialog, setOpenDialog] = useState(false)
     const [State_Loadding, SetState_Loadding] = useState(false)
-    const [State_Form, SetState_Form] = useState<Omit<ServicioType, 'categorias_servicio'>>({ estado: true })
+    const [State_Form, SetState_Form] = useState<Omit<PaqueteServicioType, "categorias_servicio" | "servicios">>({ activo: true })
     const [State_Servicios, SetState_Servicios] = useState<ServicioType[]>([])
     const [State_ListServiciosSelected, SetState_ListServiciosSelected] = useState<ServicioType[]>([])
     const [State_ServicioSelected, SetState_ServicioSelected] = useState<ServicioType>({})
@@ -36,9 +36,12 @@ export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (N
         const res = await SERVICIOS_SERVICES.GET_ALL_SERVICIOS()
         SetState_Servicios(res)
     }
-    const FN_GUARDAR_SERVICE = async () => {
+    const FN_GUARDAR_PAQUETE = async () => {
         SetState_Loadding(true)
-        const res = await SERVICIOS_SERVICES.INSERT_SERVICIO(State_Form)
+        console.log(State_Form)
+        console.log(State_ListServiciosSelected)
+        const res = await SERVICIOS_SERVICES.INSERT_PAQUETES_SERVICIOS(State_Form, State_ListServiciosSelected.map(serv => (serv.id)))
+        console.log(res)
         SetState_Loadding(false)
         setOpenDialog(false)
         onSuccess(res)
@@ -100,9 +103,9 @@ export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (N
                         </div>
                         <div className="pt-5 flex justify-center items-center col-span-1">
 
-                            <Button className="w-full rounded-full" onClick={() =>{ 
-                                 !State_ListServiciosSelected.find(item=>item.id === State_ServicioSelected.id) &&
-                                SetState_ListServiciosSelected([...State_ListServiciosSelected, State_ServicioSelected])
+                            <Button className="w-full rounded-full" onClick={() => {
+                                !State_ListServiciosSelected.find(item => item.id === State_ServicioSelected.id) &&
+                                    SetState_ListServiciosSelected([...State_ListServiciosSelected, State_ServicioSelected])
 
                             }}>
                                 <Plus className="mr-2 h-4 w-4" /> Agregar
@@ -165,15 +168,15 @@ export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (N
                         <Textarea id="materiales" placeholder="Materiales separados por comas" onChange={(e) => SetState_Form({ ...State_Form, materiales: e.target.value })} />
                     </div> */}
                     <div className="flex items-center space-x-2">
-                        <Switch id="activo" defaultChecked onCheckedChange={(check) => SetState_Form({ ...State_Form, estado: check })} />
-                        <Label htmlFor="activo">Servicio Activo</Label>
+                        <Switch id="activo" defaultChecked onCheckedChange={(check) => SetState_Form({ ...State_Form, activo: check })} />
+                        <Label htmlFor="activo">Paquete Activo</Label>
                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpenDialog(false)}>
                         Cancelar
                     </Button>
-                    <Button disabled={State_Loadding} onClick={() => FN_GUARDAR_SERVICE()}>{State_Loadding ? 'Procesando...' : 'Guardar Paquete de Servicios'}</Button>
+                    <Button disabled={State_Loadding} onClick={() => FN_GUARDAR_PAQUETE()}>{State_Loadding ? 'Procesando...' : 'Guardar Paquete de Servicios'}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

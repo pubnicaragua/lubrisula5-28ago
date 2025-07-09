@@ -22,7 +22,7 @@ import SERVICIOS_SERVICES, { ServicioType, CategoriaServicioType } from "@/servi
 export default function FormNuevoServicio({ onSuccess }: { onSuccess: (NewServicio: ServicioType) => void }) {
     const [openDialog, setOpenDialog] = useState(false)
     const [State_Loadding, SetState_Loadding] = useState(false)
-    const [State_Form, SetState_Form] = useState<Omit<ServicioType, 'categorias_servicio'>>({ estado: true })
+    const [State_Form, SetState_Form] = useState<Omit<ServicioType, 'categorias_servicio'>>({ activo: true })
     const [State_Categorias, SetState_Categorias] = useState<CategoriaServicioType[]>([])
 
     const FN_GET_CATEGORIAS_SERVICIO = async () => {
@@ -108,7 +108,7 @@ export default function FormNuevoServicio({ onSuccess }: { onSuccess: (NewServic
                         <Textarea id="materiales" placeholder="Materiales separados por comas" onChange={(e) => SetState_Form({ ...State_Form, materiales: e.target.value })} />
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Switch id="activo" defaultChecked onCheckedChange={(check) => SetState_Form({ ...State_Form, estado: check })} />
+                        <Switch id="activo" defaultChecked onCheckedChange={(check) => SetState_Form({ ...State_Form, activo: check })} />
                         <Label htmlFor="activo">Servicio Activo</Label>
                     </div>
                 </div>
