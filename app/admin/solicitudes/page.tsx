@@ -87,7 +87,7 @@ export default function SolicitudesPage() {
                         variantButton="outline"
                       />
 
-                      <Button variant="outline">Ver detalles</Button>
+                      {/* <Button variant="outline">Ver detalles</Button> */}
                     </div>
                   </div>
                 </CardContent>
