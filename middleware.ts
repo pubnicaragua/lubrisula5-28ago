@@ -77,45 +77,45 @@ export async function middleware(request: NextRequest) {
     }
 
     // Verificar acceso según rol para otros roles
-    // IMPORTANTE: Permitir que el rol "taller" acceda a todas las rutas de /taller/
-    if (
-      (pathname.startsWith("/admin") && userRole !== "admin") ||
-      (pathname.startsWith("/taller") && userRole !== "taller" && userRole !== "admin") ||
-      (pathname.startsWith("/aseguradora") && userRole !== "aseguradora" && userRole !== "admin") ||
-      (pathname.startsWith("/cliente") && userRole !== "cliente" && userRole !== "admin")
-    ) {
-      // Añadir un console.log para depurar
-      console.log("Middleware - Acceso denegado a ruta:", pathname, "para usuario con rol:", userRole)
+    // // IMPORTANTE: Permitir que el rol "taller" acceda a todas las rutas de /taller/
+    // if (
+    //   (pathname.startsWith("/admin") && userRole !== "admin") ||
+    //   (pathname.startsWith("/taller") && userRole !== "taller" && userRole !== "admin") ||
+    //   (pathname.startsWith("/aseguradora") && userRole !== "aseguradora" && userRole !== "admin") ||
+    //   (pathname.startsWith("/cliente") && userRole !== "cliente" && userRole !== "admin")
+    // ) {
+    //   // Añadir un console.log para depurar
+    //   console.log("Middleware - Acceso denegado a ruta:", pathname, "para usuario con rol:", userRole)
 
-      // Redirigir a dashboard según rol
-      if (userRole === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
-      } else if (userRole === "taller") {
-        return NextResponse.redirect(new URL("/taller/dashboard", request.url))
-      } else if (userRole === "aseguradora") {
-        return NextResponse.redirect(new URL("/aseguradora/dashboards", request.url))
-      } else if (userRole === "cliente") {
-        return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
-      } else {
-        // Si no tiene un rol específico, redirigir a una página general
-        return NextResponse.redirect(new URL("/dashboard", request.url))
-      }
-    }
+    //   // Redirigir a dashboard según rol
+    //   if (userRole === "admin") {
+    //     return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+    //   } else if (userRole === "taller") {
+    //     return NextResponse.redirect(new URL("/taller/dashboard", request.url))
+    //   } else if (userRole === "aseguradora") {
+    //     return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
+    //   } else if (userRole === "cliente") {
+    //     return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
+    //   } else {
+    //     // Si no tiene un rol específico, redirigir a una página general
+    //     return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
+    //   }
+    // }
 
-    // Redirección para la ruta raíz según el rol
-    if (pathname === "/") {
-      if (userRole === "superadmin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
-      } else if (userRole === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url))
-      } else if (userRole === "taller") {
-        return NextResponse.redirect(new URL("/taller/dashboard", request.url))
-      } else if (userRole === "aseguradora") {
-        return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
-      } else if (userRole === "cliente") {
-        return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
-      }
-    }
+    // // Redirección para la ruta raíz según el rol
+    // if (pathname === "/") {
+    //   if (userRole === "superadmin") {
+    //     return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+    //   } else if (userRole === "admin") {
+    //     return NextResponse.redirect(new URL("/admin/dashboard", request.url))
+    //   } else if (userRole === "taller") {
+    //     return NextResponse.redirect(new URL("/taller/dashboard", request.url))
+    //   } else if (userRole === "aseguradora") {
+    //     return NextResponse.redirect(new URL("/aseguradora/dashboard", request.url))
+    //   } else if (userRole === "cliente") {
+    //     return NextResponse.redirect(new URL("/cliente/dashboard", request.url))
+    //   }
+    // }
 
     // // Si el usuario está autenticado y está intentando acceder a rutas de autenticación, redirigir al dashboard según rol
     // if (request.nextUrl.pathname === "/auth/login" || request.nextUrl.pathname === "/auth/registro") {

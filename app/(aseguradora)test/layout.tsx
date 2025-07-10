@@ -8,7 +8,9 @@ export default function AseguradoraLayout({
   children: React.ReactNode
 }) {
   return (
-    <RouteGuard allowedRoles={["aseguradora", "admin", "superadmin"]}>
+    <RouteGuard 
+    // allowedRoles={["aseguradora", "admin", "superadmin"]}
+    >
       <div className="flex flex-col min-h-screen">
         <AseguradoraNav />
         <main className="flex-1">{children}</main>

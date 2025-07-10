@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -38,9 +38,19 @@ import {
   Activity,
   Plus,
 } from "lucide-react"
+import DASHBOARD_TALLER_SERVICES, { CabeceraDashboardType, CitaConDetalleType, DistribucionEspecialidadType, EstadoOrdenType, RendimientoOrdenesSemanalesType, RendimientoTecnicoType, TipoOrdenPorcentajeType } from "@/services/DASHBOARD.TALLER.SERVICE"
+import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
 
 export function TallerDashboard() {
   const [activeChart, setActiveChart] = useState<"bar" | "pie" | "line">("bar")
+  const [State_Cabecera, SetState_Cabecera] = useState<CabeceraDashboardType[]>([])
+  const [State_CitasPendientes, SetState_CitasPendientes] = useState<CitaConDetalleType[]>([])
+  const [State_DistribucionEspecialidades, SetState_DistribucionEspecialidades] = useState<DistribucionEspecialidadType[]>([])
+  const [State_EstadoOrdenes, SetState_EstadoOrdenes] = useState<EstadoOrdenType[]>([])
+  const [State_OrdenesRecientes, SetState_OrdenesRecientes] = useState<OrdenTrabajoType[]>([])
+  const [State_PorcentajeOrdenesPorTipo, SetState_PorcentajeOrdenesPorTipo] = useState<TipoOrdenPorcentajeType[]>([])
+  const [State_RendimientoTecnicos, SetState_RendimientoTecnicos] = useState<RendimientoTecnicoType[]>([])
+  const [State_RendimientoOrdenesSemanales, SetState_RendimientoOrdenesSemanales] = useState<RendimientoOrdenesSemanalesType[]>([])
 
   // Datos de ejemplo para los gráficos
   const revenueData = [
@@ -226,6 +236,30 @@ export function TallerDashboard() {
     }
   }
 
+  const FN_GET_ALL_DATA = async () => {
+
+
+    const res1 = await DASHBOARD_TALLER_SERVICES.GET_CABECERA()
+    console.log(res1)
+    SetState_Cabecera(res1)
+    const res2 = await DASHBOARD_TALLER_SERVICES.GET_CITAS_PENDIENTES()
+    SetState_CitasPendientes(res2)
+    const res3 = await DASHBOARD_TALLER_SERVICES.GET_DISTRIBUCION_DE_ESPECIALIDADES()
+    SetState_DistribucionEspecialidades(res3)
+    const res4 = await DASHBOARD_TALLER_SERVICES.GET_ESTADO_ORDENES()
+    SetState_EstadoOrdenes(res4)
+    const res5 = await DASHBOARD_TALLER_SERVICES.GET_PORCENTAJE_ORDENES_POR_TIPO()
+    SetState_PorcentajeOrdenesPorTipo(res5)
+    const res6 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_DE_TECNICOS()
+    SetState_RendimientoTecnicos(res6)
+    const res7 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_ORDENES_SEMANALES()
+    SetState_RendimientoOrdenesSemanales(res7)
+    const res8 = await DASHBOARD_TALLER_SERVICES.GET_ORDENES_RECIENTES()
+    SetState_OrdenesRecientes(res8)
+  }
+  useEffect(() => {
+    FN_GET_ALL_DATA()
+  }, [])
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
@@ -245,7 +279,24 @@ export function TallerDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card className="dashboard-card">
+        {
+          State_Cabecera.map(dat => (
+            <Card key={dat.tipo} className="dashboard-card">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">{dat.tipo}</CardTitle>
+                <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dat.cantidad}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dat.porcentaje_comparacion_mes_pasado} <ChevronUp className="h-4 w-4 inline text-green-500" /> desde el mes pasado
+                </p>
+                <Progress value={75} className="h-1 mt-2" />
+              </CardContent>
+            </Card>
+          ))
+        }
+        {/* <Card className="dashboard-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Órdenes Activas</CardTitle>
             <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
@@ -296,7 +347,7 @@ export function TallerDashboard() {
             </p>
             <Progress value={85} className="h-1 mt-2" />
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
@@ -407,7 +458,37 @@ export function TallerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  {
+                    State_EstadoOrdenes.map(ord => {
+                      let completada = "bg-green-500";
+                      let enProceso = "bg-blue-500";
+                      let pendiente = "bg-red-500";
+                      let entregada = "bg-green-500";
+                      let cancelada = "bg-yellow-500";
+                      let color = "";
+                      if (ord.estado === 'Completada') color = completada
+                      if (ord.estado === 'En Proceso') color = enProceso
+                      if (ord.estado === 'Pendiente') color = pendiente
+                      if (ord.estado === 'Entregada') color = entregada
+                      if (ord.estado === 'Cancelada') color = cancelada
+
+                      return (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${color}`}></div>
+                            <span>{ord.estado}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">{ord.cantidad}</span>
+                            <span className="text-xs text-muted-foreground">{ord.porcentaje}%</span>
+                          </div>
+                        </div>
+                      )
+                    }
+                    )
+
+                  }
+                  {/* <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
                       <span>Completadas</span>
@@ -456,7 +537,7 @@ export function TallerDashboard() {
                       <span className="font-medium">5</span>
                       <span className="text-xs text-muted-foreground">(4%)</span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="mt-6">
@@ -468,12 +549,12 @@ export function TallerDashboard() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-xs font-semibold inline-block text-green-800">87%</span>
+                        <span className="text-xs font-semibold inline-block text-green-800">{`${State_EstadoOrdenes.find(or => or.estado === "Completada")?.porcentaje}%`}</span>
                       </div>
                     </div>
                     <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-200">
                       <div
-                        style={{ width: "87%" }}
+                        style={{ width: `${State_EstadoOrdenes.find(or => or.estado === "Completada")?.porcentaje}%` }}
                         className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
                       ></div>
                     </div>
@@ -491,7 +572,7 @@ export function TallerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentOrders.map((order, index) => (
+                  {State_OrdenesRecientes.map((order, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -499,16 +580,16 @@ export function TallerDashboard() {
                         </div>
                         <div>
                           <p className="font-medium">{order.id}</p>
-                          <p className="text-sm text-muted-foreground">{order.cliente}</p>
+                          <p className="text-sm text-muted-foreground">{order.client_name}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="text-sm">{order.vehiculo}</p>
-                          <p className="text-sm text-muted-foreground">{order.fecha}</p>
+                          <p className="text-sm">{order.vehicle_marca} {order.vehiculo_modelo}</p>
+                          <p className="text-sm text-muted-foreground">{order.fecha_ingreso}</p>
                         </div>
                         <Badge className={getStatusColor(order.estado)}>{order.estado}</Badge>
-                        <div className="font-bold">{order.total}</div>
+                        <div className="font-bold">{order.costo}</div>
                       </div>
                     </div>
                   ))}
@@ -759,9 +840,8 @@ export function TallerDashboard() {
                       return (
                         <div
                           key={day}
-                          className={`aspect-square flex items-center justify-center rounded-md text-sm ${
-                            hasCitas ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50 cursor-pointer"
-                          }`}
+                          className={`aspect-square flex items-center justify-center rounded-md text-sm ${hasCitas ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50 cursor-pointer"
+                            }`}
                         >
                           {day}
                           {hasCitas && <span className="ml-1 h-1.5 w-1.5 rounded-full bg-primary inline-block"></span>}
@@ -900,6 +980,6 @@ export function TallerDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   )
 }

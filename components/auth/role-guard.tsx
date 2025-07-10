@@ -13,7 +13,7 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, allowedRoles, fallbackPath = "/auth/login" }: RoleGuardProps) {
-  const { user, loading, hasRole } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
 
@@ -32,7 +32,7 @@ export function RoleGuard({ children, allowedRoles, fallbackPath = "/auth/login"
 
       // Verificar si el rol del usuario está en los roles permitidos
       // Usar preferentemente el rol de la base de datos si está disponible
-      const userRole = user.dbRole || user.role || "cliente"
+      const userRole = user?.user_metadata?.role || user?.user_metadata?.role || "cliente"
 
       // Superadmin siempre tiene acceso a todas las rutas
       if (userRole === "superadmin") {
@@ -54,13 +54,13 @@ export function RoleGuard({ children, allowedRoles, fallbackPath = "/auth/login"
         } else if (userRole === "cliente") {
           router.push("/cliente/dashboard")
         } else {
-          router.push("/dashboard")
+          router.push("/aseguradora/dashboard")
         }
       }
     }
 
     checkRole()
-  }, [user, loading, allowedRoles, router, fallbackPath, hasRole])
+  }, [user, loading, allowedRoles, router, fallbackPath])
 
   // Mientras carga o no está autorizado, mostramos un indicador de carga
   if (loading || !authorized) {

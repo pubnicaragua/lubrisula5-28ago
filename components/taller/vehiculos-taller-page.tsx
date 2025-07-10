@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { Edit, MoreHorizontal, Plus, Search, Trash2, Eye, FileText, FileInput } from "lucide-react"
+import { Edit, MoreHorizontal, Plus, Search, Trash2, Eye, FileText, FileInput, Upload } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -61,6 +62,9 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [State_VehicleToUpdate, SetState_VehiculeToUpdate] = useState<VehiculoType>(null)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -78,6 +82,11 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
     },
   })
 
+  const FN_GET_ALL_VEHICULOS = async () => {
+    const DataVehichulos = await VEHICULO_SERVICES.GET_ALL_VEHICULOS();
+    console.log(DataVehichulos)
+    setVehiculos(DataVehichulos)
+  }
 
   const loadMockData = async () => {
     setIsLoading(true)
@@ -119,6 +128,99 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
 
     setShowEditDialog(false)
     SetState_VehiculeToUpdate(null)
+  }
+
+  const FN_IMPORT_VEHICULOS = async (file: File) => {
+    setIsImporting(true)
+
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data)
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+      const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+      let importedCount = 0
+      let errorCount = 0
+      const errors: string[] = []
+
+      for (const row of jsonData as any[]) {
+        try {
+          // Buscar cliente por nombre  
+          const cliente = clientes.find(c =>
+            c.name?.toLowerCase().includes(row.Cliente?.toLowerCase() || '') ||
+            row.Cliente?.toLowerCase().includes(c.name?.toLowerCase() || '')
+          )
+
+          if (!cliente) {
+            errors.push(`Cliente "${row.Cliente}" no encontrado para vehículo ${row.Marca} ${row.Modelo}`)
+            errorCount++
+            continue
+          }
+
+          const vehiculoData: VehiculoType = {
+            marca: row.Marca || row.marca,
+            modelo: row.Modelo || row.modelo,
+            ano: parseInt(row.Año || row.ano || row.year) || new Date().getFullYear(),
+            placa: row.Placa || row.placa,
+            color: row.Color || row.color,
+            vin: row.VIN || row.vin || "",
+            kilometraje: parseInt(row.Kilometraje || row.kilometraje) || 0,
+            client_id: cliente.id,
+            estado: "Activo",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+
+          // Validar campos requeridos  
+          if (!vehiculoData.marca || !vehiculoData.modelo || !vehiculoData.placa) {
+            errors.push(`Datos incompletos para vehículo en fila: ${JSON.stringify(row)}`)
+            errorCount++
+            continue
+          }
+
+          await VEHICULO_SERVICES.INSERT_VEHICULO(vehiculoData)
+          importedCount++
+
+        } catch (error) {
+          console.error('Error al importar vehículo:', error)
+          errors.push(`Error al procesar: ${row.Marca} ${row.Modelo}`)
+          errorCount++
+        }
+      }
+
+      // Actualizar la lista de vehículos  
+      await FN_GET_ALL_VEHICULOS()
+
+      // Mostrar resultado  
+      toast({
+        title: "Importación completada",
+        description: `${importedCount} vehículos importados exitosamente. ${errorCount} errores.`,
+        // variant: errorCount > 0 ? "destructive" : "default"  
+      })
+
+      if (errors.length > 0) {
+        console.log("Errores de importación:", errors)
+      }
+
+      setImportDialogOpen(false)
+
+    } catch (error) {
+      console.error('Error al procesar archivo:', error)
+      toast({
+        title: "Error de importación",
+        description: "No se pudo procesar el archivo. Verifique el formato.",
+        // variant: "destructive"  
+      })
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      FN_IMPORT_VEHICULOS(file)
+    }
   }
 
   const exportToExcel = () => {
@@ -225,6 +327,39 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
           <Button variant="outline" onClick={exportToPDF}>
             PDF
           </Button>
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" /> Importar Vehículos
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Importar Vehículos desde Excel</DialogTitle>
+                <DialogDescription>
+                  Selecciona un archivo Excel (.xlsx) con los datos de los vehículos.
+                  <br />
+                  <strong>Columnas requeridas:</strong> Marca, Modelo, Año, Placa, Color, Cliente, VIN (opcional), Kilometraje (opcional)
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileUpload}
+                    disabled={isImporting}
+                  />
+                </div>
+                {isImporting && (
+                  <div className="text-center">
+                    <p>Importando vehículos...</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button onClick={() => setShowAddDialog(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nuevo Vehículo
           </Button>
@@ -376,10 +511,10 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       {/* Diálogo para agregar vehículo */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Agregar Nuevo Vehículo</DialogTitle>
-          <DialogDescription>Completa el formulario para registrar un nuevo vehículo</DialogDescription>
-        </DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Agregar Nuevo Vehículo</DialogTitle>
+            <DialogDescription>Completa el formulario para registrar un nuevo vehículo</DialogDescription>
+          </DialogHeader>
           <NuevoVehiculoForm vehiculoExistente={null} onSubmit={FN_ADD_VEHICLE} clients={[]} />
 
         </DialogContent>

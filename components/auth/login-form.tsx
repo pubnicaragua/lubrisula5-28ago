@@ -50,9 +50,9 @@ export default function LoginForm() {
       } else if (data.user?.user_metadata?.role === "taller") {
         router.push("/taller/dashboard")
       } else if (data.user?.user_metadata?.role === 'aseguradora') {
-        router.push("/aseguradora/dashboardss")
+        router.push("/aseguradora/dashboard")
       }
-      router.refresh()
+      // router.refresh()
     } catch (err: any) {
       console.error("Error completo:", err)
 

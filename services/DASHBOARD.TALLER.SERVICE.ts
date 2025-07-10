@@ -1,27 +1,29 @@
 import { AxiosDelete, AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module";
+import { OrdenTrabajoType } from "./ORDENES.SERVICE";
 
 
-type CabeceraDashboardType = {
+export type CabeceraDashboardType = {
     tipo: string;
     cantidad: number;
     porcentaje_comparacion_mes_pasado: number | null;
 };
 
-type RendimientoOrdenesSemanalesType = {
+export type RendimientoOrdenesSemanalesType = {
     dia: string;
     completadas: number;
     pendientes: number;
 };
 
-type EstadoOrdenType = {
+export type EstadoOrdenType = {
     estado: string;
     porcentaje: number;
+    cantidad: number;
 };
-type TipoOrdenPorcentajeType = {
+export type TipoOrdenPorcentajeType = {
     tipo_orden: string;
     porcentaje: string;
 };
-type CitaConDetalleType = {
+export type CitaConDetalleType = {
     id: string;
     vehiculo_id: string;
     fecha: string;
@@ -84,11 +86,11 @@ type CitaConDetalleType = {
         descripcion: string;
     }
 }
-type DistribucionEspecialidadType = {
+export type DistribucionEspecialidadType = {
     especialidad: string;
     cantidad_total: number;
 }
-type RendimientoTecnicoType = {
+export type RendimientoTecnicoType = {
     tecnico_name: string;
     tiempo_promedio_hora: number;
     ordenes_completadas: number;
@@ -106,12 +108,16 @@ const DASHBOARD_TALLER_SERVICES = {
         const data: EstadoOrdenType[] = await AxiosGet({ path: '/vista_estado_ordenes' })
         return data;
     },
+    async GET_ORDENES_RECIENTES(): Promise<OrdenTrabajoType[]> {
+        const data: OrdenTrabajoType[] = await AxiosGet({ path: '/vista_ordenes_recientes' })
+        return data;
+    },
     async GET_PORCENTAJE_ORDENES_POR_TIPO(): Promise<TipoOrdenPorcentajeType[]> {
         const data: TipoOrdenPorcentajeType[] = await AxiosGet({ path: '/vista_ordenes_por_tipo' })
         return data;
     },
     async GET_CITAS_PENDIENTES(): Promise<CitaConDetalleType[]> {
-        const data: CitaConDetalleType[] = await AxiosGet({ path: 'citas?select=*,clients(*), tecnicos(*), vehicles(*), tipos_operacion(*)&estado=eq.programada' })
+        const data: CitaConDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*), tecnicos(*), vehicles(*), tipos_operacion(*)&estado=eq.programada' })
         return data;
     },
     async GET_DISTRIBUCION_DE_ESPECIALIDADES(): Promise<DistribucionEspecialidadType[]> {

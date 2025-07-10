@@ -69,24 +69,24 @@ export function CotizacionesPage({ initialCotizaciones = [], tablesExist = false
   // Cargar cotizaciones
   const loadCotizaciones = async () => {
     setLoading(true)
-    try {
-      const { success, data, error: quotationsError, isTableMissing } = await getQuotations()
-      console.log(success)
-      console.log(data)
-      console.log(isTableMissing)
-      if (isTableMissing) {
-        setError("La base de datos no está configurada correctamente. Las tablas necesarias no existen.")
-      } else if (!success) {
-        setError(quotationsError || "Error al cargar las cotizaciones")
-      } else if (success && data) {
-        setCotizaciones(data as Quotation[])
-      }
-    } catch (err) {
-      setError("Error al conectar con la base de datos")
-      console.error("Error loading quotations:", err.message)
-    } finally {
+    const { success, data, error: quotationsError, isTableMissing } = await getQuotations()
+    console.log(success)
+    console.log(data)
+      // console.log(isTableMissing)
+      // if (isTableMissing) {
+      // setError("La base de datos no está configurada correctamente. Las tablas necesarias no existen.")
+      // } else if (!success) {
+      // setError(quotationsError || "Error al cargar las cotizaciones")
+      // } else if (success && data) {
+      setCotizaciones(data)
       setLoading(false)
-    }
+      // }
+    //   try {
+    // } catch (err) {
+    //   setError("Error al conectar con la base de datos")
+    //   console.error("Error loading quotations:", err.message)
+    // } finally {
+    // }
   }
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function CotizacionesPage({ initialCotizaciones = [], tablesExist = false
         toast({
           title: "Error",
           description: error || "No se pudo eliminar la cotización",
-          variant: "destructive",
+          // variant: "destructive",
         })
       }
     }
