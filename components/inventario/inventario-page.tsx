@@ -23,9 +23,14 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
 import { FileSpreadsheet, FileIcon as FilePdf, Plus, Pencil, Trash2, Search, AlertTriangle } from "lucide-react"
 import * as XLSX from "xlsx"
-import { jsPDF } from "jspdf"
-import "jspdf-autotable"
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import INVENTARIO_SERVICES, { CategoriaMaterialType, InventarioType, ProveedorType } from "@/services/INVETARIO.SERVICE"
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+  }
+}
 interface Producto {
   id: string
   codigo: string
@@ -46,8 +51,8 @@ export function InventarioPage() {
   const supabase = createClientComponentClient()
   const { toast } = useToast()
 
-  const [productos, setProductos] = useState<Producto[]>([])
-  const [filteredProductos, setFilteredProductos] = useState<Producto[]>([])
+  const [productos, setProductos] = useState<InventarioType[]>([])
+  const [filteredProductos, setFilteredProductos] = useState<InventarioType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("todas")
@@ -55,7 +60,9 @@ export function InventarioPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [currentProducto, setCurrentProducto] = useState<Producto | null>(null)
+  const [currentProducto, setCurrentProducto] = useState<InventarioType | null>(null)
+  const [State_CategoriaMateriales, SetState_CategoriaMateriales] = useState<CategoriaMaterialType[]>([])
+  const [State_Proveedores, SetState_Proveedores] = useState<ProveedorType[]>([])
 
   const [formData, setFormData] = useState({
     codigo: "",
@@ -72,13 +79,14 @@ export function InventarioPage() {
     estado: "activo",
   })
 
-  const categorias = [
-    { value: "repuestos", label: "Repuestos" },
-    { value: "herramientas", label: "Herramientas" },
-    { value: "aceites", label: "Aceites y Lubricantes" },
-    { value: "pintura", label: "Pintura" },
-    { value: "consumibles", label: "Consumibles" },
-  ]
+  const FN_GET_CATEGORIA_MATERIALES = async () => {
+    const res = await INVENTARIO_SERVICES.GET_CATEGORIA_MATERIALES()
+    SetState_CategoriaMateriales(res)
+  }
+  const FN_GET_PROVEEDORES = async () => {
+    const res = await INVENTARIO_SERVICES.GET_PROVEEDORES()
+    SetState_Proveedores(res)
+  }
 
   const estados = [
     { value: "activo", label: "Activo" },
@@ -87,6 +95,8 @@ export function InventarioPage() {
   ]
 
   useEffect(() => {
+    FN_GET_PROVEEDORES()
+    FN_GET_CATEGORIA_MATERIALES()
     fetchProductos()
   }, [])
 
@@ -99,18 +109,18 @@ export function InventarioPage() {
   const fetchProductos = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.from("inventario").select("*").order("nombre")
+      // const { data, error } = await supabase.from("inventario_test").select("*").order("nombre")
+      const res = await INVENTARIO_SERVICES.GET_INVENTARIO()
+      // if (error) throw error
 
-      if (error) throw error
-
-      setProductos(data)
-      setFilteredProductos(data)
+      setProductos(res)
+      setFilteredProductos(res)
     } catch (error) {
       console.error("Error al cargar inventario:", error)
       toast({
         title: "Error",
         description: "No se pudo cargar el inventario",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -127,13 +137,13 @@ export function InventarioPage() {
           producto.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
           producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
           producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          producto.proveedor.toLowerCase().includes(searchTerm.toLowerCase()),
+          producto.suppliers.name.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
     // Filtrar por categoría
     if (categoryFilter !== "todas") {
-      filtered = filtered.filter((producto) => producto.categoria === categoryFilter)
+      filtered = filtered.filter((producto) => producto.categorias_materiales.nombre === categoryFilter)
     }
 
     // Filtrar por estado de stock
@@ -169,18 +179,18 @@ export function InventarioPage() {
       if (currentProducto) {
         // Actualizar producto existente
         const { error } = await supabase
-          .from("inventario")
+          .from("inventario_test")
           .update({
             codigo: formData.codigo,
             nombre: formData.nombre,
             descripcion: formData.descripcion,
-            categoria: formData.categoria,
+            categoria_id: formData.categoria,
             precio_compra: formData.precio_compra,
             precio_venta: formData.precio_venta,
             stock_actual: formData.stock_actual,
             stock_minimo: formData.stock_minimo,
-            proveedor: formData.proveedor,
-            ubicacion: formData.ubicacion,
+            proveedor_id: formData.proveedor,
+            ubicacion_almacen: formData.ubicacion,
             fecha_ingreso: formData.fecha_ingreso,
             estado: formData.estado,
           })
@@ -194,17 +204,17 @@ export function InventarioPage() {
         })
       } else {
         // Crear nuevo producto
-        const { error } = await supabase.from("inventario").insert({
+        const { error } = await supabase.from("inventario_test").insert({
           codigo: formData.codigo,
           nombre: formData.nombre,
           descripcion: formData.descripcion,
-          categoria: formData.categoria,
+          categoria_id: formData.categoria,
           precio_compra: formData.precio_compra,
           precio_venta: formData.precio_venta,
           stock_actual: formData.stock_actual,
           stock_minimo: formData.stock_minimo,
-          proveedor: formData.proveedor,
-          ubicacion: formData.ubicacion,
+          proveedor_id: formData.proveedor,
+          ubicacion_almacen: formData.ubicacion,
           fecha_ingreso: formData.fecha_ingreso,
           estado: formData.estado,
         })
@@ -226,24 +236,24 @@ export function InventarioPage() {
       toast({
         title: "Error",
         description: "No se pudo guardar el producto",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
 
-  const handleEdit = (producto: Producto) => {
+  const handleEdit = (producto: InventarioType) => {
     setCurrentProducto(producto)
     setFormData({
       codigo: producto.codigo,
       nombre: producto.nombre,
       descripcion: producto.descripcion,
-      categoria: producto.categoria,
+      categoria: producto.categorias_materiales.nombre,
       precio_compra: producto.precio_compra,
       precio_venta: producto.precio_venta,
       stock_actual: producto.stock_actual,
       stock_minimo: producto.stock_minimo,
-      proveedor: producto.proveedor,
-      ubicacion: producto.ubicacion,
+      proveedor: producto.suppliers.name,
+      ubicacion: producto.ubicacion_almacen,
       fecha_ingreso: new Date(producto.fecha_ingreso).toISOString().split("T")[0],
       estado: producto.estado,
     })
@@ -254,7 +264,7 @@ export function InventarioPage() {
     if (!currentProducto) return
 
     try {
-      const { error } = await supabase.from("inventario").delete().eq("id", currentProducto.id)
+      const { error } = await supabase.from("inventario_test").delete().eq("id", currentProducto.id)
 
       if (error) throw error
 
@@ -270,12 +280,12 @@ export function InventarioPage() {
       toast({
         title: "Error",
         description: "No se pudo eliminar el producto",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }
 
-  const confirmDelete = (producto: Producto) => {
+  const confirmDelete = (producto: InventarioType) => {
     setCurrentProducto(producto)
     setIsDeleteDialogOpen(true)
   }
@@ -304,13 +314,13 @@ export function InventarioPage() {
         Código: p.codigo,
         Nombre: p.nombre,
         Descripción: p.descripcion,
-        Categoría: p.categoria,
+        Categoría: p.categorias_materiales.nombre,
         "Precio Compra": p.precio_compra,
         "Precio Venta": p.precio_venta,
         "Stock Actual": p.stock_actual,
         "Stock Mínimo": p.stock_minimo,
-        Proveedor: p.proveedor,
-        Ubicación: p.ubicacion,
+        Proveedor: p.suppliers.name,
+        Ubicación: p.ubicacion_almacen,
         "Fecha Ingreso": p.fecha_ingreso,
         Estado: p.estado,
       })),
@@ -321,30 +331,30 @@ export function InventarioPage() {
     XLSX.writeFile(workbook, "Inventario.xlsx")
   }
 
+
   const exportToPDF = () => {
-    const doc = new jsPDF()
+    const doc = new jsPDF();
 
     // Título
-    doc.setFontSize(18)
-    doc.text("Reporte de Inventario", 14, 22)
+    doc.setFontSize(18);
+    doc.text("Reporte de Inventario", 14, 22);
 
     // Fecha de generación
-    doc.setFontSize(11)
-    doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30)
+    doc.setFontSize(11);
+    doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30);
 
     // Tabla
-    const tableColumn = ["Código", "Nombre", "Categoría", "Stock", "Precio Venta", "Estado"]
+    const tableColumn = ["Código", "Nombre", "Categoría", "Stock", "Precio Venta", "Estado"];
     const tableRows = filteredProductos.map((p) => [
       p.codigo,
       p.nombre,
-      p.categoria,
+      p.categorias_materiales.nombre,
       p.stock_actual,
       `$${p.precio_venta.toFixed(2)}`,
       p.estado,
-    ])
+    ]);
 
-    // @ts-ignore - jspdf-autotable types
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 40,
@@ -352,10 +362,17 @@ export function InventarioPage() {
       styles: { fontSize: 9 },
       headStyles: { fillColor: [66, 66, 66] },
     })
+    // doc.autoTable({
+    //   head: [tableColumn],
+    //   body: tableRows,
+    //   startY: 40,
+    //   theme: "grid",
+    //   styles: { fontSize: 9 },
+    //   headStyles: { fillColor: [66, 66, 66] },
+    // }, {});
 
-    doc.save("Inventario.pdf")
-  }
-
+    doc.save("Inventario.pdf");
+  };
   // Contar productos con stock bajo
   const stockBajoCount = productos.filter((p) => p.stock_actual <= p.stock_minimo && p.stock_actual > 0).length
   const stockAgotadoCount = productos.filter((p) => p.stock_actual === 0).length
@@ -439,9 +456,9 @@ export function InventarioPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas las categorías</SelectItem>
-                {categorias.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                {State_CategoriaMateriales.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -490,30 +507,28 @@ export function InventarioPage() {
                       <TableRow key={producto.id}>
                         <TableCell className="font-medium">{producto.codigo}</TableCell>
                         <TableCell>{producto.nombre}</TableCell>
-                        <TableCell>{producto.categoria}</TableCell>
+                        <TableCell>{producto.categorias_materiales.nombre}</TableCell>
                         <TableCell
-                          className={`text-right font-medium ${
-                            producto.stock_actual === 0
-                              ? "text-red-500"
-                              : producto.stock_actual <= producto.stock_minimo
-                                ? "text-yellow-500"
-                                : "text-green-500"
-                          }`}
+                          className={`text-right font-medium ${producto.stock_actual === 0
+                            ? "text-red-500"
+                            : producto.stock_actual <= producto.stock_minimo
+                              ? "text-yellow-500"
+                              : "text-green-500"
+                            }`}
                         >
                           {producto.stock_actual}
                         </TableCell>
                         <TableCell className="text-right">${producto.precio_compra.toFixed(2)}</TableCell>
                         <TableCell className="text-right">${producto.precio_venta.toFixed(2)}</TableCell>
-                        <TableCell>{producto.proveedor}</TableCell>
+                        <TableCell>{producto.suppliers.name}</TableCell>
                         <TableCell>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              producto.estado === "activo"
-                                ? "bg-green-100 text-green-800"
-                                : producto.estado === "descontinuado"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${producto.estado === "activo"
+                              ? "bg-green-100 text-green-800"
+                              : producto.estado === "descontinuado"
+                                ? "bg-gray-100 text-gray-800"
+                                : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {producto.estado.charAt(0).toUpperCase() + producto.estado.slice(1)}
                           </span>
@@ -580,7 +595,7 @@ export function InventarioPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="categoria">Categoría</Label>
+                    <Label htmlFor="categoria">Categoría Material</Label>
                     <Select
                       value={formData.categoria}
                       onValueChange={(value) => handleSelectChange("categoria", value)}
@@ -589,9 +604,9 @@ export function InventarioPage() {
                         <SelectValue placeholder="Seleccionar categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categorias.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
+                        {State_CategoriaMateriales.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.nombre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -674,7 +689,22 @@ export function InventarioPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="proveedor">Proveedor</Label>
-                    <Input id="proveedor" name="proveedor" value={formData.proveedor} onChange={handleInputChange} />
+                    <Select
+                      value={formData.proveedor}
+                      onValueChange={(value) => handleSelectChange("proveedor", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar Proveedor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {State_Proveedores.map((prov) => (
+                          <SelectItem key={prov.id} value={prov.id}>
+                            {prov.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {/* <Input id="proveedor" name="proveedor" value={formData.proveedor} onChange={handleInputChange} /> */}
                   </div>
 
                   <div className="space-y-2">
