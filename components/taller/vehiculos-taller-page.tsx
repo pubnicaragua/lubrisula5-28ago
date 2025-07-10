@@ -129,10 +129,10 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
     setShowEditDialog(false)
     SetState_VehiculeToUpdate(null)
   }
-
+// Nueva función para importar vehículos con auto-registro de clientes
   const FN_IMPORT_VEHICULOS = async (file: File) => {
     setIsImporting(true)
-
+    
     try {
       const data = await file.arrayBuffer()
       const workbook = XLSX.read(data)
@@ -140,19 +140,52 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
       let importedCount = 0
+      let newClientsCount = 0
       let errorCount = 0
       const errors: string[] = []
 
       for (const row of jsonData as any[]) {
         try {
-          // Buscar cliente por nombre  
-          const cliente = clientes.find(c =>
+          // Buscar cliente por nombre
+          let cliente = clientes.find(c => 
             c.name?.toLowerCase().includes(row.Cliente?.toLowerCase() || '') ||
             row.Cliente?.toLowerCase().includes(c.name?.toLowerCase() || '')
           )
 
+          // Si no existe el cliente, crearlo automáticamente
+          if (!cliente && row.Cliente) {
+            try {
+              const nuevoClienteData: ClienteType = {
+                name: row.Cliente,
+                phone: row.Telefono || row.Phone || "Sin teléfono",
+                email: row.Email || `${row.Cliente.toLowerCase().replace(/\s+/g, '')}@auto-generado.com`,
+                client_type: "Individual",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+
+              // Crear cliente en la base de datos
+              const clienteCreado = await CLIENTS_SERVICES.ADD_NEW_CLIENTE(nuevoClienteData)
+              
+              // Agregar a la lista local de clientes
+              const clienteConId = { ...nuevoClienteData, id: clienteCreado[0]?.id || crypto.randomUUID() }
+              setClientes(prev => [...prev, clienteConId])
+              
+              cliente = clienteConId
+              newClientsCount++
+              
+              console.log(`✓ Cliente "${row.Cliente}" creado automáticamente`)
+              
+            } catch (clientError) {
+              console.error('Error al crear cliente:', clientError)
+              errors.push(`No se pudo crear el cliente "${row.Cliente}" para vehículo ${row.Marca} ${row.Modelo}`)
+              errorCount++
+              continue
+            }
+          }
+
           if (!cliente) {
-            errors.push(`Cliente "${row.Cliente}" no encontrado para vehículo ${row.Marca} ${row.Modelo}`)
+            errors.push(`Cliente "${row.Cliente}" no pudo ser procesado para vehículo ${row.Marca} ${row.Modelo}`)
             errorCount++
             continue
           }
@@ -171,7 +204,7 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
             updated_at: new Date().toISOString()
           }
 
-          // Validar campos requeridos  
+          // Validar campos requeridos
           if (!vehiculoData.marca || !vehiculoData.modelo || !vehiculoData.placa) {
             errors.push(`Datos incompletos para vehículo en fila: ${JSON.stringify(row)}`)
             errorCount++
@@ -188,14 +221,14 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
         }
       }
 
-      // Actualizar la lista de vehículos  
+      // Actualizar la lista de vehículos
       await FN_GET_ALL_VEHICULOS()
 
-      // Mostrar resultado  
+      // Mostrar resultado
       toast({
         title: "Importación completada",
-        description: `${importedCount} vehículos importados exitosamente. ${errorCount} errores.`,
-        // variant: errorCount > 0 ? "destructive" : "default"  
+        description: `${importedCount} vehículos y ${newClientsCount} clientes nuevos importados. ${errorCount} errores.`,
+        // variant: errorCount > 0 ? "destructive" : "default"
       })
 
       if (errors.length > 0) {
@@ -209,13 +242,12 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       toast({
         title: "Error de importación",
         description: "No se pudo procesar el archivo. Verifique el formato.",
-        // variant: "destructive"  
+        // variant: "destructive"
       })
     } finally {
       setIsImporting(false)
     }
   }
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
