@@ -42,6 +42,14 @@ const ORDENES_TRABAJO_SERVICES = {
         const data: OrdenTrabajoType[] = await AxiosGet({ path: '/view_ordenes_trabajo' })
         return data;
     },
+    async GET_ALL_ORDENES_BY_ESTADO(estado: 'Completada' | 'En Proceso' | 'Pendiente' | 'Entregada' | 'Cancelada'): Promise<OrdenTrabajoType[]> {
+        const data: OrdenTrabajoType[] = await AxiosGet({ path: `/view_ordenes_trabajo?estado=eq.${estado}` })
+        return data;
+    },
+    async GET_ORDENES_RECIENTES(): Promise<OrdenTrabajoType[]> {
+        const data: OrdenTrabajoType[] = await AxiosGet({ path: '/vista_ordenes_recientes' })
+        return data;
+    },
 
     async INSERT_ORDEN(orden: OrdenTrabajoInsertTablaType): Promise<OrdenTrabajoType[]> {
         const res: OrdenTrabajoType[] = await AxiosPost({ path: '/ordenes_trabajo', payload: orden })

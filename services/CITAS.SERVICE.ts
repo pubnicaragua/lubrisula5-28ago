@@ -78,7 +78,10 @@ export type CitaType = Omit<CitasDetalleType, 'vehicles' | 'tipos_operacion' | '
 const CITAS_SERVICES = {
     async GET_ALL_CITAS(): Promise<CitasDetalleType[]> {
         const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*), tecnicos(*), vehicles(*), tipos_operacion(*)' })
-        console.log('GET_CITAS', CitasData);
+        return CitasData;
+    },
+    async GET_ALL_CITAS_PROGRAMADAS_RECIENTES(): Promise<CitasDetalleType[]> {
+        const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*),tecnicos(*),vehicles(*),tipos_operacion(*)&order=created_at.desc&estado=eq.programada&limit=5' })
         return CitasData;
     },
     async GET_CITA_BY_ID(Id: string): Promise<CitasDetalleType> {

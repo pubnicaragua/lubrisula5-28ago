@@ -181,7 +181,7 @@ export function CitasPage() {
                           <span className="font-medium text-foreground">Vehículo:</span>
                         </div>
                         <p>
-                          {cita.vehicles.marca} {cita.vehicles.modelo} {cita.vehicles.placa}
+                          {cita.vehicles?.marca} {cita.vehicles?.modelo} {cita.vehicles?.placa}
                         </p>
                       </div>
                       <div className="space-y-1">

@@ -38,19 +38,24 @@ import {
   Activity,
   Plus,
 } from "lucide-react"
-import DASHBOARD_TALLER_SERVICES, { CabeceraDashboardType, CitaConDetalleType, DistribucionEspecialidadType, EstadoOrdenType, RendimientoOrdenesSemanalesType, RendimientoTecnicoType, TipoOrdenPorcentajeType } from "@/services/DASHBOARD.TALLER.SERVICE"
+import DASHBOARD_TALLER_SERVICES, { CabeceraDashboardType, DistribucionEspecialidadType, EstadoOrdenType, RendimientoOrdenesSemanalesType, RendimientoTecnicoType, TipoOrdenPorcentajeType } from "@/services/DASHBOARD.TALLER.SERVICE"
 import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
+import CITAS_SERVICES, { CitasDetalleType } from "@/services/CITAS.SERVICE"
+import Form_NuevaCita from "./Form_Nueva_CIta"
+import TECNICO_SERVICES, { TecnicoType } from "@/services/TECNICO_SERVICES.SERVICE"
 
 export function TallerDashboard() {
   const [activeChart, setActiveChart] = useState<"bar" | "pie" | "line">("bar")
   const [State_Cabecera, SetState_Cabecera] = useState<CabeceraDashboardType[]>([])
-  const [State_CitasPendientes, SetState_CitasPendientes] = useState<CitaConDetalleType[]>([])
+  const [State_CitasProgramadasRecientes, SetState_CitasProgramadasRecientes] = useState<CitasDetalleType[]>([])
   const [State_DistribucionEspecialidades, SetState_DistribucionEspecialidades] = useState<DistribucionEspecialidadType[]>([])
   const [State_EstadoOrdenes, SetState_EstadoOrdenes] = useState<EstadoOrdenType[]>([])
   const [State_OrdenesRecientes, SetState_OrdenesRecientes] = useState<OrdenTrabajoType[]>([])
+  const [State_OrdenesEnActivasEnProceso, SetState_OrdenesEnActivasEnProceso] = useState<OrdenTrabajoType[]>([])
   const [State_PorcentajeOrdenesPorTipo, SetState_PorcentajeOrdenesPorTipo] = useState<TipoOrdenPorcentajeType[]>([])
   const [State_RendimientoTecnicos, SetState_RendimientoTecnicos] = useState<RendimientoTecnicoType[]>([])
   const [State_RendimientoOrdenesSemanales, SetState_RendimientoOrdenesSemanales] = useState<RendimientoOrdenesSemanalesType[]>([])
+  const [State_ListaDeTecnicos, SetState_ListaDeTecnicos] = useState<TecnicoType[]>([])
 
   // Datos de ejemplo para los gráficos
   const revenueData = [
@@ -227,9 +232,9 @@ export function TallerDashboard() {
         return "bg-purple-100 text-purple-800"
       case "cancelada":
         return "bg-red-100 text-red-800"
-      case "disponible":
+      case "Disponible":
         return "bg-green-100 text-green-800"
-      case "ocupado":
+      case "Ocupado":
         return "bg-orange-100 text-orange-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -242,20 +247,34 @@ export function TallerDashboard() {
     const res1 = await DASHBOARD_TALLER_SERVICES.GET_CABECERA()
     console.log(res1)
     SetState_Cabecera(res1)
-    const res2 = await DASHBOARD_TALLER_SERVICES.GET_CITAS_PENDIENTES()
-    SetState_CitasPendientes(res2)
+    const res2 = await CITAS_SERVICES.GET_ALL_CITAS_PROGRAMADAS_RECIENTES()
+    console.log(res2)
+    SetState_CitasProgramadasRecientes(res2)
     const res3 = await DASHBOARD_TALLER_SERVICES.GET_DISTRIBUCION_DE_ESPECIALIDADES()
+    console.log(res3)
     SetState_DistribucionEspecialidades(res3)
     const res4 = await DASHBOARD_TALLER_SERVICES.GET_ESTADO_ORDENES()
     SetState_EstadoOrdenes(res4)
     const res5 = await DASHBOARD_TALLER_SERVICES.GET_PORCENTAJE_ORDENES_POR_TIPO()
     SetState_PorcentajeOrdenesPorTipo(res5)
+    console.log(res5)
     const res6 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_DE_TECNICOS()
+    console.log(res6)
     SetState_RendimientoTecnicos(res6)
     const res7 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_ORDENES_SEMANALES()
     SetState_RendimientoOrdenesSemanales(res7)
-    const res8 = await DASHBOARD_TALLER_SERVICES.GET_ORDENES_RECIENTES()
+    const res8 = await ORDENES_TRABAJO_SERVICES.GET_ORDENES_RECIENTES()
     SetState_OrdenesRecientes(res8)
+    const res9 = await ORDENES_TRABAJO_SERVICES.GET_ALL_ORDENES_BY_ESTADO('En Proceso');
+    SetState_OrdenesEnActivasEnProceso(res9)
+    const res10 = await TECNICO_SERVICES.GET_ALL_TECNICOS();
+    SetState_ListaDeTecnicos(res10)
+  }
+
+  const FN_GEL_ALL_CITAS_PROGRAMADAS = async () => {
+    const res2 = await CITAS_SERVICES.GET_ALL_CITAS_PROGRAMADAS_RECIENTES();
+    SetState_CitasProgramadasRecientes(res2)
+    console.log(res2)
   }
   useEffect(() => {
     FN_GET_ALL_DATA()
@@ -653,9 +672,9 @@ export function TallerDashboard() {
               <CardContent className="pl-2">
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ordersData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <BarChart data={State_RendimientoOrdenesSemanales} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
+                      <XAxis dataKey="dia" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
@@ -677,7 +696,7 @@ export function TallerDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={serviceTypeData}
+                        data={State_PorcentajeOrdenesPorTipo.map(dt => ({ name: dt.tipo_orden, value: parseFloat(dt.porcentaje) }))}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -686,7 +705,7 @@ export function TallerDashboard() {
                         dataKey="value"
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
-                        {serviceTypeData.map((entry, index) => (
+                        {State_PorcentajeOrdenesPorTipo.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -707,52 +726,47 @@ export function TallerDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Todas las Órdenes Activas</CardTitle>
+              <CardTitle>Todas las Órdenes Recientes Activas En Proceso</CardTitle>
               <CardDescription>Listado de órdenes en proceso</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <div className="grid grid-cols-7 bg-muted/50 p-3 font-medium">
+                <div className="grid grid-cols-8 bg-muted/50 p-3 font-medium">
                   <div>ID</div>
                   <div>Cliente</div>
                   <div>Vehículo</div>
                   <div>Fecha</div>
                   <div>Estado</div>
                   <div>Total</div>
-                  <div className="text-right">Acciones</div>
+                  <div>Servicio</div>
+                  <div>Prioridad</div>
                 </div>
                 <div className="divide-y">
-                  {[...recentOrders, ...recentOrders.slice(0, 2)].map((order, i) => (
-                    <div key={i} className="grid grid-cols-7 items-center p-3">
+                  {State_OrdenesEnActivasEnProceso.map((order, i) => (
+                    <div key={i} className="grid grid-cols-8 items-center p-3">
                       <div>{order.id}</div>
-                      <div>{order.cliente}</div>
-                      <div>{order.vehiculo}</div>
-                      <div>{order.fecha}</div>
+                      <div>{order.client_name}</div>
+                      <div>{order.vehicle_marca} {order.vehiculo_modelo}</div>
+                      <div>{order.fecha_ingreso}</div>
                       <div>
                         <Badge className={getStatusColor(order.estado)}>{order.estado}</Badge>
                       </div>
-                      <div>{order.total}</div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm">
-                          Ver
-                        </Button>
-                        <Button size="sm">Editar</Button>
-                      </div>
+                      <div>{order.costo}</div>
+                      <div>{order.servicio_name}</div>
+                      <div>{order.prioridad}</div>
+
                     </div>
                   ))}
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <div className="flex w-full justify-between">
-                <Button variant="outline" size="sm">
-                  Anterior
+              <Link href="/taller/ordenes" className="w-full">
+                <Button variant="outline" className="w-full">
+                  Ver todas las órdenes <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <div className="flex items-center gap-1 text-sm">Página 1 de 3</div>
-                <Button variant="outline" size="sm">
-                  Siguiente
-                </Button>
-              </div>
+              </Link>
+
             </CardFooter>
           </Card>
         </TabsContent>
@@ -766,31 +780,31 @@ export function TallerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border">
-                  <div className="grid grid-cols-6 bg-muted/50 p-3 font-medium">
+                  <div className="grid grid-cols-5 bg-muted/50 p-3 font-medium">
                     <div>ID</div>
                     <div>Cliente</div>
                     <div>Vehículo</div>
                     <div>Fecha</div>
                     <div>Servicio</div>
-                    <div className="text-right">Acciones</div>
+                    {/* <div className="text-right">Acciones</div> */}
                   </div>
                   <div className="divide-y">
-                    {pendingAppointments.map((appointment, i) => (
-                      <div key={i} className="grid grid-cols-6 items-center p-3">
+                    {State_CitasProgramadasRecientes.map((appointment, i) => (
+                      <div key={i} className="grid grid-cols-5 items-center p-3">
                         <div>{appointment.id}</div>
-                        <div>{appointment.cliente}</div>
-                        <div>{appointment.vehiculo}</div>
+                        <div>{appointment.clients.name}</div>
+                        <div>{appointment.vehicles.marca} {appointment.vehicles.modelo}</div>
                         <div>
                           {appointment.fecha}
                           <br />
-                          <span className="text-xs text-muted-foreground">{appointment.hora}</span>
+                          <span className="text-xs text-muted-foreground">{appointment.hora_inicio}</span>
                         </div>
-                        <div>{appointment.servicio}</div>
+                        <div>{appointment.tipos_operacion.nombre}</div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm">
+                          {/* <Button variant="outline" size="sm">
                             Ver
-                          </Button>
-                          <Button size="sm">Confirmar</Button>
+                          </Button> */}
+                          {/* <Button size="sm">Confirmar</Button> */}
                         </div>
                       </div>
                     ))}
@@ -809,18 +823,18 @@ export function TallerDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Calendario</CardTitle>
-                <CardDescription>Vista rápida de citas</CardDescription>
+                <CardDescription>Vista rápida de citas programada este mes</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Button variant="outline" size="sm">
+                  <div className="flex justify-center items-center">
+                    {/* <Button variant="outline" size="sm">
                       &lt; Anterior
-                    </Button>
-                    <div className="font-medium">Mayo 2024</div>
-                    <Button variant="outline" size="sm">
+                    </Button> */}
+                    <div className="font-medium">{new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(new Date())} {new Date().getFullYear()}</div>
+                    {/* <Button variant="outline" size="sm">
                       Siguiente &gt;
-                    </Button>
+                    </Button> */}
                   </div>
 
                   <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium">
@@ -836,7 +850,7 @@ export function TallerDashboard() {
                   <div className="grid grid-cols-7 gap-1 text-center">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                       // Simular días con citas
-                      const hasCitas = [5, 8, 15, 16, 17, 22, 25].includes(day)
+                      const hasCitas = [...State_CitasProgramadasRecientes.map(cit => parseInt(cit.fecha.split("-")[2], 10))].includes(day)
                       return (
                         <div
                           key={day}
@@ -852,10 +866,7 @@ export function TallerDashboard() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nueva Cita
-                </Button>
+                <Form_NuevaCita onSucces={FN_GEL_ALL_CITAS_PROGRAMADAS} />
               </CardFooter>
             </Card>
           </div>
@@ -875,18 +886,18 @@ export function TallerDashboard() {
                     <div>Nombre</div>
                     <div>Especialidad</div>
                     <div>Estado</div>
-                    <div>Órdenes Asignadas</div>
+                    <div>Ordenes Completadas</div>
                   </div>
                   <div className="divide-y">
-                    {technicians.map((tech, i) => (
+                    {State_ListaDeTecnicos.map((tech, i) => (
                       <div key={i} className="grid grid-cols-5 items-center p-3">
                         <div>{tech.id}</div>
                         <div>{tech.nombre}</div>
-                        <div>{tech.especialidad}</div>
+                        <div>{tech.area}</div>
                         <div>
-                          <Badge className={getStatusColor(tech.estado)}>{tech.estado}</Badge>
+                          <Badge className={getStatusColor(tech?.estado)}>{tech?.estado}</Badge>
                         </div>
-                        <div>{tech.ordenes_asignadas}</div>
+                        <div>{tech.cant_ordenes_completadas}</div>
                       </div>
                     ))}
                   </div>
@@ -911,13 +922,7 @@ export function TallerDashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={[
-                          { name: "Mecánica general", value: 3 },
-                          { name: "Electricidad", value: 2 },
-                          { name: "Pintura", value: 1 },
-                          { name: "Enderezado", value: 1 },
-                          { name: "Diagnóstico", value: 1 },
-                        ]}
+                        data={State_DistribucionEspecialidades.map(esp => ({ name: esp.especialidad, value: esp.cantidad_total }))}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -953,16 +958,7 @@ export function TallerDashboard() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={[
-                      { name: "Miguel Ángel P.", completadas: 15, tiempo: 4.2 },
-                      { name: "Fernando G.", completadas: 12, tiempo: 3.8 },
-                      { name: "Alejandro M.", completadas: 10, tiempo: 5.1 },
-                      { name: "Ricardo V.", completadas: 8, tiempo: 4.5 },
-                      { name: "José Luis M.", completadas: 14, tiempo: 3.9 },
-                      { name: "Eduardo C.", completadas: 9, tiempo: 4.7 },
-                      { name: "Gabriel R.", completadas: 11, tiempo: 4.0 },
-                      { name: "Daniel F.", completadas: 13, tiempo: 3.5 },
-                    ]}
+                    data={State_RendimientoTecnicos.map(tec => ({ name: tec.tecnico_name, completadas: tec.ordenes_completadas, tiempo: tec.tiempo_promedio_hora }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />

@@ -78,7 +78,7 @@ export default function Form_NuevaCita({ onSucces }: { onSucces?: () => void }) 
     return (
         <Dialog open={State_OpenDialog} onOpenChange={SetState_OpenDialog}>
             <DialogTrigger asChild>
-                <Button className="rounded-full">
+                <Button className="rounded-full w-full">
                     <Plus className="mr-2 h-4 w-4" /> Nueva Cita
                 </Button>
             </DialogTrigger>
