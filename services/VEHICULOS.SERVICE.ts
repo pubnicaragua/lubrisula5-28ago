@@ -4,6 +4,8 @@ export type VehiculoType = {
     id?: string // uuid
     client_id?: string // uuid
     client_name?: string,
+    client_phone?: string;
+    client_email?: string;
     marca?: string
     modelo?: string
     ano?: number

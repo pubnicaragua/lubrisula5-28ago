@@ -6,28 +6,23 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Edit, FileText, FileInput, Calendar, User, Phone, Mail } from "lucide-react"
+import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
 
 export default function VehiculoDetallePage() {
   const params = useParams()
   const router = useRouter()
-  const [vehiculo, setVehiculo] = useState<any>(null)
+  const [vehiculo, setVehiculo] = useState<VehiculoType>({})
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     loadVehiculoDetails()
   }, [params.id])
 
-  const loadVehiculoDetails = () => {
+  const loadVehiculoDetails = async () => {
     setIsLoading(true)
-
-    // Cargar desde localStorage
-    const savedVehiculos = localStorage.getItem("mockVehiculos")
-    if (savedVehiculos) {
-      const vehiculos = JSON.parse(savedVehiculos)
-      const vehiculoEncontrado = vehiculos.find((v: any) => v.id === params.id)
-      setVehiculo(vehiculoEncontrado)
-    }
-
+    console.log(params)
+    const savedVehiculos = await VEHICULO_SERVICES.GET_VEHICULOS_BY_ID(params.id as string)
+    setVehiculo(savedVehiculos)
     setIsLoading(false)
   }
 
@@ -63,7 +58,7 @@ export default function VehiculoDetallePage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">
-              {vehiculo.marca} {vehiculo.modelo} ({vehiculo.anio})
+              {vehiculo.marca} {vehiculo.modelo} ({vehiculo.ano})
             </h1>
             <p className="text-muted-foreground">Placa: {vehiculo.placa}</p>
           </div>
@@ -102,7 +97,7 @@ export default function VehiculoDetallePage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Año</label>
-                <p className="text-lg font-semibold">{vehiculo.anio}</p>
+                <p className="text-lg font-semibold">{vehiculo.ano}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Placa</label>
@@ -114,7 +109,7 @@ export default function VehiculoDetallePage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Tipo</label>
-                <Badge variant="secondary">{vehiculo.tipo}</Badge>
+                <Badge variant="secondary">{vehiculo.estado}</Badge>
               </div>
             </div>
             {vehiculo.vin && (
@@ -132,21 +127,21 @@ export default function VehiculoDetallePage() {
             <CardTitle>Información del Cliente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {vehiculo.cliente ? (
+            {vehiculo.client_name ? (
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-lg font-semibold">
-                    {vehiculo.cliente.nombre} {vehiculo.cliente.apellido}
+                    {vehiculo.client_name}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{vehiculo.cliente.telefono}</span>
+                  <span>{vehiculo.client_phone}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{vehiculo.cliente.email}</span>
+                  <span>{vehiculo.client_email}</span>
                 </div>
               </div>
             ) : (

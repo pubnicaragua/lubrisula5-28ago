@@ -35,9 +35,19 @@ export type TallerSolicitudType = {
     fecha_solicitud: string;
     fecha_actualizacion: string;
 }
+export type TallerType = {
+    id: string;
+    nombre: string;
+    direccion: string;
+    telefono: string;
+}
 const TALLER_SERVICES = {
-    async GET_ALL_TALLERES(): Promise<TallerSolicitudType[]> {
+    async GET_ALL_SOLICITUDES_TALLERES(): Promise<TallerSolicitudType[]> {
         const TalleresData: TallerSolicitudType[] = await AxiosGet({ path: '/solicitudes_talleres' })
+        return TalleresData;
+    },
+    async GET_ALL_TALLERES(): Promise<TallerType[]> {
+        const TalleresData: TallerType[] = await AxiosGet({ path: '/talleres' })
         return TalleresData;
     },
     async APROBAR_SOLICITUD(Id: number): Promise<TallerSolicitudType> {

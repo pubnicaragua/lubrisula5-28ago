@@ -12,7 +12,7 @@ export default function SolicitudesPage() {
   const [State_DataTalleres, SetState_DataTalleres] = useState<TallerSolicitudType[]>([])
   const [State_Toast, SetState_Toast] = useState<boolean>(false)
   const GET_TALLERES = async () => {
-    const res = await TALLER_SERVICES.GET_ALL_TALLERES();
+    const res = await TALLER_SERVICES.GET_ALL_SOLICITUDES_TALLERES();
     SetState_DataTalleres(res)
   }
   const APROBAR_SOLICITUD = async (id: number) => {
