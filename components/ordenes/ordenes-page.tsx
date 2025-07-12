@@ -139,13 +139,13 @@ export function OrdenesPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+      {/* <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
         <MainNav />
         <div className="ml-auto flex items-center gap-4">
           <ModeToggle />
           <UserNav />
         </div>
-      </header>
+      </header> */}
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Órdenes de Trabajo</h1>

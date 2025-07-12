@@ -27,6 +27,7 @@ import "jspdf-autotable"
 import FACTURAS_SERVICES, { FacturaType, MetodoPagoType } from "@/services/FACTURAS.SERVICE"
 import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 import ORDENES_TRABAJO_SERVICES, { OrdenTrabajoType } from "@/services/ORDENES.SERVICE"
+import autoTable from "jspdf-autotable"
 
 export function FacturasPage() {
   const { toast } = useToast()
@@ -242,18 +243,19 @@ export function FacturasPage() {
       f.estado,
     ])
 
-    // @ts-ignore - jspdf-autotable types
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 40,
-      theme: "grid",
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [66, 66, 66] },
-    })
+    
+     autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 40,
+        theme: "grid",
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [66, 66, 66] },
+      })
 
     doc.save("Facturas.pdf")
   }
+
   function getEstadoFacturaClass(estado: string): string {
     switch (estado) {
       case "Pagado":

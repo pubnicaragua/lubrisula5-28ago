@@ -35,6 +35,7 @@ import VEHICULO_SERVICES, { VehiculoType } from "@/services/VEHICULOS.SERVICE"
 import CLIENTS_SERVICES, { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 import { NuevoVehiculoForm } from "../vehiculos/nuevo-vehiculo-form"
 import EstadoVehiculoComponent from "../ui/EstadoVehiculo"
+import autoTable from "jspdf-autotable"
 
 const vehiculoSchema = z.object({
   marca: z.string().min(1, { message: "La marca es requerida" }),
@@ -129,10 +130,10 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
     setShowEditDialog(false)
     SetState_VehiculeToUpdate(null)
   }
-// Nueva función para importar vehículos con auto-registro de clientes
+  // Nueva función para importar vehículos con auto-registro de clientes
   const FN_IMPORT_VEHICULOS = async (file: File) => {
     setIsImporting(true)
-    
+
     try {
       const data = await file.arrayBuffer()
       const workbook = XLSX.read(data)
@@ -147,7 +148,7 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       for (const row of jsonData as any[]) {
         try {
           // Buscar cliente por nombre
-          let cliente = clientes.find(c => 
+          let cliente = clientes.find(c =>
             c.name?.toLowerCase().includes(row.Cliente?.toLowerCase() || '') ||
             row.Cliente?.toLowerCase().includes(c.name?.toLowerCase() || '')
           )
@@ -166,16 +167,16 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
 
               // Crear cliente en la base de datos
               const clienteCreado = await CLIENTS_SERVICES.ADD_NEW_CLIENTE(nuevoClienteData)
-              
+
               // Agregar a la lista local de clientes
               const clienteConId = { ...nuevoClienteData, id: clienteCreado[0]?.id || crypto.randomUUID() }
               setClientes(prev => [...prev, clienteConId])
-              
+
               cliente = clienteConId
               newClientsCount++
-              
+
               console.log(`✓ Cliente "${row.Cliente}" creado automáticamente`)
-              
+
             } catch (clientError) {
               console.error('Error al crear cliente:', clientError)
               errors.push(`No se pudo crear el cliente "${row.Cliente}" para vehículo ${row.Marca} ${row.Modelo}`)
@@ -292,8 +293,8 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       vehiculo.cliente ? `${vehiculo.cliente.nombre} ${vehiculo.cliente.apellido || ""}` : "N/A",
     ])
 
-    // @ts-ignore
-    doc.autoTable({
+
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 40,

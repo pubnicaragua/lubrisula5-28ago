@@ -56,7 +56,7 @@ export function TallerDashboard() {
   const [State_RendimientoTecnicos, SetState_RendimientoTecnicos] = useState<RendimientoTecnicoType[]>([])
   const [State_RendimientoOrdenesSemanales, SetState_RendimientoOrdenesSemanales] = useState<RendimientoOrdenesSemanalesType[]>([])
   const [State_ListaDeTecnicos, SetState_ListaDeTecnicos] = useState<TecnicoType[]>([])
-
+  const MesYearActual = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(new Date()) + " " + new Date().getFullYear()
   // Datos de ejemplo para los gráficos
   const revenueData = [
     { name: "Ene", value: 12500 },
@@ -289,7 +289,7 @@ export function TallerDashboard() {
         <div className="flex items-center space-x-2">
           <Button variant="outline" className="rounded-full">
             <Calendar className="mr-2 h-4 w-4" />
-            Mayo 2024
+            {MesYearActual}
           </Button>
           <Button className="rounded-full">
             <FileText className="mr-2 h-4 w-4" /> Generar Reporte
@@ -831,7 +831,7 @@ export function TallerDashboard() {
                     {/* <Button variant="outline" size="sm">
                       &lt; Anterior
                     </Button> */}
-                    <div className="font-medium">{new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(new Date())} {new Date().getFullYear()}</div>
+                    <div className="font-medium">{MesYearActual}</div>
                     {/* <Button variant="outline" size="sm">
                       Siguiente &gt;
                     </Button> */}
