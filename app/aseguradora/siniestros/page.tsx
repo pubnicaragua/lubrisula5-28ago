@@ -10,23 +10,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"  
 import { Badge } from "@/components/ui/badge"  
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"  
-import { Plus, Search, Edit, Trash2, Eye, ShieldCheck } from "lucide-react"  
+import { Plus, Search, Edit, Trash2, ShieldCheck } from "lucide-react"  
 import { toast } from "@/components/ui/use-toast"  
 import SINIESTROS_SERVICES, { type SiniestroType } from "@/services/SINIESTROS_SERVICES.service"  
+import CLIENTS_SERVICES, { type ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"  
+import VEHICULO_SERVICES, { type VehiculoType } from "@/services/VEHICULOS.SERVICE"  
+import ASEGURADORA_SERVICES, { type AseguradoraType } from "@/services/ASEGURADORA_SERVICES.SERVICE"  
   
 export default function SiniestrosPage() {  
   const [siniestros, setSiniestros] = useState<SiniestroType[]>([])  
+  const [clientes, setClientes] = useState<ClienteType[]>([])  
+  const [vehiculos, setVehiculos] = useState<VehiculoType[]>([])  
+  const [aseguradoras, setAseguradoras] = useState<AseguradoraType[]>([])  
   const [loading, setLoading] = useState(true)  
   const [searchTerm, setSearchTerm] = useState("")  
   const [selectedSiniestro, setSelectedSiniestro] = useState<SiniestroType | null>(null)  
   const [isDialogOpen, setIsDialogOpen] = useState(false)  
   const [isEditing, setIsEditing] = useState(false)  
   
-  const [formData, setFormData] = useState<SiniestroType>({})  
+  const [formData, setFormData] = useState<SiniestroType>({  
+    numero_siniestro: "",  
+    fecha_siniestro: "",  
+    descripcion: "",  
+    estado: "reportado",  
+    monto_estimado: 0,  
+    nivel_daño: 1,  
+    aseguradora_id: 0,  
+    cliente_id: "",  
+    vehiculo_id: ""  
+  })  
   
   useEffect(() => {  
     loadSiniestros()  
+    loadClientes()  
+    loadAseguradoras()  
   }, [])  
+  
+  // Cargar vehículos cuando cambia el cliente  
+  useEffect(() => {  
+    if (formData.cliente_id) {  
+      loadVehiculos(formData.cliente_id)  
+    } else {  
+      setVehiculos([])  
+    }  
+  }, [formData.cliente_id])  
   
   const loadSiniestros = async () => {  
     try {  
@@ -44,8 +71,46 @@ export default function SiniestrosPage() {
     }  
   }  
   
+  const loadClientes = async () => {  
+    try {  
+      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS()  
+      setClientes(data)  
+    } catch (error) {  
+      console.error("Error al cargar clientes:", error)  
+    }  
+  }  
+  
+  const loadVehiculos = async (clienteId: string) => {  
+    try {  
+      const data = await VEHICULO_SERVICES.GET_ALL_VEHICULOS_BY_CLIENT(clienteId)  
+      setVehiculos(data)  
+    } catch (error) {  
+      console.error("Error al cargar vehículos:", error)  
+    }  
+  }  
+  
+  const loadAseguradoras = async () => {  
+    try {  
+      const data = await ASEGURADORA_SERVICES.GET_ASEGURADORAS()  
+      setAseguradoras(data)  
+    } catch (error) {  
+      console.error("Error al cargar aseguradoras:", error)  
+    }  
+  }  
+  
   const handleSubmit = async (e: React.FormEvent) => {  
     e.preventDefault()  
+      
+    // Validaciones  
+    if (!formData.cliente_id || !formData.vehiculo_id || !formData.aseguradora_id) {  
+      toast({  
+        title: "Error",  
+        description: "Debe seleccionar cliente, vehículo y aseguradora",  
+        variant: "destructive"  
+      })  
+      return  
+    }  
+  
     try {  
       if (isEditing && selectedSiniestro) {  
         await SINIESTROS_SERVICES.UPDATE_SINIESTRO({ ...formData, id: selectedSiniestro.id })  
@@ -115,19 +180,25 @@ export default function SiniestrosPage() {
       descripcion: "",  
       estado: "reportado",  
       monto_estimado: 0,  
+      nivel_daño: 1,  
       aseguradora_id: 0,  
       cliente_id: "",  
       vehiculo_id: ""  
     })  
     setSelectedSiniestro(null)  
     setIsEditing(false)  
+    setVehiculos([])  
   }  
   
   const openEditDialog = (siniestro: SiniestroType) => {  
+    console.log(siniestro)
     setFormData(siniestro)  
     setSelectedSiniestro(siniestro)  
     setIsEditing(true)  
     setIsDialogOpen(true)  
+    if (siniestro.cliente_id) {  
+      loadVehiculos(siniestro.cliente_id)  
+    }  
   }  
   
   const getEstadoBadge = (estado: string) => {  
@@ -165,7 +236,7 @@ export default function SiniestrosPage() {
               Nuevo Siniestro  
             </Button>  
           </DialogTrigger>  
-          <DialogContent className="max-w-2xl">  
+          <DialogContent className="max-w-4xl">  
             <DialogHeader>  
               <DialogTitle>  
                 {isEditing ? "Editar Siniestro" : "Nuevo Siniestro"}  
@@ -175,6 +246,7 @@ export default function SiniestrosPage() {
               </DialogDescription>  
             </DialogHeader>  
             <form onSubmit={handleSubmit} className="space-y-4">  
+              {/* Primera fila: Número y Fecha */}  
               <div className="grid grid-cols-2 gap-4">  
                 <div className="space-y-2">  
                   <Label htmlFor="numero_siniestro">Número de Siniestro</Label>  
@@ -190,21 +262,97 @@ export default function SiniestrosPage() {
                   <Input  
                     id="fecha_siniestro"  
                     type="datetime-local"  
-                    value={formData.fecha_siniestro}  
+                    value={isEditing ? formData?.fecha_siniestro?.slice(0,16) : formData?.fecha_siniestro}  
                     onChange={(e) => setFormData({...formData, fecha_siniestro: e.target.value})}  
                     required  
                   />  
                 </div>  
               </div>  
-              <div className="space-y-2">  
-                <Label htmlFor="descripcion">Descripción</Label>  
-                <Textarea  
-                  id="descripcion"  
-                  value={formData.descripcion}  
-                  onChange={(e) => setFormData({...formData, descripcion: e.target.value})}  
-                  rows={3}  
-                />  
+  
+              {/* Segunda fila: Cliente y Aseguradora */}  
+              <div className="grid grid-cols-2 gap-4">  
+                <div className="space-y-2">  
+                  <Label htmlFor="cliente_id">Cliente</Label>  
+                  <Select   
+                    value={formData.cliente_id}   
+                    onValueChange={(value) => setFormData({...formData, cliente_id: value, vehiculo_id: ""})}  
+                  >  
+                    <SelectTrigger>  
+                      <SelectValue placeholder="Seleccionar cliente" />  
+                    </SelectTrigger>  
+                    <SelectContent>  
+                      {clientes.map((cliente) => (  
+                        <SelectItem key={cliente.id} value={cliente.id!}>  
+                          {cliente.name}  
+                        </SelectItem>  
+                      ))}  
+                    </SelectContent>  
+                  </Select>  
+                </div>  
+                <div className="space-y-2">  
+                  <Label htmlFor="aseguradora_id">Aseguradora</Label>  
+                  <Select   
+                    value={formData.aseguradora_id?.toString()}   
+                    onValueChange={(value) => setFormData({...formData, aseguradora_id: parseInt(value)})}  
+                  >  
+                    <SelectTrigger>  
+                      <SelectValue placeholder="Seleccionar aseguradora" />  
+                    </SelectTrigger>  
+                    <SelectContent>  
+                      {aseguradoras.map((aseguradora) => (  
+                        <SelectItem key={aseguradora.id} value={aseguradora.id!.toString()}>  
+                          {aseguradora.nombre}  
+                        </SelectItem>  
+                      ))}  
+                    </SelectContent>  
+                  </Select>  
+                </div>  
               </div>  
+  
+              {/* Tercera fila: Vehículo y Nivel de Daño */}  
+              <div className="grid grid-cols-2 gap-4">  
+                <div className="space-y-2">  
+                  <Label htmlFor="vehiculo_id">Vehículo</Label>  
+                  <Select   
+                    value={formData.vehiculo_id}   
+                    onValueChange={(value) => setFormData({...formData, vehiculo_id: value})}  
+                    disabled={!formData.cliente_id || vehiculos.length === 0}  
+                  >  
+                    <SelectTrigger>  
+                      <SelectValue   
+                        placeholder={  
+                          !formData.cliente_id   
+                            ? "Selecciona un cliente primero"   
+                            : vehiculos.length === 0   
+                              ? "No hay vehículos para este cliente"  
+                              : "Seleccionar vehículo"  
+                        }   
+                      />  
+                    </SelectTrigger>  
+                    <SelectContent>  
+                      {vehiculos.map((vehiculo) => (  
+                        <SelectItem key={vehiculo.id} value={vehiculo.id!}>  
+                          {vehiculo.marca} {vehiculo.modelo} ({vehiculo.placa})  
+                        </SelectItem>  
+                      ))}  
+                    </SelectContent>  
+                  </Select>  
+                </div>  
+                <div className="space-y-2">  
+                  <Label htmlFor="nivel_daño">Nivel de Daño (1-10)</Label>  
+                  <Input  
+                    id="nivel_daño"  
+                    type="number"  
+                    min="1"  
+                    max="10"  
+                    value={formData.nivel_daño}  
+                    onChange={(e) => setFormData({...formData, nivel_daño: parseInt(e.target.value)})}  
+                    required  
+                  />  
+                </div>  
+              </div>  
+
+                            {/* Cuarta fila: Estado y Monto */}  
               <div className="grid grid-cols-2 gap-4">  
                 <div className="space-y-2">  
                   <Label htmlFor="estado">Estado</Label>  
@@ -232,6 +380,18 @@ export default function SiniestrosPage() {
                   />  
                 </div>  
               </div>  
+  
+              {/* Descripción */}  
+              <div className="space-y-2">  
+                <Label htmlFor="descripcion">Descripción</Label>  
+                <Textarea  
+                  id="descripcion"  
+                  value={formData.descripcion}  
+                  onChange={(e) => setFormData({...formData, descripcion: e.target.value})}  
+                  rows={3}  
+                />  
+              </div>  
+  
               <DialogFooter>  
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>  
                   Cancelar  
@@ -268,7 +428,10 @@ export default function SiniestrosPage() {
               <TableRow>  
                 <TableHead>Número</TableHead>  
                 <TableHead>Fecha</TableHead>  
-                <TableHead>Descripción</TableHead>  
+                <TableHead>Cliente</TableHead>  
+                <TableHead>Vehículo</TableHead>  
+                <TableHead>Aseguradora</TableHead>  
+                <TableHead>Nivel Daño</TableHead>  
                 <TableHead>Estado</TableHead>  
                 <TableHead>Monto</TableHead>  
                 <TableHead>Acciones</TableHead>  
@@ -277,13 +440,13 @@ export default function SiniestrosPage() {
             <TableBody>  
               {loading ? (  
                 <TableRow>  
-                  <TableCell colSpan={6} className="text-center">  
+                  <TableCell colSpan={9} className="text-center">  
                     Cargando...  
                   </TableCell>  
                 </TableRow>  
               ) : filteredSiniestros.length === 0 ? (  
                 <TableRow>  
-                  <TableCell colSpan={6} className="text-center">  
+                  <TableCell colSpan={9} className="text-center">  
                     No se encontraron siniestros  
                   </TableCell>  
                 </TableRow>  
@@ -296,8 +459,17 @@ export default function SiniestrosPage() {
                     <TableCell>  
                       {siniestro.fecha_siniestro ? new Date(siniestro.fecha_siniestro).toLocaleDateString() : '-'}  
                     </TableCell>  
-                    <TableCell className="max-w-xs truncate">  
-                      {siniestro.descripcion}  
+                    <TableCell>  
+                      {siniestro.clientes?.name || '-'}  
+                    </TableCell>  
+                    <TableCell>  
+                      {siniestro.vehiculos ? `${siniestro.vehiculos.marca} ${siniestro.vehiculos.modelo}` : '-'}  
+                    </TableCell>  
+                    <TableCell>  
+                      {siniestro.aseguradoras?.nombre || '-'}  
+                    </TableCell>  
+                    <TableCell>  
+                      <Badge variant="outline">{siniestro.nivel_daño || 1}</Badge>  
                     </TableCell>  
                     <TableCell>  
                       {getEstadoBadge(siniestro.estado || 'reportado')}  
