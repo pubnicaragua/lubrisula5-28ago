@@ -55,12 +55,7 @@ export function SolicitudCompraForm({ repuestoId, repuestoNombre, onSuccess }: S
     try {
       // Simulación de envío de datos
       // En producción, esto sería una llamada a la API o a Supabase
-      console.log("Solicitud de compra:", {
-        repuestoId,
-        repuestoNombre,
-        ...values,
-        fechaSolicitud: new Date().toISOString(),
-      })
+    
 
       // Simulamos un retraso para mostrar el estado de carga
       await new Promise((resolve) => setTimeout(resolve, 1000))

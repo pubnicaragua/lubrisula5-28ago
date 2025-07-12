@@ -38,10 +38,7 @@ export default function FormNuevoPaqueteServicio({ onSuccess }: { onSuccess?: (N
     }
     const FN_GUARDAR_PAQUETE = async () => {
         SetState_Loadding(true)
-        console.log(State_Form)
-        console.log(State_ListServiciosSelected)
         const res = await SERVICIOS_SERVICES.INSERT_PAQUETES_SERVICIOS(State_Form, State_ListServiciosSelected.map(serv => (serv.id)))
-        console.log(res)
         SetState_Loadding(false)
         setOpenDialog(false)
         onSuccess(res)

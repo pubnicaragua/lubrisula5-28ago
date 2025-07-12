@@ -20,7 +20,6 @@ export default function VehiculoDetallePage() {
 
   const loadVehiculoDetails = async () => {
     setIsLoading(true)
-    console.log(params)
     const savedVehiculos = await VEHICULO_SERVICES.GET_VEHICULOS_BY_ID(params.id as string)
     setVehiculo(savedVehiculos)
     setIsLoading(false)

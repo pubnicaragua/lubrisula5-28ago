@@ -44,7 +44,6 @@ export function OrdenesPage() {
 
   const FN_GET_ALL_ORDENES_TRABAJO = async () => {
     const data = await ORDENES_TRABAJO_SERVICES.GET_ALL_ORDENES();
-    console.log(data)
     SetState_OrdenesTrabajo(data)
 
   }

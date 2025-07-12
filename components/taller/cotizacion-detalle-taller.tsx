@@ -36,7 +36,6 @@ export function CotizacionDetalleTaller({ id }: CotizacionDetalleTallerProps) {
     setLoading(true)
     // const { succe, data, error: quotationError, isTableMissing } = await getQuotationById(id)
     const data = await COTIZACIONES_SERVICES.GET_DETALLE_COTIZACIONES_BY_ID(id)
-    console.log(data)
     setCotizacion(data)
     setLoading(false)
   }

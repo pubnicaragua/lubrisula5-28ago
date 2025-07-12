@@ -63,7 +63,6 @@ export function CotizacionesTallerPage() {
       setLoading(true)
       // const data = await getQuotations()
       const data = await COTIZACIONES_SERVICES.GET_ALL_COTIZACIONES()
-      console.log(data)
       SetState_Cotizaciones(data)
       // if (isTableMissing) {
       //   setError("La tabla de cotizaciones no existe. Por favor, inicialice la base de datos.")

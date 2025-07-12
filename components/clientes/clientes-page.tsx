@@ -44,15 +44,11 @@ export function ClientesPage() {
 
   const FN_GET_CLIENTS = async () => {
     const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
-    console.log(res)
     setState_Clientes(res)
-    console.log('GET CLIENTS', res);
   }
   const FN_UPDATE_CLIENTE = async (clienteEditado: ClienteType) => {
-    console.log(clienteEditado)
     if (!editingCliente) return
     const res = await CLIENTS_SERVICES.UPDATE_CLIENTE(clienteEditado);
-    console.log('UPDATE CLIENTE', res);
 
     const clienteActualizado: ClienteType = {
       ...editingCliente,
@@ -69,7 +65,6 @@ export function ClientesPage() {
     })
   }
   const FN_DELETE_CLIENTE = async (id: string) => {
-    console.log('DELETE CLIENTE', id);
     await CLIENTS_SERVICES.DELETE_CLIENTE(id)
     setState_Clientes((prev) => prev.filter((c) => c.id !== clienteToDelete.id))
     setDeleteDialogOpen(false)
@@ -80,11 +75,8 @@ export function ClientesPage() {
     })
   }
   const FN_ADD_NEW_CLIENTE = async (nuevoCliente: ClienteType) => {
-    console.log('ADD NEW CLIENTE', nuevoCliente);
-    console.log(nuevoCliente)
     const NewData: ClienteType = { ...nuevoCliente, created_at: new Date().toISOString() }
     const res = await CLIENTS_SERVICES.ADD_NEW_CLIENTE(NewData)
-    console.log('RESPONSE ADD NEW CLIENTE', res);
     setState_Clientes((prev) => [...prev, { ...NewData, status: "Activo" }])
     setOpen(false)
     toast({
@@ -100,7 +92,6 @@ export function ClientesPage() {
 
   // Guardar en localStorage cuando cambie el estado
   useEffect(() => {
-    console.log(State_Clientes)
     if (State_Clientes.length > 0) {
       localStorage.setItem("clientes", JSON.stringify(State_Clientes))
     }
@@ -108,13 +99,11 @@ export function ClientesPage() {
 
 
   const openEditDialog = (cliente: ClienteType) => {
-    console.log(cliente)
     setEditingCliente(cliente)
     setOpen(true)
   }
 
   const openDeleteDialog = (cliente: ClienteType) => {
-    console.log(cliente)
     setClienteToDelete(cliente)
     setDeleteDialogOpen(true)
   }
@@ -136,7 +125,6 @@ export function ClientesPage() {
   }
 
   const getTipoClienteBadge = (tipo: string) => {
-    console.log("Tipo de cliente:", tipo)
     const colors = {
       Individual: "bg-blue-500 hover:bg-blue-600",
       Empresa: "bg-purple-500 hover:bg-purple-600",

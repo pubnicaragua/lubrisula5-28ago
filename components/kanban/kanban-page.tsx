@@ -418,7 +418,6 @@ export function KanbanPage() {
 
   const handleDragEnd = (result: any) => {
     // La lógica de arrastrar y soltar ya está implementada en el componente KanbanBoard
-    console.log("Drag end result:", result)
   }
 
   return (

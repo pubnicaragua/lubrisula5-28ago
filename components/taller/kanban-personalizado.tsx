@@ -130,7 +130,6 @@ export function KanbanPersonalizado() {
         variant: "destructive",
       })
     }
-    console.log("Datos enviados para guardar:", data)
   }
 
   const handleTipoChange = (tipo: string) => {

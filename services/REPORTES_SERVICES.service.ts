@@ -34,7 +34,6 @@ const REPORTES_SERVICES = {
     },  
   
     async GENERAR_REPORTE(reporte: ReporteType): Promise<ReporteType> {  
-        console.log('GENERAR REPORTE', reporte);  
         const res = await AxiosPost({  
             path: `/reportes`,   
             payload: {  
@@ -46,12 +45,10 @@ const REPORTES_SERVICES = {
                 descripcion: reporte.descripcion  
             }  
         });  
-        console.log('GENERAR REPORTE RESULT', res);  
         return res[0];  
     },  
   
     async DELETE_REPORTE(id: string): Promise<any> {  
-        console.log('DELETE REPORTE', id);  
         const res = await AxiosDelete({  
             path: `/reportes?id=eq.${id}`,   
             payload: {}  

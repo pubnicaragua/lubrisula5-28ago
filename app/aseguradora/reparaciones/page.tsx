@@ -156,7 +156,6 @@ export default function ReparacionesPage() {
   }
 
   const openEditDialog = (reparacion: ReparacionType) => {
-    console.log(reparacion)
     setFormData(reparacion)
     setSelectedReparacion(reparacion)
     setIsEditing(true)

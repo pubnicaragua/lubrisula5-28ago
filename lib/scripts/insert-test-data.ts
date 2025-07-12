@@ -1,7 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin-client"
 
 export async function insertTestData() {
-  console.log("Insertando datos de prueba en Supabase...")
 
   try {
     // Insertar clientes de prueba
@@ -28,7 +27,6 @@ export async function insertTestData() {
     // Insertar tareas de Kanban de prueba
     await insertKanbanTasks()
 
-    console.log("Datos de prueba insertados correctamente.")
   } catch (error) {
     console.error("Error al insertar datos de prueba:", error)
   }
@@ -75,7 +73,6 @@ async function insertClientes() {
   const { data: existingClients } = await supabaseAdmin.from("clients").select("*").limit(1)
 
   if (existingClients && existingClients.length > 0) {
-    console.log("Ya existen clientes en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -84,7 +81,6 @@ async function insertClientes() {
     if (error) {
       console.error(`Error al insertar cliente ${cliente.name}:`, error)
     } else {
-      console.log(`Cliente ${cliente.name} insertado correctamente.`)
     }
   }
 }
@@ -94,7 +90,6 @@ async function insertVehiculos() {
   const { data: clientes } = await supabaseAdmin.from("clients").select("id, name")
 
   if (!clientes || clientes.length === 0) {
-    console.log("No hay clientes para asociar vehículos. Omitiendo inserción de vehículos.")
     return
   }
 
@@ -102,7 +97,6 @@ async function insertVehiculos() {
   const { data: existingVehicles } = await supabaseAdmin.from("vehicles").select("*").limit(1)
 
   if (existingVehicles && existingVehicles.length > 0) {
-    console.log("Ya existen vehículos en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -174,7 +168,6 @@ async function insertVehiculos() {
     if (error) {
       console.error(`Error al insertar vehículo ${vehiculo.make} ${vehiculo.model}:`, error)
     } else {
-      console.log(`Vehículo ${vehiculo.make} ${vehiculo.model} insertado correctamente.`)
     }
   }
 }
@@ -184,7 +177,6 @@ async function insertTalleres() {
   const { data: existingTalleres } = await supabaseAdmin.from("talleres").select("*").limit(1)
 
   if (existingTalleres && existingTalleres.length > 0) {
-    console.log("Ya existen talleres en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -232,7 +224,6 @@ async function insertTalleres() {
     if (error) {
       console.error(`Error al insertar taller ${taller.nombre}:`, error)
     } else {
-      console.log(`Taller ${taller.nombre} insertado correctamente.`)
     }
   }
 }
@@ -242,7 +233,6 @@ async function insertAseguradoras() {
   const { data: existingAseguradoras } = await supabaseAdmin.from("aseguradoras").select("*").limit(1)
 
   if (existingAseguradoras && existingAseguradoras.length > 0) {
-    console.log("Ya existen aseguradoras en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -282,7 +272,6 @@ async function insertAseguradoras() {
     if (error) {
       console.error(`Error al insertar aseguradora ${aseguradora.nombre}:`, error)
     } else {
-      console.log(`Aseguradora ${aseguradora.nombre} insertada correctamente.`)
     }
   }
 }
@@ -293,7 +282,6 @@ async function insertCotizaciones() {
   const { data: vehiculos } = await supabaseAdmin.from("vehicles").select("id, client_id")
 
   if (!clientes || clientes.length === 0 || !vehiculos || vehiculos.length === 0) {
-    console.log("No hay clientes o vehículos para asociar cotizaciones. Omitiendo inserción.")
     return
   }
 
@@ -301,7 +289,6 @@ async function insertCotizaciones() {
   const { data: existingCotizaciones } = await supabaseAdmin.from("quotations").select("*").limit(1)
 
   if (existingCotizaciones && existingCotizaciones.length > 0) {
-    console.log("Ya existen cotizaciones en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -356,7 +343,6 @@ async function insertCotizaciones() {
       continue
     }
 
-    console.log(`Cotización ${cotizacion.quotation_number} insertada correctamente.`)
 
     // Insertar partes de la cotización
     const partesCotizacion = [
@@ -409,7 +395,6 @@ async function insertOrdenes() {
     .eq("status", "Aprobada")
 
   if (!clientes || clientes.length === 0 || !vehiculos || vehiculos.length === 0) {
-    console.log("No hay clientes o vehículos para asociar órdenes. Omitiendo inserción.")
     return
   }
 
@@ -417,7 +402,6 @@ async function insertOrdenes() {
   const { data: existingOrdenes } = await supabaseAdmin.from("orders").select("*").limit(1)
 
   if (existingOrdenes && existingOrdenes.length > 0) {
-    console.log("Ya existen órdenes en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -464,7 +448,6 @@ async function insertOrdenes() {
       continue
     }
 
-    console.log(`Orden ${orden.order_number} insertada correctamente.`)
 
     // Insertar detalles de la orden
     const detallesOrden = [
@@ -514,7 +497,6 @@ async function insertMateriales() {
   const { data: existingMateriales } = await supabaseAdmin.from("materiales").select("*").limit(1)
 
   if (existingMateriales && existingMateriales.length > 0) {
-    console.log("Ya existen materiales en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -522,7 +504,6 @@ async function insertMateriales() {
   const { data: categorias } = await supabaseAdmin.from("categorias_materiales").select("id, nombre")
 
   if (!categorias || categorias.length === 0) {
-    console.log("No hay categorías de materiales. Omitiendo inserción de materiales.")
     return
   }
 
@@ -637,7 +618,6 @@ async function insertMateriales() {
     if (error) {
       console.error(`Error al insertar material ${material.nombre}:`, error)
     } else {
-      console.log(`Material ${material.nombre} insertado correctamente.`)
     }
   }
 }
@@ -647,7 +627,6 @@ async function insertKanbanTasks() {
   const { data: columns } = await supabaseAdmin.from("kanban_columns").select("id, title")
 
   if (!columns || columns.length === 0) {
-    console.log("No hay columnas Kanban. Omitiendo inserción de tareas.")
     return
   }
 
@@ -655,7 +634,6 @@ async function insertKanbanTasks() {
   const { data: existingTasks } = await supabaseAdmin.from("kanban_tasks").select("*").limit(1)
 
   if (existingTasks && existingTasks.length > 0) {
-    console.log("Ya existen tareas Kanban en la base de datos. Omitiendo inserción.")
     return
   }
 
@@ -708,7 +686,6 @@ async function insertKanbanTasks() {
     if (error) {
       console.error(`Error al insertar tarea Kanban ${task.title}:`, error)
     } else {
-      console.log(`Tarea Kanban ${task.title} insertada correctamente.`)
     }
   }
 }

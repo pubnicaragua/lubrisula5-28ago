@@ -63,7 +63,6 @@ const FACTURAS_SERVICES = {
         return res[0]
     },
     async UPDATE_FACTURA(factura: FacturaTableType): Promise<FacturaTableType> {
-        console.log(factura)
         const IdFactura = factura.id;
         delete factura.id
         const res: FacturaTableType[] = await AxiosPatch({ path: `/facturas?id=eq.${IdFactura}`, payload: factura });

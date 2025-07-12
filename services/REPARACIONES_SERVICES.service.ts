@@ -46,7 +46,6 @@ const REPARACIONES_SERVICES = {
     },
 
     async INSERT_REPARACION(reparacion: ReparacionType): Promise<ReparacionType> {
-        console.log('INSERT REPARACION', reparacion);
         const res = await AxiosPost({
             path: `/reparaciones`,
             payload: {
@@ -60,12 +59,10 @@ const REPARACIONES_SERVICES = {
                 descripcion_trabajo: reparacion.descripcion_trabajo
             }
         });
-        console.log('INSERT REPARACION RESULT', res);
         return res[0];
     },
 
     async UPDATE_REPARACION(reparacion: ReparacionType): Promise<ReparacionType> {
-        console.log('UPDATE REPARACION', reparacion);
         const res = await AxiosPatch({
             path: `/reparaciones?id=eq.${reparacion.id}`,
             payload: {
@@ -83,7 +80,6 @@ const REPARACIONES_SERVICES = {
     },
 
     async DELETE_REPARACION(id: string): Promise<any> {
-        console.log('DELETE REPARACION', id);
         const res = await AxiosDelete({
             path: `/reparaciones?id=eq.${id}`,
             payload: {}

@@ -21,7 +21,6 @@ export default function EditUsersForm({ CurrentDataUSer }: { CurrentDataUSer?: U
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        console.log("Formulario enviado:", form);
         // Aquí iría la lógica para guardar los cambios, por ejemplo una petición a la API
         // await saveUser(form);
         setLoading(false);

@@ -21,7 +21,6 @@ const ASEGURADORA_SERVICE = {
         return aseguradoras;
     },
     async INSERT_ASEGURADORA(aseguradora: AseguradoraType) {
-        console.log('UPDATE ASEGURADORA', aseguradora);
 
         const res = await AxiosPost({
             path: `/aseguradoras`, payload: {
@@ -32,11 +31,9 @@ const ASEGURADORA_SERVICE = {
                 nivel_tarifa: aseguradora.nivel_tarifa
             }
         },)
-        console.log('INSERT ASEGURADORA', res);
         return res;
     },
     async UPDATE_ASEGURADORA(aseguradora: AseguradoraType) {
-        console.log('UPDATE ASEGURADORA', aseguradora);
 
         const res = await AxiosPatch({
             path: `/aseguradoras?id=eq.${aseguradora.id}`, payload: {
@@ -50,7 +47,6 @@ const ASEGURADORA_SERVICE = {
         return res[0];
     },
     async DELETE_ASEGURADORA(id: number) {
-        console.log('DELETE ASEGURADORA', id);
         const res = await AxiosDelete({
             path: `/aseguradoras?id=eq.${id}`, payload: {}
         })

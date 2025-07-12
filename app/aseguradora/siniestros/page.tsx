@@ -191,7 +191,6 @@ export default function SiniestrosPage() {
   }  
   
   const openEditDialog = (siniestro: SiniestroType) => {  
-    console.log(siniestro)
     setFormData(siniestro)  
     setSelectedSiniestro(siniestro)  
     setIsEditing(true)  

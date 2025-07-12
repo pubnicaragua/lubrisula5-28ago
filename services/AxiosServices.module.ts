@@ -25,7 +25,6 @@ export async function AxiosPost({ path, payload }: { path: string, payload: any 
 }
 
 export async function AxiosPatch({ path, payload }: { path: string, payload?: any }) {
-    console.log("AxiosPatch", path, payload)
     try {
 
         const res = await axios.patch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1${path}`, payload, {
@@ -36,7 +35,6 @@ export async function AxiosPatch({ path, payload }: { path: string, payload?: an
             }
         }
         )
-        console.log(res)
         return res.data
     } catch (error) {
         console.log(error.message)
@@ -53,6 +51,5 @@ export async function AxiosDelete({ path, payload }: { path: string, payload?: a
         }
     }
     )
-    console.log("AxiosDelete", res)
     return res.data
 }

@@ -49,7 +49,6 @@ const MENSAJES_SERVICES = {
     },
 
     async ENVIAR_MENSAJE(mensaje: MensajeType): Promise<MensajeType> {
-        console.log('ENVIAR MENSAJE', mensaje);
         const res = await AxiosPost({
             path: `/mensajes`,
             payload: {
@@ -60,7 +59,6 @@ const MENSAJES_SERVICES = {
                 leido: false
             }
         });
-        console.log('ENVIAR MENSAJE RESULT', res);
         return res[0];
     },
 
@@ -81,7 +79,6 @@ const MENSAJES_SERVICES = {
     },
 
     async DELETE_MENSAJE(id: string): Promise<any> {
-        console.log('DELETE MENSAJE', id);
         const res = await AxiosDelete({
             path: `/mensajes?id=eq.${id}`,
             payload: {}

@@ -38,15 +38,12 @@ export default function FormAgregarServicioAPaquete({ servicio_id, onSuccess, op
     const FN_GUARDAR = async () => {
         SetState_Loadding(true)
         const res = await SERVICIOS_SERVICES.AGREGAR_SERVICIO_AL_PAQUETE(servicio_id, State_PaqueteServicesSelected.id)
-        console.log(res)
         SetState_Loadding(false)
         setOpenDialog(false)
         onSuccess(res)
     }
     useEffect(() => {
-        console.log('ejecuta')
         if (openDialog) {
-            console.log('ejecuta')
             FN_GET_PAQUETES()
             SetState_PaqueteServicesSelected({})
         }

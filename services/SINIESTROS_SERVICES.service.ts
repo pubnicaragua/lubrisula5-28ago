@@ -74,7 +74,6 @@ const SINIESTROS_SERVICES = {
     },  
   
     async INSERT_SINIESTRO(siniestro: SiniestroType): Promise<SiniestroType> {  
-        console.log('INSERT SINIESTRO', siniestro);  
         const res = await AxiosPost({  
             path: `/siniestros`,   
             payload: {  
@@ -88,12 +87,10 @@ const SINIESTROS_SERVICES = {
                 monto_estimado: siniestro.monto_estimado  
             }  
         });  
-        console.log('INSERT SINIESTRO RESULT', res);  
         return res[0];  
     },  
   
     async UPDATE_SINIESTRO(siniestro: SiniestroType): Promise<SiniestroType> {  
-        console.log('UPDATE SINIESTRO', siniestro);  
         const res = await AxiosPatch({  
             path: `/siniestros?id=eq.${siniestro.id}`,   
             payload: {  
@@ -111,7 +108,6 @@ const SINIESTROS_SERVICES = {
     },  
   
     async DELETE_SINIESTRO(id: number): Promise<any> {  
-        console.log('DELETE SINIESTRO', id);  
         const res = await AxiosDelete({  
             path: `/siniestros?id=eq.${id}`,   
             payload: {}  

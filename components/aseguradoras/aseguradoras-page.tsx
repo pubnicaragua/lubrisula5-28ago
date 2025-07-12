@@ -44,7 +44,6 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
     SetState_Aseguradoras([...State_Aseguradoras.filter((aseguradora) => aseguradora.id !== NewDataAseguradora.id), NewDataAseguradora])
   }
   const Fn_AGREGAR_ASEGURADORA = (NewDataAseguradora: AseguradoraType) => {
-    console.log("Nueva aseguradora agregada:", NewDataAseguradora)
     SetState_Aseguradoras([...State_Aseguradoras, NewDataAseguradora])
   }
   const Fn_ELIMINAR_ASEGURADORA = (id: number) => {
@@ -185,7 +184,6 @@ export function AseguradorasPage({ aseguradoras, error }: AseguradorasPageProps)
             <EditarAseguradoraForm
               aseguradora={currentAseguradora}
               onSuccess={(data) => {
-                console.log(data)
                 setIsEditing(false)
                 setCurrentAseguradora(null)
                 Fn_UPDATE_ASEGURADORA(data)

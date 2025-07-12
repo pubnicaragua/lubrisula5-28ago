@@ -70,15 +70,12 @@ const COTIZACIONES_SERVICES = {
     },
     async GET_PARTS_BY_COTIZACION_ID(cotizacion_id: string): Promise<ParteCotizacionType[]> {
         const data: ParteCotizacionType[] = await AxiosGet({ path: `/quotation_parts?quotation_id=eq.${cotizacion_id}` })
-        console.log(data)
         return data;
     },
     async GET_DETALLE_COTIZACIONES_BY_ID(Id: string): Promise<DetalleCotyzacionesType> {
         const data: CotizacionesType[] = await AxiosGet({ path: `/view_cotizaciones?id=eq.${Id}` })
         const cotizacion: CotizacionesType = data[0]
-        console.log(cotizacion)
         const client = await CLIENTS_SERVICES.GET_CLIENTS_BY_ID(cotizacion.client_id);
-        console.log(client)
         const vehiculo = await VEHICULO_SERVICES.GET_VEHICULOS_BY_ID(cotizacion.vehicle_id);
         const partes = await COTIZACIONES_SERVICES.GET_PARTS_BY_COTIZACION_ID(cotizacion.id);
         let detalle: DetalleCotyzacionesType = {
@@ -99,14 +96,12 @@ const COTIZACIONES_SERVICES = {
     // async GET_ALL_VEHICULOS_BY_CLIENT(client_id:string): Promise<VehiculoType[]> {
     //     const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?client_id=eq.${client_id}` })
 
-    //     console.log('GET_ALL_USERS', data);
     //     return data;
     // },
     // async UPDATE_VEHICULO(vehicle: VehiculoType): Promise<VehiculoType[]> {
     //     const Id_Vehiculo = vehicle.id; // Use vehicle.id if available, otherwise use Id
     //     delete vehicle.id; // Remove id from payload if it's not needed for update
     //     delete vehicle.client_name; 
-    //     console.log(vehicle)
     //     const res: VehiculoType[] = await AxiosPatch({ path: `/vehicles?id=eq.${Id_Vehiculo}`, payload: vehicle })
     //     return res;
     // },

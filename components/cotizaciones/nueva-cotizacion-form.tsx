@@ -145,8 +145,6 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
   // Cargar vehículos cuando cambia el cliente
   useEffect(() => {
     async function loadVehicles() {
-      console.log('ejecuta')
-      console.log(formData.client_id)
       if (formData.client_id) {
         try {
           // const data = await getVehiclesByClient(formData.client_id)
@@ -304,7 +302,6 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
     }
 
     const totales = calcularTotales()
-    console.log(totales)
     try {
       let result
       if (cotizacionExistente?.id) {

@@ -86,21 +86,14 @@ const TECNICO_SERVICES = {
     },
 
     async INSERT_TECNICO(InsertTecnicoData: InsertTecnicoType) {
-        console.log(InsertTecnicoData)
         const newTecnico: TecnicoType[] = await AxiosPost({ path: '/tecnicos', payload: InsertTecnicoData.info })
         const IdTecnico = newTecnico[0].id;
-        console.log(IdTecnico)
         const Habilidades: TecnicoHabilidadType[] = InsertTecnicoData.habilidades.map(hab => ({ tecnico_id: IdTecnico, habilidad: hab }))
-        console.log(Habilidades)
         const ResHabilidades: TecnicoType[] = await AxiosPost({ path: '/tecnicos_habilidades', payload: Habilidades })
-        console.log(ResHabilidades)
         const horarios: TecnicoHorarioType[] = InsertTecnicoData.horarios.map(h => ({ tecnico_id: IdTecnico, dia: h.dia, horario: h.horario }))
-        console.log(horarios)
         const ResHorarios: TecnicoType[] = await AxiosPost({ path: '/tecnicos_horarios', payload: horarios })
-        console.log(ResHorarios)
         const certificaciones: TecnicoCertificacionType[] = InsertTecnicoData.certificaciones.map(c => ({ tecnico_id: IdTecnico, certificacion: c }))
         const ResCertificacion: TecnicoType[] = await AxiosPost({ path: '/tecnicos_certificaciones', payload: certificaciones })
-        console.log(ResCertificacion)
         return true;
     },
     async UPDATE_TECNICO(UpdateTecnicoData: UpdateTecnicoType) {
@@ -110,7 +103,6 @@ const TECNICO_SERVICES = {
         for (let habilidad of UpdateTecnicoData.habilidades) {
             //insertamos las nuevas habilidades
             const ResHabilidades: TecnicoHabilidadType[] = await AxiosPost({ path: `/tecnicos_habilidades`, payload: habilidad })
-            console.log(ResHabilidades)
         }
         //eliminamos todas las certificaciones de ese tecnico
         await AxiosDelete({ path: `/tecnicos_certificaciones?tecnico_id=eq.${UpdateTecnicoData.info.id}` })
@@ -118,7 +110,6 @@ const TECNICO_SERVICES = {
             // const certificaciones: TecnicoCertificacionType[] = UpdateTecnicoData.certificaciones.map(c => ({ tecnico_id: IdTecnico, certificacion: c }))
             const ResCertificacion: TecnicoCertificacionType[] = await AxiosPost({ path: `/tecnicos_certificaciones`, payload: cert })
             // const ResCertificacion: TecnicoType[] = await AxiosPatch({ path: '/tecnicos_certificaciones', payload: certificaciones })
-            console.log(ResCertificacion)
 
         }
         return true;

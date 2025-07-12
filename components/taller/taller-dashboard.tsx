@@ -245,21 +245,16 @@ export function TallerDashboard() {
 
 
     const res1 = await DASHBOARD_TALLER_SERVICES.GET_CABECERA()
-    console.log(res1)
     SetState_Cabecera(res1)
     const res2 = await CITAS_SERVICES.GET_ALL_CITAS_PROGRAMADAS_RECIENTES()
-    console.log(res2)
     SetState_CitasProgramadasRecientes(res2)
     const res3 = await DASHBOARD_TALLER_SERVICES.GET_DISTRIBUCION_DE_ESPECIALIDADES()
-    console.log(res3)
     SetState_DistribucionEspecialidades(res3)
     const res4 = await DASHBOARD_TALLER_SERVICES.GET_ESTADO_ORDENES()
     SetState_EstadoOrdenes(res4)
     const res5 = await DASHBOARD_TALLER_SERVICES.GET_PORCENTAJE_ORDENES_POR_TIPO()
     SetState_PorcentajeOrdenesPorTipo(res5)
-    console.log(res5)
     const res6 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_DE_TECNICOS()
-    console.log(res6)
     SetState_RendimientoTecnicos(res6)
     const res7 = await DASHBOARD_TALLER_SERVICES.GET_RENDIMIENTO_ORDENES_SEMANALES()
     SetState_RendimientoOrdenesSemanales(res7)
@@ -274,7 +269,6 @@ export function TallerDashboard() {
   const FN_GEL_ALL_CITAS_PROGRAMADAS = async () => {
     const res2 = await CITAS_SERVICES.GET_ALL_CITAS_PROGRAMADAS_RECIENTES();
     SetState_CitasProgramadasRecientes(res2)
-    console.log(res2)
   }
   useEffect(() => {
     FN_GET_ALL_DATA()

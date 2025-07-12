@@ -27,18 +27,15 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
   const [formData, setFormData] = useState<ClienteType | null>()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  console.log(clienteExistente)
   // Cargar datos del cliente existente si se está editando
   useEffect(() => {
     if (clienteExistente) {
-      console.log(clienteExistente)
       setFormData(clienteExistente)
     }
   }, [clienteExistente])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    console.log("Input change:", name, value)
     setFormData({ ...formData, [name]: value, updated_at: new Date().toISOString() })
   }
 
@@ -52,7 +49,6 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
     // Simular delay de procesamiento
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    console.log(formData)
     onSubmit(formData)
 
     // Limpiar formulario si no es edición

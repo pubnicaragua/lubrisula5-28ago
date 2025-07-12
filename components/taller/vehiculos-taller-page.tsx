@@ -85,7 +85,6 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
 
   const FN_GET_ALL_VEHICULOS = async () => {
     const DataVehichulos = await VEHICULO_SERVICES.GET_ALL_VEHICULOS();
-    console.log(DataVehichulos)
     setVehiculos(DataVehichulos)
   }
 
@@ -175,7 +174,6 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
               cliente = clienteConId
               newClientsCount++
 
-              console.log(`✓ Cliente "${row.Cliente}" creado automáticamente`)
 
             } catch (clientError) {
               console.error('Error al crear cliente:', clientError)
@@ -233,7 +231,6 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
       })
 
       if (errors.length > 0) {
-        console.log("Errores de importación:", errors)
       }
 
       setImportDialogOpen(false)

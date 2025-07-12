@@ -34,7 +34,6 @@ export default function FormActualizarServicio({ servicio_id, onSuccess, openDia
 
     }
     const FN_ACTUALIZAR_SERVICIO = async () => {
-        console.log(State_Form)
         SetState_Loadding(true)
         const res = await SERVICIOS_SERVICES.UPDATE_SERVICIO(State_Form)
         SetState_Loadding(false)

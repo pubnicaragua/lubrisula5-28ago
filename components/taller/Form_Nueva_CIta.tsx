@@ -68,7 +68,6 @@ export default function Form_NuevaCita({ onSucces }: { onSucces?: () => void }) 
         FN_GET_SERVICIOS();
     }, [])
     const FN_ADD_NEW_CITA = async () => {
-        console.log(State_Form)
         SetState_IsLoadding(true)
         await CITAS_SERVICES.INSERT_CITA(State_Form)
         SetState_IsLoadding(false)

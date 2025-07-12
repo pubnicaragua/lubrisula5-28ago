@@ -30,17 +30,14 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
   // const [State_EstadoOrden, SetState_EstadoOrden] = useState<TipoServicioType[]>([])
   const GET_CLIENTES = async () => {
     const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
-    console.log(res)
     SetStateClientes(res)
   }
   const GET_VEHICULOS = async (client_id: string) => {
-    console.log(client_id)
     const res = await VEHICULO_SERVICES.GET_ALL_VEHICULOS_BY_CLIENT(client_id);
     SetState_Vehiculos(res)
   }
   const GET_TECNICOS = async () => {
     const res = await TECNICO_SERVICES.GET_ALL_TECNICOS();
-    console.log(res)
     SetState_Tecnicos(res)
   }
   const GET_TIPOS_SERVICIOS = async () => {
@@ -50,8 +47,6 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    console.log(name)
-    console.log(value)
     setFormData({
       ...formData,
       [name]: name === "costoEstimado" || name === "costoFinal" ? Number.parseFloat(value) || 0 : value,
@@ -59,8 +54,6 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
   }
 
   const handleSelectChange = async (name: string, value: string) => {
-    console.log(name)
-    console.log(value)
     setFormData({ ...formData, [name]: value })
 
     // Si cambia el cliente, actualizar el nombre del cliente
@@ -89,7 +82,6 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     setIsSubmitting(true)
 
     // Simular delay de procesamiento
-    console.log(formData)
     if (!ordenExistente) {
       await ORDENES_TRABAJO_SERVICES.INSERT_ORDEN({
         client_id: formData.client_id,
@@ -153,7 +145,6 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
     // Cargar datos de la orden existente si se está editando
   useEffect(() => {
     if (ordenExistente) {
-      console.log(ordenExistente)
       setFormData(ordenExistente)
       GET_VEHICULOS(ordenExistente?.client_id)
     }

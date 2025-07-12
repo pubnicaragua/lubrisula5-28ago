@@ -15,7 +15,6 @@ export default async function AdminLayout({
     const supabase = createServerComponentClient({ cookies })
   // const supabase = createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
-  console.log(session)
   // if (!session) {
   //   redirect('/auth/login')
   // }
@@ -26,9 +25,7 @@ export default async function AdminLayout({
   //   .eq('user_id', session.user.id)
   //   .single()
 
-  // console.log(session.user.user_metadata)
   const rol = session?.user?.user_metadata?.role
-  console.log('Rol:', rol)
   if (rol !== 'admin' && rol !== 'superadmin') {
     redirect('/dashboard')
   }

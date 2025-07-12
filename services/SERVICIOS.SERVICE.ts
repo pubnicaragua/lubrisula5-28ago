@@ -52,7 +52,6 @@ export type PaqueteServicioType = {
 const SERVICIOS_SERVICES = {
   async GET_ALL_TIPO_SERVICIOS(): Promise<TipoServicioType[]> {
     const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_operacion' })
-    console.log(data)
     return data;
   },
   async GET_GATEGORIAS_SERVICIO(): Promise<CategoriaServicioType[]> {

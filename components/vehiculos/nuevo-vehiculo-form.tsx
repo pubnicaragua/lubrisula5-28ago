@@ -20,7 +20,6 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
   const [State_Clientes, SetState_Clientes] = useState<ClienteType[]>([])
   const [State_FormData, SetState_FormData] = useState<VehiculoType | null>(null)
   // const [State_Estado, SetState_Estado] = useState<string>('')
-  console.log(vehiculoExistente)
 
   const FN_GET_CLIENTES = async () => {
     // Aquí podrías llamar a un servicio para obtener los clientes si no se pasan como prop 
@@ -30,8 +29,6 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
   // Cargar datos del vehículo existente si se está editando
   useEffect(() => {
     if (vehiculoExistente) {
-      console.log(vehiculoExistente)
-      console.log(currentYear)
       SetState_FormData(vehiculoExistente)
       // SetState_Estado(vehiculoExistente.estado)
     }
@@ -50,7 +47,6 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    console.log(name, value)
     SetState_FormData({ ...State_FormData, [name]: value })
   }
 
@@ -58,17 +54,13 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
     e.preventDefault()
     setIsSubmitting(true)
 
-    console.log("Datos del formulario:", State_FormData)
     //si existe un vehiculo actualizarlo si no existe entonces inserta
     if (vehiculoExistente) {
       const RequestData: VehiculoType = { ...State_FormData, updated_at: new Date().toISOString() }
-      console.log(RequestData)
       const res = await VEHICULO_SERVICES.UPDATE_VEHICULO(RequestData as VehiculoType)
-      console.log("Respuesta del servicio:", res)
 
     } else {
       const res = await VEHICULO_SERVICES.INSERT_VEHICULO(State_FormData as VehiculoType)
-      console.log("Respuesta del servicio:", res)
     }
 
     const RequestData: VehiculoType = { ...State_FormData, updated_at: new Date().toISOString(), client_name: State_Clientes.find(client => client.id === State_FormData.client_id).name }

@@ -65,7 +65,6 @@ export function TecnicosPage() {
 
   const FN_GET_TECNICOS = async () => {
     const data = await TECNICO_SERVICES.GET_ALL_DETALLE_TECNICOS();
-    console.log(data)
     SetState_Tecnicos(data)
   }
 
@@ -137,7 +136,6 @@ export function TecnicosPage() {
     //     domingo: "Descanso",
     //   },
     // }
-    console.log(formData)
     const horarioArray = Object.entries(horario).map(([dia, horario]) => ({
       // tecnico_id,
       dia: dia.charAt(0).toUpperCase() + dia.slice(1), // Capitaliza el día
@@ -182,7 +180,6 @@ export function TecnicosPage() {
   }
 
   const handleEdit = (tecnicoData: TecnicoConDetallesType) => {
-    console.log(tecnicoData)
     setSelectedTecnico(tecnicoData)
     setFormData({
       nombre: tecnicoData.nombre,

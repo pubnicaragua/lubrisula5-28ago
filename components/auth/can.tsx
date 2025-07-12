@@ -12,7 +12,6 @@ interface CanProps {
 
 export function Can({ children, perform, roles = [] }: CanProps) {
   const { user } = useAuth()
-  console.log(user)
 
   // Si no hay usuario, no mostrar nada
   if (!user) return null

@@ -89,7 +89,6 @@ export function ConfiguracionTaller() {
       title: "Configuración guardada",
       description: "La configuración del taller ha sido actualizada correctamente.",
     })
-    console.log(data)
   }
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -114,8 +114,6 @@ export function FacturasPage() {
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    console.log(name)
-    console.log(value)
     setFormData((prev) => ({ ...prev, [name]: value }))
 
     // Si se selecciona una orden, cargar datos del cliente automáticamente
@@ -130,7 +128,6 @@ export function FacturasPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log(formData)
     //si no se esta editando factura entonces inserta una nueva
     if (!State_IsEditingMode) {
       await FACTURAS_SERVICES.INSERT_FACTURA(formData);
@@ -167,7 +164,6 @@ export function FacturasPage() {
   }
 
   const handleEdit = (factura: FacturaType) => {
-    console.log(factura)
     // setCurrentFactura(factura)
     FN_GET_ALL_CLIENTS()
     FN_GET_ORDENES_DE_TRABAJO()

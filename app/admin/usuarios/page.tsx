@@ -93,7 +93,6 @@ export default function UsuariosPage() {
   }, [])
   const Fn_GET_USERS = async () => {
     const res = await USER_SERVICE.GET_ALL_USERS()
-    console.log(res)
     SetUsersData(res)
     setLoading(false)
   }
@@ -128,7 +127,7 @@ export default function UsuariosPage() {
       toast({
         title: "Error",
         description: "No se pudo eliminar el usuario",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -141,8 +140,6 @@ export default function UsuariosPage() {
     try {
       setLoading(true)
       const result = await toggleUserStatus(userId, isCurrentlyActive)
-      console.log(result)
-      console.log(userId, isCurrentlyActive)
       if (!result.success) {
         throw new Error(result.error)
       }
@@ -159,7 +156,7 @@ export default function UsuariosPage() {
       toast({
         title: "Error",
         description: "No se pudo cambiar el estado del usuario",
-        variant: "destructive",
+        // variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -184,7 +181,7 @@ export default function UsuariosPage() {
       toast({
         title: "Error",
         description: "No se pudo enviar el correo de restablecimiento",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }

@@ -83,8 +83,6 @@ export async function crearAseguradora(data: AseguradoraData) {
 
 export async function actualizarAseguradora(id: number, NewData: AseguradoraData) {
   const supabaseClient = await createClient()
-  console.log(id)
-  console.log(NewData)
   try {
     const { error } = await supabaseClient
       .from("aseguradoras")
@@ -96,7 +94,6 @@ export async function actualizarAseguradora(id: number, NewData: AseguradoraData
       throw new Error(error.message)
     }
 
-    console.log("====================================>>>>>>>>>>>")
     // revalidatePath("/admin/aseguradoras")
   } catch (error) {
     console.error(`Error al actualizar aseguradora con ID ${id}:`, error)

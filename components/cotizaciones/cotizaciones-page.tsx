@@ -70,9 +70,6 @@ export function CotizacionesPage({ initialCotizaciones = [], tablesExist = false
   const loadCotizaciones = async () => {
     setLoading(true)
     const { success, data, error: quotationsError, isTableMissing } = await getQuotations()
-    console.log(success)
-    console.log(data)
-      // console.log(isTableMissing)
       // if (isTableMissing) {
       // setError("La base de datos no está configurada correctamente. Las tablas necesarias no existen.")
       // } else if (!success) {

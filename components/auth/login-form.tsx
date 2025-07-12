@@ -36,7 +36,6 @@ export default function LoginForm() {
         email,
         password,
       })
-      console.log(data)
       if (error) {
         console.error("Error de autenticación:", error)
         throw error
