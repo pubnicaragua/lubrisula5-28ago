@@ -20,7 +20,9 @@ export type VehiculoType = {
 
 const VEHICULO_SERVICES = {
     async GET_ALL_VEHICULOS(): Promise<VehiculoType[]> {
-        const data: VehiculoType[] = await AxiosGet({ path: '/view_vehicles' })
+        const taller_id = localStorage.getItem('taller_id');
+        console.log(taller_id)
+        const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?taller_id=eq.${taller_id}` })
 
         return data;
     },
@@ -34,7 +36,8 @@ const VEHICULO_SERVICES = {
         return data[0];
     },
     async INSERT_VEHICULO(vehicles: VehiculoType): Promise<VehiculoType[]> {
-        const res: VehiculoType[] = await AxiosPost({ path: '/vehicles', payload: vehicles })
+        const taller_id = localStorage.getItem('taller_id');
+        const res: VehiculoType[] = await AxiosPost({ path: '/vehicles', payload: { ...vehicles, taller_id } })
 
         return res;
     },

@@ -21,6 +21,10 @@ const USER_SERVICE = {
         const UsuariosData: UserType[] = await AxiosGet({ path: '/users_with_roles' })
         return UsuariosData;
     },
+    async GET_TALLER_ID(user_id: string): Promise<string> {
+        const data = await AxiosGet({ path: `/usuarios_taller?user_id=eq.${user_id}` })
+        return data[0]?.taller_id;
+    },
     async INSERT_USER(): Promise<UserType[]> {
         const UsuariosData: UserType[] = await AxiosGet({ path: '/usarios' })
         return UsuariosData;

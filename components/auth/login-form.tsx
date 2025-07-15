@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Loader2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
+import USER_SERVICE from "@/services/USER_SERVICES.SERVICE"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -40,8 +41,8 @@ export default function LoginForm() {
         console.error("Error de autenticación:", error)
         throw error
       }
-      console.log(data)
-
+      const taller_id = await USER_SERVICE.GET_TALLER_ID(data.user.id);
+      localStorage.setItem('taller_id', taller_id || '');
 
       // Redirigir según el rol del usuario (esto se puede personalizar)
       if (data.user?.user_metadata?.role === "admin") {
