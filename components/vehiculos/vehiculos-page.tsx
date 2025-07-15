@@ -329,6 +329,7 @@ export function VehiculosPage() {
                       <TableHead>Vehículo</TableHead>
                       <TableHead>Placa</TableHead>
                       <TableHead>Cliente</TableHead>
+                      <TableHead>Taller</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Kilometraje</TableHead>
                       <TableHead>Fecha Registro</TableHead>
@@ -353,6 +354,7 @@ export function VehiculosPage() {
                         </TableCell>
                         <TableCell className="font-mono">{vehiculo.placa}</TableCell>
                         <TableCell>{vehiculo.client_name}</TableCell>
+                        <TableCell>{vehiculo.taller_name}</TableCell>
                         <TableCell><EstadoVehiculoComponent estado={vehiculo.estado} /></TableCell>
                         <TableCell>{vehiculo.kilometraje || "N/A"}</TableCell>
                         <TableCell>{vehiculo.created_at}</TableCell>

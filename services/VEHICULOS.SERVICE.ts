@@ -16,15 +16,22 @@ export type VehiculoType = {
     created_at?: string // ISO 8601 (timestamp with time zone)
     updated_at?: string // ISO 8601 (timestamp with time zone)
     estado?: string // Assuming estado is a string, adjust as necessary
+    taller_id?:string
+    taller_name?: string;
 }
 
 const VEHICULO_SERVICES = {
     async GET_ALL_VEHICULOS(): Promise<VehiculoType[]> {
         const taller_id = localStorage.getItem('taller_id');
         console.log(taller_id)
-        const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?taller_id=eq.${taller_id}` })
+        if (taller_id) {
+            const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?taller_id=eq.${taller_id}` })
+            return data;
+        } else {
+            const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles` })
+            return data;
+        }
 
-        return data;
     },
     async GET_ALL_VEHICULOS_BY_CLIENT(client_id: string): Promise<VehiculoType[]> {
         const data: VehiculoType[] = await AxiosGet({ path: `/view_vehicles?client_id=eq.${client_id}` })

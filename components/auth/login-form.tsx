@@ -41,8 +41,6 @@ export default function LoginForm() {
         console.error("Error de autenticación:", error)
         throw error
       }
-      const taller_id = await USER_SERVICE.GET_TALLER_ID(data.user.id);
-      localStorage.setItem('taller_id', taller_id || '');
 
       // Redirigir según el rol del usuario (esto se puede personalizar)
       if (data.user?.user_metadata?.role === "admin") {
@@ -50,6 +48,8 @@ export default function LoginForm() {
       } else if (data.user?.user_metadata?.role === "cliente") {
         router.push("/dashboard")
       } else if (data.user?.user_metadata?.role === "taller") {
+        const taller_id = await USER_SERVICE.GET_TALLER_ID(data.user.id);
+        localStorage.setItem('taller_id', taller_id || '');
         router.push("/taller/dashboard")
       } else if (data.user?.user_metadata?.role === 'aseguradora') {
         router.push("/aseguradora/dashboard")

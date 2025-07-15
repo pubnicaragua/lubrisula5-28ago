@@ -281,13 +281,13 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
     doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 30)
 
     const tableColumn = ["Marca", "Modelo", "Año", "Placa", "Color", "Cliente"]
-    const tableRows = filteredVehiculos.map((vehiculo: any) => [
+    const tableRows = filteredVehiculos.map((vehiculo) => [
       vehiculo.marca,
       vehiculo.modelo,
-      vehiculo.anio,
+      vehiculo.ano,
       vehiculo.placa,
       vehiculo.color,
-      vehiculo.cliente ? `${vehiculo.cliente.nombre} ${vehiculo.cliente.apellido || ""}` : "N/A",
+      vehiculo.client_name ? `${vehiculo.client_name}` : "N/A",
     ])
 
 
