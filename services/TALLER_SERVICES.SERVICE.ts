@@ -36,10 +36,13 @@ export type TallerSolicitudType = {
     fecha_actualizacion: string;
 }
 export type TallerType = {
-    id: string;
-    nombre: string;
-    direccion: string;
-    telefono: string;
+    id?: string;
+    nombre?: string;
+    direccion?: string;
+    telefono?: string;
+    log?: string;
+    email?: string;
+    pais?: string;
 }
 const TALLER_SERVICES = {
     async GET_ALL_SOLICITUDES_TALLERES(): Promise<TallerSolicitudType[]> {
@@ -56,6 +59,13 @@ const TALLER_SERVICES = {
             payload: { estado: "aprobada" }
         })
         return TalleresData;
+    },
+    async UPDATE_TALLER(taller: TallerType): Promise<TallerType> {
+        const TalleresData: TallerType[] = await AxiosPatch({
+            path: `/taller?id=eq.${taller.id}`,
+            payload: taller
+        })
+        return TalleresData[0];
     },
     async RECHAZAR_SOLICITUD(Id: number): Promise<TallerSolicitudType> {
         const TalleresData: TallerSolicitudType = await AxiosPatch({

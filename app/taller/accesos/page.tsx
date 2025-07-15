@@ -1,4 +1,4 @@
-import { GestionAccesos } from "@/components/taller/gestion-accesos"
+import GestionAccesos from "@/components/taller/gestion-accesos"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {

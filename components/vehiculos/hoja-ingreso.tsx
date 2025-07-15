@@ -24,7 +24,7 @@ interface Punto {
   descripcion: string
 }
 
-export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) {
+export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) {
   const { toast } = useToast()
   const formRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -220,7 +220,7 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
       toast({
         title: "Error",
         description: "No se ha seleccionado un vehículo",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }
@@ -280,7 +280,7 @@ export function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) 
       toast({
         title: "Error",
         description: "No se pudo generar el PDF",
-        variant: "destructive",
+        // variant: "destructive",
       })
     }
   }

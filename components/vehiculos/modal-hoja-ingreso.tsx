@@ -1,6 +1,6 @@
 "use client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { HojaIngreso } from "@/components/vehiculos/hoja-ingreso"
+import HojaIngreso from "./hoja-ingreso"
 
 interface ModalHojaIngresoProps {
   isOpen: boolean

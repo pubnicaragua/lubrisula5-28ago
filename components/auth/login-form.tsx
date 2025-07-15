@@ -40,6 +40,8 @@ export default function LoginForm() {
         console.error("Error de autenticación:", error)
         throw error
       }
+      console.log(data)
+
 
       // Redirigir según el rol del usuario (esto se puede personalizar)
       if (data.user?.user_metadata?.role === "admin") {
