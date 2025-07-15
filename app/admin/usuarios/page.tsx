@@ -518,6 +518,7 @@ export default function UsuariosPage() {
             </DialogDescription>
           </DialogHeader>
           <RegisterForm
+            onSuccess={() => { setShowCreateDialog(false); Fn_GET_USERS() }}
           //isAdmin={true}
           />
         </DialogContent>

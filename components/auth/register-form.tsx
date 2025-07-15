@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from "@/lib/supabase/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import TALLERES_SERVICES from "@/services/TALLERES_SERVICES.service"
+import { TallerType } from "@/services/TALLER_SERVICES.SERVICE"
 
 const formSchema = z
   .object({
@@ -28,18 +30,22 @@ const formSchema = z
     role: z.enum(["cliente", "taller", "aseguradora", "admin"], {
       required_error: "Por favor selecciona un rol.",
     }),
+    taller_id: z.string({
+      message: "Por favor ingresa un correo electrónico válido.",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
   })
 
-export function RegisterForm() {
+export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
   const { signUp } = useAuth()
-  
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [State_talleres, SetState_talleres] = useState<TallerType[]>([])
   const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -52,17 +58,25 @@ export function RegisterForm() {
     },
   })
 
+  const FN_GET_TALLERES = async () => {
+    const res = await TALLERES_SERVICES.GET_ALL_TALLERES();
+    SetState_talleres(res)
+    console.log(res)
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
     try {
-      await signUp(values.email, values.password, values.role)
+      await signUp(values.email, values.password, values.role, values?.taller_id)
+
       setSuccess("Registro exitoso. Por favor verifica tu correo electrónico para confirmar tu cuenta.")
-      setTimeout(() => {
-        router.push("/auth/login")
-      }, 3000)
+      onSuccess && onSuccess()
+      // setTimeout(() => {
+      //   router.push("/auth/login")
+      // }, 3000)
     } catch (error) {
       console.error("Error en el formulario de registro:", error)
       setError(error instanceof Error ? error.message : "Error al registrar usuario")
@@ -70,6 +84,9 @@ export function RegisterForm() {
       setIsLoading(false)
     }
   }
+  useEffect(() => {
+    FN_GET_TALLERES()
+  }, [])
 
   return (
     <div className="grid gap-6">
@@ -149,6 +166,35 @@ export function RegisterForm() {
               </FormItem>
             )}
           />
+          {
+            form.getValues().role === 'taller' &&
+            <FormField
+              control={form.control}
+              name="taller_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rol</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un rol" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {
+                        State_talleres.map((taller) => (
+                          <SelectItem value={taller.id}>{taller.nombre}</SelectItem>
+
+                        )
+                        )
+                      }
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          }
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Registrando..." : "Registrarse"}
           </Button>

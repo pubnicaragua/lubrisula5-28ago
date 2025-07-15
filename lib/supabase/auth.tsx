@@ -13,7 +13,7 @@ export type AuthContextType = {
   session: Session | null
   loading: boolean
   signOut: () => Promise<void>
-  signUp: (email: string, password: string, role: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string, role: string, taller_id?: string) => Promise<{ error: string | null }>
 }
 
 // Contexto de autenticación
@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
-  signOut: async () => {},
+  signOut: async () => { },
   signUp: async () => ({ error: "Not implemented" }),
 })
 
@@ -145,7 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    role: string
+    role: string,
+    taller_id?: string
   ): Promise<{ error: string | null }> => {
     try {
       // 1. Crear el usuario
@@ -156,6 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { role }, // metadata opcional
         },
       })
+      console.log("SignUp data:", data)
+      console.log("taller id:", taller_id)
+      console.log("role:", role)
+      if (role === 'taller' && !error) {
+        await supabase.from('usuarios_taller').insert([{ user_id: data?.user?.id, taller_id }])
+      }
 
       if (error) {
         console.error("Error en signUp:", error.message)
