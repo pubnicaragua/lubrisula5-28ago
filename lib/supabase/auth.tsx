@@ -13,7 +13,7 @@ export type AuthContextType = {
   session: Session | null
   loading: boolean
   signOut: () => Promise<void>
-  signUp: (email: string, password: string, role: string, taller_id?: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string, role: string, taller_id?: string, nombre?: string, apellido?: string, telefono?: string) => Promise<{ error: string | null }>
 }
 
 // Contexto de autenticación
@@ -146,7 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     role: string,
-    taller_id?: string
+    taller_id?: string,
+    nombre?: string,
+    apellido?: string,
+    telefono?: string
   ): Promise<{ error: string | null }> => {
     try {
       // 1. Crear el usuario
@@ -160,9 +163,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("SignUp data:", data)
       console.log("taller id:", taller_id)
       console.log("role:", role)
+      console.log("nombre:", nombre)
+      console.log("apellido:", apellido)
+      console.log("telefono:", telefono)
       if (role === 'taller' && !error) {
         await supabase.from('usuarios_taller').insert([{ user_id: data?.user?.id, taller_id }])
       }
+      await supabase.from('perfil_usuario').insert([{ user_id: data?.user?.id, nombre, apellido, telefono, correo: email, estado: true }])
 
       if (error) {
         console.error("Error en signUp:", error.message)

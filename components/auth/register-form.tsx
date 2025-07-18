@@ -31,7 +31,16 @@ const formSchema = z
       required_error: "Por favor selecciona un rol.",
     }),
     taller_id: z.string({
-      message: "Por favor ingresa un correo electrónico válido.",
+      message: "",
+    }),
+    nombre: z.string({
+      message: "Por favor ingresa un nombre válido.",
+    }),
+    apellido: z.string({
+      message: "por favor ingresa un apellido válido.",
+    }),
+    telefono: z.string({
+      message: "Por favor ingresa un número de teléfono válido.",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -39,7 +48,7 @@ const formSchema = z
     path: ["confirmPassword"],
   })
 
-export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
+export function RegisterForm({ onSuccess, registerUserTaller }: { onSuccess?: () => any, registerUserTaller?: boolean }) {
   const { signUp } = useAuth()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -70,7 +79,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
     setSuccess(null)
 
     try {
-      await signUp(values.email, values.password, values.role, values?.taller_id)
+      await signUp(values.email, values.password, values.role, values?.taller_id, values?.nombre, values?.apellido, values?.telefono)
 
       setSuccess("Registro exitoso. Por favor verifica tu correo electrónico para confirmar tu cuenta.")
       onSuccess && onSuccess()
@@ -104,6 +113,45 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="nombre"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre</FormLabel>
+                <FormControl>
+                  <Input placeholder="Igrese su nombre" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="apellido"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Apellido</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ingrese su apellido" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="telefono"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ingrese su telefono</FormLabel>
+                <FormControl>
+                  <Input placeholder="+505 77924800" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="email"
@@ -156,10 +204,17 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="cliente">Cliente</SelectItem>
-                    <SelectItem value="taller">Taller</SelectItem>
-                    <SelectItem value="aseguradora">Aseguradora</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
+                    {
+                      registerUserTaller ? (
+                        <SelectItem value="taller">Taller</SelectItem>
+                      ) :
+                        <>
+                          <SelectItem value="cliente">Cliente</SelectItem>
+                          <SelectItem value="taller">Taller</SelectItem>
+                          <SelectItem value="aseguradora">Aseguradora</SelectItem>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                        </>
+                    }
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -173,19 +228,24 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => any }) {
               name="taller_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rol</FormLabel>
+                  <FormLabel>Taller</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un rol" />
+                        <SelectValue placeholder="Selecciona un taller" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {
-                        State_talleres.map((taller) => (
-                          <SelectItem value={taller.id}>{taller.nombre}</SelectItem>
-
-                        )
+                        State_talleres.map((taller) => {
+                          if (registerUserTaller && taller.id === localStorage.getItem("taller_id")) {
+                            return <SelectItem value={taller.id}>{taller.nombre}</SelectItem>
+                          } else if (!registerUserTaller) {
+                            return (
+                              <SelectItem value={taller.id}>{taller.nombre}</SelectItem>
+                            )
+                          }
+                        }
                         )
                       }
                     </SelectContent>

@@ -40,9 +40,11 @@ export type TallerType = {
     nombre?: string;
     direccion?: string;
     telefono?: string;
-    log?: string;
+    logo?: string;
     email?: string;
     pais?: string;
+    hora_apertura?: string;
+    hora_cierre?: string;
 }
 const TALLER_SERVICES = {
     async GET_ALL_SOLICITUDES_TALLERES(): Promise<TallerSolicitudType[]> {

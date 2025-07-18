@@ -525,7 +525,7 @@ export default function UsuariosPage() {
       </Dialog>
       {/* Diálogo para editar usuario */}
       <Dialog open={State_EditDialog} onOpenChange={SetState_EditDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="overflow-auto h-[100vh] max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar Usuario</DialogTitle>
             <DialogDescription>
