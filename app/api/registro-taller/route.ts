@@ -4,10 +4,14 @@ import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/database.types"
 
 export async function POST(request: Request) {
+
   const requestUrl = new URL(request.url)
   const formData = await request.formData()
+  return console.log(formData)
   const email = String(formData.get("email"))
+  console.log(email)
   const password = String(formData.get("password"))
+  console.log()
   const nombre_taller = String(formData.get("nombre_taller"))
   const direccion = String(formData.get("direccion"))
   const ciudad = String(formData.get("ciudad"))

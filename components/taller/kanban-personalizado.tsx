@@ -1,441 +1,403 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/hooks/use-toast"
-import { Separator } from "@/components/ui/separator"
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
-import { GripVertical, Plus, Save, Trash2 } from "lucide-react"
-import { Switch } from "@/components/ui/switch"
-// Eliminar las importaciones de las acciones de Supabase
-//- import { saveKanbanConfiguration, getKanbanConfiguration } from "@/lib/actions/kanban"
-
-const kanbanFormSchema = z.object({
-  tipoTaller: z.string({
-    required_error: "Por favor selecciona un tipo de taller.",
-  }),
-  columnas: z
-    .array(
-      z.object({
-        id: z.string(),
-        nombre: z.string().min(1, "El nombre es requerido"),
-        color: z.string(),
-        porcentaje: z.number().min(0).max(100),
-      }),
-    )
-    .min(2, "Debe haber al menos 2 columnas"),
-  mostrarPorcentajes: z.boolean().default(true),
-  mostrarTiempoEstimado: z.boolean().default(true),
-  mostrarAsignados: z.boolean().default(true),
-})
-
-type KanbanFormValues = z.infer<typeof kanbanFormSchema>
-
-// Columnas predefinidas según el tipo de taller
-const columnasPredefinidas = {
-  mecanica: [
-    { id: "col-1", nombre: "Por iniciar", color: "#f97316", porcentaje: 0 },
-    { id: "col-2", nombre: "Diagnóstico", color: "#eab308", porcentaje: 25 },
-    { id: "col-3", nombre: "En reparación", color: "#3b82f6", porcentaje: 50 },
-    { id: "col-4", nombre: "Pruebas", color: "#a855f7", porcentaje: 75 },
-    { id: "col-5", nombre: "Completado", color: "#22c55e", porcentaje: 100 },
-  ],
-  carroceria: [
-    { id: "col-1", nombre: "Por iniciar", color: "#f97316", porcentaje: 0 },
-    { id: "col-2", nombre: "Desmontaje", color: "#eab308", porcentaje: 15 },
-    { id: "col-3", nombre: "Enderezado", color: "#3b82f6", porcentaje: 30 },
-    { id: "col-4", nombre: "Preparación", color: "#a855f7", porcentaje: 50 },
-    { id: "col-5", nombre: "Pintura", color: "#ec4899", porcentaje: 75 },
-    { id: "col-6", nombre: "Montaje", color: "#06b6d4", porcentaje: 90 },
-    { id: "col-7", nombre: "Completado", color: "#22c55e", porcentaje: 100 },
-  ],
-  neumaticos: [
-    { id: "col-1", nombre: "Por iniciar", color: "#f97316", porcentaje: 0 },
-    { id: "col-2", nombre: "Diagnóstico", color: "#eab308", porcentaje: 25 },
-    { id: "col-3", nombre: "En proceso", color: "#3b82f6", porcentaje: 50 },
-    { id: "col-4", nombre: "Completado", color: "#22c55e", porcentaje: 100 },
-  ],
-  personalizado: [
-    { id: "col-1", nombre: "Por iniciar", color: "#f97316", porcentaje: 0 },
-    { id: "col-2", nombre: "En proceso", color: "#3b82f6", porcentaje: 50 },
-    { id: "col-3", nombre: "Completado", color: "#22c55e", porcentaje: 100 },
-  ],
-}
-
-export function KanbanPersonalizado() {
-  const [tipoSeleccionado, setTipoSeleccionado] = useState("mecanica")
-
-  const form = useForm<KanbanFormValues>({
-    resolver: zodResolver(kanbanFormSchema),
-    defaultValues: {
-      tipoTaller: "mecanica",
-      columnas: columnasPredefinidas.mecanica,
-      mostrarPorcentajes: true,
-      mostrarTiempoEstimado: true,
-      mostrarAsignados: true,
-    },
-  })
-
-  // Cargar configuración al inicio
-  // Modificar el useEffect para cargar la configuración desde localStorage
-  useEffect(() => {
-    const loadConfig = () => {
-      if (typeof window !== "undefined") {
-        const savedConfig = localStorage.getItem("kanbanConfig")
-        if (savedConfig) {
-          const config = JSON.parse(savedConfig)
-          form.reset({
-            tipoTaller: config.tipoTaller,
-            columnas: config.columnas,
-            mostrarPorcentajes: config.mostrarPorcentajes,
-            mostrarTiempoEstimado: config.mostrarTiempoEstimado,
-            mostrarAsignados: config.mostrarAsignados,
-          })
-          setTipoSeleccionado(config.tipoTaller)
-        }
-      }
-    }
-    loadConfig()
-  }, [form])
-
-  // Guardar la configuración en localStorage cada vez que cambie
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("kanbanConfig", JSON.stringify(value))
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [form])
-
-  // Modificar la función onSubmit para guardar en localStorage
-  async function onSubmit(data: KanbanFormValues) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("kanbanConfig", JSON.stringify(data))
-      toast({
-        title: "Configuración guardada",
-        description: "La configuración del Kanban ha sido guardada localmente.",
-      })
-    } else {
-      toast({
-        title: "Error al guardar",
-        description: "localStorage no está disponible en este entorno.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleTipoChange = (tipo: string) => {
-    setTipoSeleccionado(tipo)
-    form.setValue("tipoTaller", tipo)
-    form.setValue("columnas", columnasPredefinidas[tipo as keyof typeof columnasPredefinidas])
-  }
-
-  const handleAddColumn = () => {
-    const columnas = form.getValues("columnas")
-    const newId = `col-${Date.now()}` // Usar timestamp para ID único
-    form.setValue("columnas", [...columnas, { id: newId, nombre: "Nueva columna", color: "#64748b", porcentaje: 0 }])
-  }
-
-  const handleRemoveColumn = (index: number) => {
-    const columnas = form.getValues("columnas")
-    if (columnas.length <= 2) {
-      toast({
-        title: "Error",
-        description: "Debe haber al menos 2 columnas en el tablero.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const newColumnas = [...columnas]
-    newColumnas.splice(index, 1)
-    form.setValue("columnas", newColumnas)
-  }
-
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return
-
-    const columnas = form.getValues("columnas")
-    const [reorderedItem] = columnas.splice(result.source.index, 1)
-    columnas.splice(result.destination.index, 0, reorderedItem)
-
-    form.setValue("columnas", columnas)
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Personalización del Kanban</h1>
-        <p className="text-muted-foreground">Configura tu tablero Kanban según las necesidades de tu taller</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuración del Tablero</CardTitle>
-          <CardDescription>Personaliza las columnas y opciones de visualización de tu tablero Kanban</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="tipoTaller"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Taller</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value)
-                        handleTipoChange(value)
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un tipo de taller" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="mecanica">Taller Mecánico</SelectItem>
-                        <SelectItem value="carroceria">Taller de Carrocería y Pintura</SelectItem>
-                        <SelectItem value="neumaticos">Taller de Neumáticos</SelectItem>
-                        <SelectItem value="personalizado">Personalizado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Selecciona el tipo de taller para cargar una configuración predefinida o elige "Personalizado"
-                      para crear tu propia configuración.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium">Columnas del Tablero</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={handleAddColumn}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Añadir Columna
-                  </Button>
-                </div>
-
-                <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="columnas">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                        {form.watch("columnas").map((columna, index) => (
-                          <Draggable key={columna.id} draggableId={columna.id} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="flex items-center gap-2 p-3 border rounded-md bg-background"
-                              >
-                                <div {...provided.dragHandleProps} className="cursor-move">
-                                  <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                </div>
-
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                                  <div>
-                                    <Input
-                                      value={columna.nombre}
-                                      onChange={(e) => {
-                                        const newColumnas = [...form.getValues("columnas")]
-                                        newColumnas[index].nombre = e.target.value
-                                        form.setValue("columnas", newColumnas)
-                                      }}
-                                      placeholder="Nombre de la columna"
-                                    />
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className="w-6 h-6 rounded-md border"
-                                      style={{ backgroundColor: columna.color }}
-                                    />
-                                    <Input
-                                      value={columna.color}
-                                      onChange={(e) => {
-                                        const newColumnas = [...form.getValues("columnas")]
-                                        newColumnas[index].color = e.target.value
-                                        form.setValue("columnas", newColumnas)
-                                      }}
-                                      placeholder="#000000"
-                                      className="w-28"
-                                    />
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={columna.porcentaje}
-                                      onChange={(e) => {
-                                        const newColumnas = [...form.getValues("columnas")]
-                                        newColumnas[index].porcentaje = Number.parseInt(e.target.value)
-                                        form.setValue("columnas", newColumnas)
-                                      }}
-                                      className="w-20"
-                                    />
-                                    <span className="text-sm">% de avance</span>
-                                  </div>
-                                </div>
-
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRemoveColumn(index)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Opciones de Visualización</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="mostrarPorcentajes"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                        <div className="space-y-0.5">
-                          <FormLabel>Mostrar Porcentajes</FormLabel>
-                          <FormDescription>Mostrar el porcentaje de avance en cada tarjeta</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="mostrarTiempoEstimado"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                        <div className="space-y-0.5">
-                          <FormLabel>Mostrar Tiempo Estimado</FormLabel>
-                          <FormDescription>Mostrar el tiempo estimado de finalización</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="mostrarAsignados"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                        <div className="space-y-0.5">
-                          <FormLabel>Mostrar Técnicos Asignados</FormLabel>
-                          <FormDescription>Mostrar los técnicos asignados a cada tarea</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Vista Previa</h3>
-
-                <div className="border rounded-md p-4 overflow-x-auto">
-                  <div className="flex gap-4 min-w-max">
-                    {form.watch("columnas").map((columna, index) => (
-                      <div key={index} className="w-64">
-                        <div
-                          className="p-2 rounded-t-md font-medium text-white"
-                          style={{ backgroundColor: columna.color }}
-                        >
-                          {columna.nombre}
-                          {form.watch("mostrarPorcentajes") && (
-                            <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                              {columna.porcentaje}%
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="border border-t-0 rounded-b-md p-2 bg-background min-h-[100px]">
-                          {index === 0 && (
-                            <div className="border rounded-md p-2 mb-2 bg-card">
-                              <div className="text-sm font-medium">Toyota Corolla - Cambio de aceite</div>
-                              {form.watch("mostrarTiempoEstimado") && (
-                                <div className="text-xs text-muted-foreground mt-1">Tiempo estimado: 1 hora</div>
-                              )}
-                              {form.watch("mostrarAsignados") && (
-                                <div className="flex items-center gap-1 mt-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] text-white">
-                                    JD
-                                  </div>
-                                  <span className="text-xs">Juan Díaz</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {index === 1 && (
-                            <div className="border rounded-md p-2 bg-card">
-                              <div className="text-sm font-medium">Honda Civic - Revisión de frenos</div>
-                              {form.watch("mostrarTiempoEstimado") && (
-                                <div className="text-xs text-muted-foreground mt-1">Tiempo estimado: 2 horas</div>
-                              )}
-                              {form.watch("mostrarAsignados") && (
-                                <div className="flex items-center gap-1 mt-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] text-white">
-                                    MR
-                                  </div>
-                                  <span className="text-xs">María Rodríguez</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Guardar Configuración
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
-  )
+"use client"  
+  
+import { useState, useEffect } from "react"  
+import { Button } from "@/components/ui/button"  
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"  
+import { Input } from "@/components/ui/input"  
+import { Label } from "@/components/ui/label"  
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"  
+import { Badge } from "@/components/ui/badge"  
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"  
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"  
+import { Settings, Save, Plus, Edit, Trash2, Palette } from "lucide-react"  
+import { useToast } from "@/hooks/use-toast"  
+import KANBAN_SERVICES from "@/services/KANBAN_SERVICES.service"  
+  
+export function KanbanPersonalizado() {  
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("mecanica")  
+  const [columnasActuales, setColumnasActuales] = useState<any[]>([])  
+  const [templates, setTemplates] = useState<any[]>([])  
+  const [loading, setLoading] = useState(false)  
+  const [isDialogOpen, setIsDialogOpen] = useState(false)  
+  const [editingColumn, setEditingColumn] = useState<any>(null)  
+  const [newColumn, setNewColumn] = useState({  
+    title: "",  
+    description: "",  
+    color: "#3b82f6"  
+  })  
+  const { toast } = useToast()  
+  
+  useEffect(() => {  
+    loadData()  
+  }, [])  
+  
+  const loadData = async () => {  
+    try {  
+      setLoading(true)  
+        
+      // Cargar columnas actuales desde backend  
+      const columns = await KANBAN_SERVICES.GET_COLUMNS()  
+      setColumnasActuales(columns)  
+  
+      // Cargar plantillas disponibles desde backend  
+      const templatesData = await KANBAN_SERVICES.GET_TEMPLATES()  
+      setTemplates(templatesData)  
+        
+    } catch (error) {  
+      console.error("Error al cargar datos:", error)  
+      toast({  
+        title: "Error",  
+        description: "No se pudieron cargar los datos",  
+        // variant: "destructive",  
+      })  
+    } finally {  
+      setLoading(false)  
+    }  
+  }  
+  
+  const aplicarPlantilla = async () => {  
+    try {  
+      setLoading(true)  
+      await KANBAN_SERVICES.APPLY_TEMPLATE(tipoSeleccionado)  
+      await loadData()  
+        
+      toast({  
+        title: "Éxito",  
+        description: "Plantilla aplicada correctamente. Los cambios se reflejarán en el tablero Kanban.",  
+      })  
+    } catch (error) {  
+      console.error("Error al aplicar plantilla:", error)  
+      toast({  
+        title: "Error",  
+        description: "No se pudo aplicar la plantilla",  
+        // variant: "destructive",  
+      })  
+    } finally {  
+      setLoading(false)  
+    }  
+  }  
+  
+  const crearColumna = async () => {  
+    if (!newColumn.title.trim()) {  
+      toast({  
+        title: "Error",  
+        description: "El título de la columna es requerido",  
+        // variant: "destructive",  
+      })  
+      return  
+    }  
+  
+    try {  
+      setLoading(true)  
+      await KANBAN_SERVICES.CREATE_COLUMN(newColumn)  
+      await loadData()  
+        
+      setNewColumn({ title: "", description: "", color: "#3b82f6" })  
+      setIsDialogOpen(false)  
+        
+      toast({  
+        title: "Éxito",  
+        description: "Columna creada correctamente",  
+      })  
+    } catch (error) {  
+      console.error("Error al crear columna:", error)  
+      toast({  
+        title: "Error",  
+        description: "No se pudo crear la columna",  
+        // variant: "destructive",  
+      })  
+    } finally {  
+      setLoading(false)  
+    }  
+  }  
+  
+  const editarColumna = async () => {  
+    if (!editingColumn?.title?.trim()) {  
+      toast({  
+        title: "Error",  
+        description: "El título de la columna es requerido",  
+        // variant: "destructive",  
+      })  
+      return  
+    }  
+  
+    try {  
+      setLoading(true)  
+      await KANBAN_SERVICES.UPDATE_COLUMN(editingColumn.id, {  
+        title: editingColumn.title,  
+        description: editingColumn.description,  
+        color: editingColumn.color  
+      })  
+      await loadData()  
+        
+      setEditingColumn(null)  
+      setIsDialogOpen(false)  
+        
+      toast({  
+        title: "Éxito",  
+        description: "Columna actualizada correctamente",  
+      })  
+    } catch (error) {  
+      console.error("Error al actualizar columna:", error)  
+      toast({  
+        title: "Error",  
+        description: "No se pudo actualizar la columna",  
+        // variant: "destructive",  
+      })  
+    } finally {  
+      setLoading(false)  
+    }  
+  }  
+  
+  const eliminarColumna = async (columnId: string) => {  
+    if (columnasActuales.length <= 2) {  
+      toast({  
+        title: "Error",  
+        description: "Debe haber al menos 2 columnas en el tablero",  
+        // variant: "destructive",  
+      })  
+      return  
+    }  
+  
+    if (!confirm("¿Estás seguro de eliminar esta columna? Esta acción no se puede deshacer.")) {  
+      return  
+    }  
+  
+    try {  
+      setLoading(true)  
+      await KANBAN_SERVICES.DELETE_COLUMN(columnId)  
+      await loadData()  
+        
+      toast({  
+        title: "Éxito",  
+        description: "Columna eliminada correctamente",  
+      })  
+    } catch (error) {  
+      console.error("Error al eliminar columna:", error)  
+      toast({  
+        title: "Error",  
+        description: "No se pudo eliminar la columna",  
+        // variant: "destructive",  
+      })  
+    } finally {  
+      setLoading(false)  
+    }  
+  }  
+  
+  const openEditDialog = (column: any) => {  
+    setEditingColumn({ ...column })  
+    setIsDialogOpen(true)  
+  }  
+  
+  const openCreateDialog = () => {  
+    setEditingColumn(null)  
+    setNewColumn({ title: "", description: "", color: "#3b82f6" })  
+    setIsDialogOpen(true)  
+  }  
+  
+  return (  
+    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">  
+      <div className="flex items-center justify-between">  
+        <div>  
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">  
+            <Settings className="h-8 w-8" />  
+            Personalización del Kanban  
+          </h1>  
+          <p className="text-muted-foreground">  
+            Configura tu tablero Kanban según las necesidades de tu taller  
+          </p>  
+        </div>  
+      </div>  
+  
+      <Tabs defaultValue="plantillas" className="space-y-4">  
+        <TabsList>  
+          <TabsTrigger value="plantillas">Plantillas</TabsTrigger>  
+          <TabsTrigger value="personalizado">Personalizado</TabsTrigger>  
+        </TabsList>  
+  
+        <TabsContent value="plantillas">  
+          <Card>  
+            <CardHeader>  
+              <CardTitle>Plantillas Predefinidas</CardTitle>  
+              <CardDescription>  
+                Selecciona una plantilla según el tipo de taller  
+              </CardDescription>  
+            </CardHeader>  
+            <CardContent className="space-y-4">  
+              <div className="space-y-2">  
+                <Label htmlFor="tipo-taller">Tipo de Taller</Label>  
+                <Select value={tipoSeleccionado} onValueChange={setTipoSeleccionado}>  
+                  <SelectTrigger>  
+                    <SelectValue placeholder="Seleccionar tipo de taller" />  
+                  </SelectTrigger>  
+                  <SelectContent>  
+                    {templates.map((template) => (  
+                      <SelectItem key={template.type} value={template.type}>  
+                        {template.name}  
+                      </SelectItem>  
+                    ))}  
+                  </SelectContent>  
+                </Select>  
+              </div>  
+  
+              <div className="space-y-2">  
+                <Label>Vista Previa de Columnas</Label>  
+                <div className="flex gap-2 flex-wrap">  
+                  {templates  
+                    .find(t => t.type === tipoSeleccionado)  
+                    ?.columns?.map((col: any, index: number) => (  
+                      <Badge key={index} style={{ backgroundColor: col.color, color: 'white' }}>  
+                        {col.title}  
+                      </Badge>  
+                    )) || []}  
+                </div>  
+              </div>  
+  
+              <Button onClick={aplicarPlantilla} disabled={loading}>  
+                <Save className="mr-2 h-4 w-4" />  
+                {loading ? "Aplicando..." : "Aplicar Plantilla"}  
+              </Button>  
+            </CardContent>  
+          </Card>  
+        </TabsContent>  
+  
+        <TabsContent value="personalizado">  
+          <Card>  
+            <CardHeader>  
+              <div className="flex items-center justify-between">  
+                <div>  
+                  <CardTitle>Columnas Actuales</CardTitle>  
+                  <CardDescription>  
+                    {columnasActuales.length} columna(s) configurada(s)  
+                  </CardDescription>  
+                </div>  
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>  
+                  <DialogTrigger asChild>  
+                    <Button onClick={openCreateDialog}>  
+                      <Plus className="mr-2 h-4 w-4" />  
+                      Nueva Columna  
+                    </Button>  
+                  </DialogTrigger>  
+                  <DialogContent>  
+                    <DialogHeader>  
+                      <DialogTitle>  
+                        {editingColumn ? "Editar Columna" : "Nueva Columna"}  
+                      </DialogTitle>  
+                      <DialogDescription>  
+                        {editingColumn ? "Modifica los datos de la columna" : "Crea una nueva columna para el tablero"}  
+                      </DialogDescription>  
+                    </DialogHeader>  
+                    <div className="space-y-4">  
+                      <div className="space-y-2">  
+                        <Label htmlFor="title">Título</Label>  
+                        <Input  
+                          id="title"  
+                          value={editingColumn ? editingColumn.title : newColumn.title}  
+                          onChange={(e) => {  
+                            if (editingColumn) {  
+                              setEditingColumn({...editingColumn, title: e.target.value})  
+                            } else {  
+                              setNewColumn({...newColumn, title: e.target.value})  
+                            }  
+                          }}  
+                          placeholder="Nombre de la columna"  
+                        />  
+                      </div>  
+                      <div className="space-y-2">  
+                        <Label htmlFor="description">Descripción</Label>  
+                        <Input  
+                          id="description"  
+                          value={editingColumn ? editingColumn.description : newColumn.description}  
+                          onChange={(e) => {  
+                            if (editingColumn) {  
+                              setEditingColumn({...editingColumn, description: e.target.value})  
+                            } else {  
+                              setNewColumn({...newColumn, description: e.target.value})  
+                            }  
+                          }}  
+                          placeholder="Descripción opcional"  
+                        />  
+                      </div>  
+                      <div className="space-y-2">  
+                        <Label htmlFor="color">Color</Label>  
+                        <div className="flex items-center gap-2">  
+                          <div  
+                            className="w-8 h-8 rounded border"  
+                            style={{ backgroundColor: editingColumn ? editingColumn.color : newColumn.color }}  
+                          />  
+                          <Input  
+                            id="color"  
+                            type="color"  
+                            value={editingColumn ? editingColumn.color : newColumn.color}  
+                            onChange={(e) => {  
+                              if (editingColumn) {  
+                                setEditingColumn({...editingColumn, color: e.target.value})  
+                              } else {  
+                                setNewColumn({...newColumn, color: e.target.value})  
+                              }  
+                            }}  
+                            className="w-20"  
+                          />  
+                        </div>  
+                      </div>  
+                    </div>  
+                    <DialogFooter>  
+                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>  
+                        Cancelar  
+                      </Button>  
+                      <Button onClick={editingColumn ? editarColumna : crearColumna} disabled={loading}>  
+                        {loading ? "Guardando..." : (editingColumn ? "Actualizar" : "Crear")}  
+                      </Button>  
+                    </DialogFooter>  
+                  </DialogContent>  
+                </Dialog>  
+              </div>  
+            </CardHeader>  
+            <CardContent>  
+              <div className="space-y-2">  
+                {columnasActuales.map((col) => (  
+                  <div key={col.id} className="flex items-center justify-between p-3 border rounded-lg">  
+                    <div className="flex items-center gap-3">  
+                      <div   
+                        className="w-4 h-4 rounded"   
+                        style={{ backgroundColor: col.color }}  
+                      />  
+                      <div>  
+                        <span className="font-medium">{col.title}</span>  
+                        {col.description && (  
+                          <p className="text-sm text-muted-foreground">{col.description}</p>  
+                        )}  
+                      </div>  
+                    </div>  
+                    <div className="flex items-center gap-2">  
+                      <Badge variant="outline">Posición {col.position}</Badge>  
+                      <Button  
+                        variant="ghost"  
+                        size="icon"  
+                        onClick={() => openEditDialog(col)}  
+                      >  
+                        <Edit className="h-4 w-4" />  
+                      </Button>  
+                      <Button  
+                        variant="ghost"  
+                        size="icon"  
+                        onClick={() => eliminarColumna(col.id)}  
+                      >  
+                        <Trash2 className="h-4 w-4" />  
+                      </Button>  
+                    </div>  
+                  </div>  
+                ))}  
+                {columnasActuales.length === 0 && (  
+                  <div className="text-center py-8 text-muted-foreground">  
+                    No hay columnas configuradas. Crea una nueva columna o aplica una plantilla.  
+                  </div>  
+                )}  
+              </div>  
+            </CardContent>
+            </Card>  
+        </TabsContent>  
+      </Tabs>  
+    </div>  
+  )  
 }

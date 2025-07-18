@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/hooks/use-toast"
 
 // Mock data para demo
 const mockVehicles = [
@@ -105,7 +105,7 @@ const defaultCards = [
 ]
 
 export function KanbanBoard() {
-  const { toast } = useToast()
+  // const { toast } = useToast()
   const [columns, setColumns] = useState(defaultColumns)
   const [cards, setCards] = useState(defaultCards)
   const [isLoading, setIsLoading] = useState(true)
@@ -190,7 +190,7 @@ export function KanbanBoard() {
       toast({
         title: "Campos requeridos",
         description: "Por favor complete los campos requeridos",
-        variant: "destructive",
+        // variant: "destructive",
       })
       return
     }

@@ -8,14 +8,15 @@ export const metadata: Metadata = {
 
 export default function RegistroTallerPage() {
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[550px]">
-        <div className="flex flex-col space-y-2 text-center">
+    <main className="container flex w-screen flex-col items-center justify-center overflow-auto h-[100vh] p-3">
+        <div className="flex flex-col p-2 text-center h-[10%]">
           <h1 className="text-2xl font-semibold tracking-tight">Registro de Taller</h1>
           <p className="text-sm text-muted-foreground">Completa la información para registrar tu taller en AutoFlowX</p>
         </div>
+        <div className="h-[90%]">
+
         <RegistroTallerForm />
-      </div>
-    </div>
+        </div>
+    </main>
   )
 }
