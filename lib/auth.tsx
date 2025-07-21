@@ -7,6 +7,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from "next/navigation"
 import type { Database } from "@/lib/supabase/database.types"
 
+
+
 // Cliente de Supabase
 export const supabase = createClientComponentClient<Database>()
 
