@@ -1,4 +1,5 @@
 "use client"
+// CI trigger: actualización básica para forzar build en Vercel
 
 import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
@@ -25,6 +26,7 @@ const AccordionTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Header className="flex">
+    {typeof window !== "undefined" && console.log("✅ AccordionTrigger cargado")}
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
