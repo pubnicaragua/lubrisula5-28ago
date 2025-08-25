@@ -793,7 +793,7 @@ export function TallerDashboard() {
                           <br />
                           <span className="text-xs text-muted-foreground">{appointment.hora_inicio}</span>
                         </div>
-                        <div>{appointment.tipos_operacion.nombre}</div>
+                        <div>{appointment?.tipos_operacion?.nombre}</div>
                         <div className="flex justify-end gap-2">
                           {/* <Button variant="outline" size="sm">
                             Ver

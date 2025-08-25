@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Save, Printer, FileDown, Upload, X } from "lucide-react"
 import html2canvas from "html2canvas"
 import { jsPDF } from "jspdf"
+import SignatureCanvas from "react-signature-canvas";
+
 
 interface HojaIngresoProps {
   vehiculoId?: string
@@ -33,7 +35,13 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
   const [vehiculoData, setVehiculoData] = useState<any>(null)
   const [imagenCarroceria, setImagenCarroceria] = useState<string | null>(null)
   const [puntos, setPuntos] = useState<Punto[]>([])
-  const [modoEdicion, setModoEdicion] = useState(false)
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [sigClienteRef, setSigClienteRef] = useState<any>(null)
+  const [sigEncargadoRef, setsigEncargadoRef] = useState<any>(null)
+  const [firmaCliente, setFirmaCliente] = useState<any>(null)
+  const [InitialfirmaCliente, setInitialfirmaCliente] = useState<any>(null)
+  const [firmaEncargado, setfirmaEncargado] = useState<any>(null)
+  const [InitialfirmaEncargado, setInitialfirmaEncargado] = useState<any>(null)
 
   // Estado para cada sección de la hoja de ingreso
   const [interiores, setInteriores] = useState({
@@ -100,6 +108,8 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       setComentarios(data.comentarios || "")
       setImagenCarroceria(data.imagen_carroceria || null)
       setPuntos(data.puntos || [])
+      setInitialfirmaCliente(data.firmas?.firmaCliente || null)
+      setInitialfirmaEncargado(data.firmas?.firmaEncargado || null)
     }
   }
 
@@ -236,6 +246,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       comentarios,
       imagen_carroceria: imagenCarroceria,
       puntos,
+      firmas: { firmaCliente, firmaEncargado }
     }
 
     localStorage.setItem(`inspeccion_${vehiculoId}`, JSON.stringify(inspeccionData))
@@ -435,57 +446,51 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-32 w-4 bg-gray-200 rounded-full relative overflow-hidden">
                     <div
-                      className={`absolute bottom-0 w-full rounded-b-full transition-all duration-300 ${
-                        nivelGasolina === "vacio"
-                          ? "h-0 bg-red-500"
-                          : nivelGasolina === "1/4"
-                            ? "h-1/4 bg-red-500"
-                            : nivelGasolina === "1/2"
-                              ? "h-1/2 bg-yellow-500"
-                              : nivelGasolina === "3/4"
-                                ? "h-3/4 bg-blue-500"
-                                : "h-full bg-green-500"
-                      }`}
+                      className={`absolute bottom-0 w-full rounded-b-full transition-all duration-300 ${nivelGasolina === "vacio"
+                        ? "h-0 bg-red-500"
+                        : nivelGasolina === "1/4"
+                          ? "h-1/4 bg-red-500"
+                          : nivelGasolina === "1/2"
+                            ? "h-1/2 bg-yellow-500"
+                            : nivelGasolina === "3/4"
+                              ? "h-3/4 bg-blue-500"
+                              : "h-full bg-green-500"
+                        }`}
                     ></div>
                   </div>
                   <div className="ml-4">
                     <div className="flex flex-col space-y-2">
                       <div
-                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${
-                          nivelGasolina === "lleno" ? "bg-blue-600" : "bg-gray-300"
-                        }`}
+                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${nivelGasolina === "lleno" ? "bg-blue-600" : "bg-gray-300"
+                          }`}
                         onClick={() => setNivelGasolina("lleno")}
                       >
                         1/1
                       </div>
                       <div
-                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${
-                          nivelGasolina === "3/4" ? "bg-blue-500" : "bg-gray-300"
-                        }`}
+                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${nivelGasolina === "3/4" ? "bg-blue-500" : "bg-gray-300"
+                          }`}
                         onClick={() => setNivelGasolina("3/4")}
                       >
                         3/4
                       </div>
                       <div
-                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${
-                          nivelGasolina === "1/2" ? "bg-yellow-500" : "bg-gray-300"
-                        }`}
+                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${nivelGasolina === "1/2" ? "bg-yellow-500" : "bg-gray-300"
+                          }`}
                         onClick={() => setNivelGasolina("1/2")}
                       >
                         1/2
                       </div>
                       <div
-                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${
-                          nivelGasolina === "1/4" ? "bg-red-500" : "bg-gray-300"
-                        }`}
+                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${nivelGasolina === "1/4" ? "bg-red-500" : "bg-gray-300"
+                          }`}
                         onClick={() => setNivelGasolina("1/4")}
                       >
                         1/4
                       </div>
                       <div
-                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${
-                          nivelGasolina === "vacio" ? "bg-red-600" : "bg-gray-300"
-                        }`}
+                        className={`w-16 h-6 flex items-center justify-center text-xs text-white rounded cursor-pointer ${nivelGasolina === "vacio" ? "bg-red-600" : "bg-gray-300"
+                          }`}
                         onClick={() => setNivelGasolina("vacio")}
                       >
                         E
@@ -666,7 +671,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
                     <canvas
                       ref={canvasRef}
                       onClick={handleCanvasClick}
-                      className={`max-w-full h-auto ${modoEdicion ? "cursor-crosshair" : "cursor-default"}`}
+                      className={`max-w-full h-full ${modoEdicion ? "cursor-crosshair" : "cursor-default"}`}
                       style={{ maxHeight: "400px" }}
                     />
                     {modoEdicion && (
@@ -711,10 +716,44 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
 
         {/* Firmas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div className="border-t-2 border-gray-300 pt-2">
+          <div className="border-b-2 border-gray-300 pt-2 bg-white h-[200px]">
+
+            {
+              InitialfirmaCliente ?
+                <img
+                  src={InitialfirmaCliente || "/placeholder.svg"}
+                  alt="Firma del cliente"
+                  className="w-full h-full object-contain"
+                />
+                :
+                <SignatureCanvas
+                  ref={(ref) => setSigClienteRef(ref)}
+                  canvasProps={{ className: "w-full h-full h-[200px]" }}
+                  onEnd={() => setFirmaCliente(sigClienteRef?.toDataURL())}
+
+                />
+            }
+
+
             <div className="text-center font-medium">Firma del Cliente</div>
+
           </div>
-          <div className="border-t-2 border-gray-300 pt-2">
+          <div className="border-b-2 border-gray-300 pt-2 bg-white h-[200px]">
+            {
+              InitialfirmaEncargado ?
+                <img
+                  src={InitialfirmaEncargado || "/placeholder.svg"}
+                  alt="Firma del cliente"
+                  className="w-full h-full object-contain"
+                />
+                :
+                <SignatureCanvas
+                  ref={(ref) => setsigEncargadoRef(ref)}
+                  canvasProps={{ className: "w-full h-full h-[200px]" }}
+                  onEnd={() => setfirmaEncargado(sigEncargadoRef?.toDataURL())}
+                />
+            }
+
             <div className="text-center font-medium">Firma del Encargado</div>
           </div>
         </div>
