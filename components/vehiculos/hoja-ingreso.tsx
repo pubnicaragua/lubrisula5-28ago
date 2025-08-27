@@ -11,6 +11,7 @@ import { Save, Printer, FileDown, Upload, X } from "lucide-react"
 import html2canvas from "html2canvas"
 import { jsPDF } from "jspdf"
 import SignatureCanvas from "react-signature-canvas";
+import HOJA_INGRESO_SERVICE, { HojaIngresoType } from "@/services/HOJA_INGRESO.service"
 
 
 interface HojaIngresoProps {
@@ -88,7 +89,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
     }
   }, [vehiculoId])
 
-  const loadVehiculoData = () => {
+  const loadVehiculoData = async () => {
     const savedVehiculos = localStorage.getItem("mockVehiculos")
     if (savedVehiculos) {
       const vehiculos = JSON.parse(savedVehiculos)
@@ -97,9 +98,10 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
     }
 
     // Cargar datos guardados de la inspección
-    const savedInspection = localStorage.getItem(`inspeccion_${vehiculoId}`)
-    if (savedInspection) {
-      const data = JSON.parse(savedInspection)
+    // const savedInspection = localStorage.getItem(`inspeccion_${vehiculoId}`)
+    const data = await HOJA_INGRESO_SERVICE.ObtenerInspeccion(vehiculoId);
+    if (data) {
+      // const data = JSON.parse(savedInspection)
       setInteriores(data.interiores || interiores)
       setExteriores(data.exteriores || exteriores)
       setCoqueta(data.coqueta || coqueta)
@@ -108,8 +110,10 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       setComentarios(data.comentarios || "")
       setImagenCarroceria(data.imagen_carroceria || null)
       setPuntos(data.puntos || [])
-      setInitialfirmaCliente(data.firmas?.firmaCliente || null)
-      setInitialfirmaEncargado(data.firmas?.firmaEncargado || null)
+      setInitialfirmaCliente(data?.firma_cliente || null)
+      setFirmaCliente(data?.firma_cliente || null)
+      setInitialfirmaEncargado(data?.firma_encargado || null)
+      setfirmaEncargado(data?.firma_encargado || null)
     }
   }
 
@@ -225,7 +229,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!vehiculoId) {
       toast({
         title: "Error",
@@ -235,7 +239,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       return
     }
 
-    const inspeccionData = {
+    const inspeccionData: HojaIngresoType = {
       vehiculo_id: vehiculoId,
       fecha: new Date().toISOString(),
       interiores,
@@ -248,8 +252,9 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       puntos,
       firmas: { firmaCliente, firmaEncargado }
     }
-
-    localStorage.setItem(`inspeccion_${vehiculoId}`, JSON.stringify(inspeccionData))
+    console.log("Datos de inspección guardados:", inspeccionData)
+    await HOJA_INGRESO_SERVICE.guardarInspeccion(vehiculoId, inspeccionData)
+    // localStorage.setItem(`inspeccion_${vehiculoId}`, JSON.stringify(inspeccionData))
 
     toast({
       title: "Éxito",
