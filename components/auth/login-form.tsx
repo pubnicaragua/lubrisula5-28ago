@@ -41,7 +41,7 @@ export default function LoginForm() {
         console.error("Error de autenticación:", error)
         throw error
       }
-
+      console.log("Usuario autenticado:", data.user)
       // Redirigir según el rol del usuario (esto se puede personalizar)
       if (data.user?.user_metadata?.role === "admin") {
         router.push("/admin/dashboard")
@@ -53,6 +53,8 @@ export default function LoginForm() {
         router.push("/taller/dashboard")
       } else if (data.user?.user_metadata?.role === 'aseguradora') {
         router.push("/aseguradora/dashboard")
+      } else if (data.user?.user_metadata?.role === 'tecnico') {
+        throw new Error('Los técnicos no pueden iniciar sesión desde esta plataforma. Por favor, utiliza la aplicación móvil.')
       }
       // router.refresh()
     } catch (err: any) {
@@ -66,6 +68,9 @@ export default function LoginForm() {
           userMessage = "Credenciales inválidas. Verifica tu correo y contraseña."
         } else if (err.message.includes("fetch failed")) {
           userMessage = "Error de conexión. Verifica tu conexión a internet o inténtalo más tarde."
+        } else {
+          userMessage = err.message
+
         }
       }
 

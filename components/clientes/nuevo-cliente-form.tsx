@@ -19,7 +19,7 @@ import { ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 // }
 
 interface NuevoClienteFormProps {
-  onSubmit: (cliente: ClienteType) => void
+  onSubmit: (cliente: ClienteType) => any
   clienteExistente?: ClienteType
 }
 
@@ -30,7 +30,7 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
   // Cargar datos del cliente existente si se está editando
   useEffect(() => {
     if (clienteExistente) {
-      setFormData(clienteExistente)
+      setFormData({ ...clienteExistente })
     }
   }, [clienteExistente])
 
@@ -47,10 +47,8 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
     e.preventDefault()
     setIsSubmitting(true)
     // Simular delay de procesamiento
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    onSubmit(formData)
-
+    const res = await onSubmit(formData)
+    if (!res) return setIsSubmitting(false)
     // Limpiar formulario si no es edición
     if (!clienteExistente) {
       setFormData({
@@ -62,6 +60,8 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
         client_type: "Individual",
         created_at: "",
         updated_at: "",
+        password: "123456" // Default password, should be changed later
+
       })
     }
 
@@ -87,30 +87,37 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email *</Label>
+          <Input id="email" name="email" type="email" value={formData?.email} onChange={handleInputChange} required />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="email">Password *</Label>
+          <Input id="password" name="password" type="text" value={formData?.password} onChange={handleInputChange} required />
+        </div>
+
         <div className="grid gap-2">
           <Label htmlFor="phone">Teléfono *</Label>
           <Input type="number" id="phone" name="phone" value={formData?.phone} onChange={handleInputChange} required />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" value={formData?.email} onChange={handleInputChange} required />
+          <Label htmlFor="client_type">Tipo de Cliente *</Label>
+          <Select onValueChange={handleSelectChange} value={formData?.client_type} defaultValue={clienteExistente?.client_type}>
+            <SelectTrigger id="client_type">
+              <SelectValue placeholder={clienteExistente?.client_type} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Individual">Individual</SelectItem>
+              <SelectItem value="Empresa">Empresa</SelectItem>
+              <SelectItem value="Flota">Flota</SelectItem>
+              <SelectItem value="Aseguradora">Aseguradora</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="client_type">Tipo de Cliente *</Label>
-        <Select onValueChange={handleSelectChange} value={formData?.client_type} defaultValue={clienteExistente?.client_type}>
-          <SelectTrigger id="client_type">
-            <SelectValue placeholder={clienteExistente?.client_type} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Individual">Individual</SelectItem>
-            <SelectItem value="Empresa">Empresa</SelectItem>
-            <SelectItem value="Flota">Flota</SelectItem>
-            <SelectItem value="Aseguradora">Aseguradora</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
 
       <div className="flex justify-end mt-4">
         <Button type="submit" disabled={isSubmitting}>

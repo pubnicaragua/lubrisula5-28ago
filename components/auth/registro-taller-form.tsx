@@ -122,7 +122,7 @@ const modulos = [
 ]
 
 export function RegistroTallerForm() {
-  const { signUp } = useAuth()
+  const { signUpTaller } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -182,7 +182,8 @@ export function RegistroTallerForm() {
       }
       console.log(DataSolicitudTaller)
       // Registrar el usuario en Supabase
-      await signUp(values.email, values.password, 'taller', "", values.nombre_contacto, values.apellido_contacto, values.telefono, true, DataSolicitudTaller)
+      const { success, error } = await signUpTaller(values.email, values.password, values.nombre_contacto, values.apellido_contacto, values.telefono, DataSolicitudTaller)
+      if (!success) return alert(error)
 
       // Enviar la solicitud de registro del taller
       // const response = await axios.post("/api/registro-taller", {

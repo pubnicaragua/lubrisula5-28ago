@@ -1,4 +1,5 @@
 import { AxiosDelete, AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module";
+import SIGNUP_SERVICES from "./SIGNUP_SERVICE.service";
 
 
 export type TecnicoType = {
@@ -45,7 +46,8 @@ export type InsertTecnicoType = {
     info: TecnicoType;
     habilidades: string[];
     horarios: TecnicoHorarioType[],
-    certificaciones: string[]
+    certificaciones: string[],
+    password: string
 }
 export type UpdateTecnicoType = {
     info: TecnicoType;
@@ -75,6 +77,8 @@ export type TecnicoConDetallesType = {
     tecnicos_certificaciones: TecnicoCertificacionType[];
 }
 
+
+
 const TECNICO_SERVICES = {
     async GET_ALL_TECNICOS(): Promise<TecnicoType[]> {
         const data: TecnicoType[] = await AxiosGet({ path: '/tecnicos' })
@@ -85,7 +89,22 @@ const TECNICO_SERVICES = {
         return data;
     },
 
-    async INSERT_TECNICO(InsertTecnicoData: InsertTecnicoType) {
+    async INSERT_TECNICO(InsertTecnicoData: InsertTecnicoType): Promise<{ success: boolean, error: string | null }> {
+        //Guardar usuario y contraseña en tabla usuarios
+
+        const user = await SIGNUP_SERVICES.SignUp({
+            apellido: InsertTecnicoData.info.apellido,
+            nombre: InsertTecnicoData.info.nombre,
+            correo: InsertTecnicoData.info.email,
+            telefono: InsertTecnicoData.info.telefono,
+            role: 'tecnico',
+            estado: true,
+            taller_id: localStorage.getItem('taller_id') || '',
+            rol_id: 6, // Asumiendo que 3 es el ID del rol 'tecnico',
+            password: InsertTecnicoData.password
+        })
+        console.log(user)
+        if (user.error) return { success: false, error: user.error }
         const newTecnico: TecnicoType[] = await AxiosPost({ path: '/tecnicos', payload: InsertTecnicoData.info })
         const IdTecnico = newTecnico[0].id;
         const Habilidades: TecnicoHabilidadType[] = InsertTecnicoData.habilidades.map(hab => ({ tecnico_id: IdTecnico, habilidad: hab }))
@@ -94,7 +113,7 @@ const TECNICO_SERVICES = {
         const ResHorarios: TecnicoType[] = await AxiosPost({ path: '/tecnicos_horarios', payload: horarios })
         const certificaciones: TecnicoCertificacionType[] = InsertTecnicoData.certificaciones.map(c => ({ tecnico_id: IdTecnico, certificacion: c }))
         const ResCertificacion: TecnicoType[] = await AxiosPost({ path: '/tecnicos_certificaciones', payload: certificaciones })
-        return true;
+        return { success: true, error: null }
     },
     async UPDATE_TECNICO(UpdateTecnicoData: UpdateTecnicoType) {
         await AxiosPatch({ path: `/tecnicos?id=eq.${UpdateTecnicoData.info.id}`, payload: UpdateTecnicoData.info })

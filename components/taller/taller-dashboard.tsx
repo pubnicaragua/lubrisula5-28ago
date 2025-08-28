@@ -221,7 +221,7 @@ export function TallerDashboard() {
 
   // Función para obtener el color del estado
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "en proceso":
         return "bg-blue-100 text-blue-800"
       case "pendiente":

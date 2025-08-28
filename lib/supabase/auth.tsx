@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "./client"
 import { useRouter } from "next/navigation"
 import type { User, Session } from "@supabase/supabase-js"
+import TALLER_SERVICES from "@/services/TALLER_SERVICES.SERVICE"
 
 // Tipos
 export type AuthContextType = {
@@ -13,6 +14,26 @@ export type AuthContextType = {
   session: Session | null
   loading: boolean
   signOut: () => Promise<void>
+  signUpTaller: (
+    email: string,
+    password: string,
+    nombre?: string,
+    apellido?: string,
+    telefono?: string,
+    newTallerData?: {
+      // user_auth_id: string
+      nombre_taller: string
+      direccion: string
+      ciudad: string
+      estado: string
+      codigo_postal: string
+      nombre_contacto: string
+      telefono: string
+      email: string
+      descripcion?: string | null
+      modulos_seleccionados?: any[]
+    }
+  ) => Promise<{ success: boolean, error: string | null }>
   signUp: (
     email: string,
     password: string,
@@ -36,6 +57,7 @@ export type AuthContextType = {
       modulos_seleccionados?: any[]
     }
   ) => Promise<{ error: string | null }>
+
 }
 
 // Contexto de autenticación
@@ -45,6 +67,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signOut: async () => { },
   signUp: async () => ({ error: "Not implemented" }),
+  signUpTaller: async () => ({ success: false, error: "Not implemented" }),
+
 })
 
 // Función para normalizar roles
@@ -164,15 +188,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (
+  const signUpTaller = async (
     email: string,
     password: string,
-    role: string,
-    taller_id?: string,
     nombre?: string,
     apellido?: string,
     telefono?: string,
-    newRegister?: boolean,
     newTallerData?: {
       user_auth_id: string
       nombre_taller: string
@@ -186,9 +207,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       descripcion?: string | null
       modulos_seleccionados?: any[]
     }
+  ): Promise<{ success: boolean, error: string | null }> => {
+    try {
+      // 1. Crear el usuario
+
+      const { data, error: ErrorUserAuth } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { role: 'taller' }, // metadata opcional
+        },
+      })
+      console.log(data)
+      console.log(data)
+      if (ErrorUserAuth) {
+        console.log("Error en signUp:", ErrorUserAuth)
+        console.log("Error en signUp:", ErrorUserAuth.message)
+        return { success: false, error: ErrorUserAuth.message }
+      }
+      console.log("SignUp data:", data)
+      console.log("nombre:", nombre)
+      console.log("apellido:", apellido)
+      console.log("telefono:", telefono)
+
+      if (!ErrorUserAuth) {
+        const taller = await TALLER_SERVICES.INSERT_TALLER({
+          direccion: newTallerData?.direccion,
+          email: newTallerData?.email,
+          nombre: newTallerData?.nombre_taller,
+          pais: newTallerData?.estado,
+          telefono: newTallerData?.telefono,
+          logo: '',
+          hora_apertura: '08:00',
+          hora_cierre: '17:00'
+        })
+        await supabase.from('usuarios_taller').insert([{ user_id: data?.user?.id, taller_id: taller.id }])
+        await supabase.from("solicitudes_talleres").insert({ ...newTallerData, user_auth_id: data?.user?.id })
+        await supabase.from('perfil_usuario').insert([{ auth_id: data?.user?.id, nombre, apellido, telefono, correo: email, estado: true, taller_id: taller.id, rol_id: 3, role: 'taller' }])
+      }
+      const userId = data.user?.id
+      if (!userId) {
+        return { success: false, error: "No se pudo obtener el ID del usuario" }
+      }
+
+      // 2. Obtener ID del rol
+      const { data: rolData, error: rolError } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("nombre", 'taller')
+        .single()
+
+      if (rolError || !rolData) {
+        console.error("Error al obtener rol:", rolError?.message)
+        return { success: false, error: "Rol no válido o no encontrado" }
+      }
+
+      const rolId = rolData.id
+
+      // 3. Insertar en roles_usuario
+      const { error: insertError } = await supabase
+        .from("roles_usuario")
+        .insert([{ user_id: userId, rol_id: rolId }])
+
+      if (insertError) {
+        console.error("Error al insertar en roles_usuario:", insertError.message)
+        return { success: false, error: "No se pudo asignar el rol al usuario" }
+      }
+
+      console.log("Usuario registrado y rol asignado correctamente")
+      return { success: true, error: null }
+    } catch (err: any) {
+      console.error("Error inesperado en signUp:", err)
+      return { success: false, error: "Error inesperado en el registro" }
+    }
+  }
+  const signUp = async (
+    email: string,
+    password: string,
+    role: string,
+    taller_id?: string,
+    nombre?: string,
+    apellido?: string,
+    telefono?: string
+
   ): Promise<{ error: string | null }> => {
     try {
       // 1. Crear el usuario
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -196,20 +301,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { role }, // metadata opcional
         },
       })
+      if (error) {
+        console.log("Error en signUp:", error.message)
+        return { error: error.message }
+      }
       console.log("SignUp data:", data)
       console.log("taller id:", taller_id)
       console.log("role:", role)
       console.log("nombre:", nombre)
       console.log("apellido:", apellido)
       console.log("telefono:", telefono)
-      if (role === 'taller' && !error && !newRegister) {
-        await supabase.from('usuarios_taller').insert([{ user_id: data?.user?.id, taller_id }])
-      }
-      if (newRegister && role === 'taller') {
-        await supabase.from("solicitudes_talleres").insert({ ...newTallerData, user_auth_id: data?.user?.id })
 
-      }
-      await supabase.from('perfil_usuario').insert([{ user_id: data?.user?.id, nombre, apellido, telefono, correo: email, estado: true }])
+
+      await supabase.from('perfil_usuario').insert([{ auth_id: data?.user?.id, nombre, apellido, telefono, correo: email, estado: true }])
 
       if (error) {
         console.error("Error en signUp:", error.message)
@@ -246,7 +350,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("Usuario registrado y rol asignado correctamente")
-      return { error: null }
+      return null
     } catch (err: any) {
       console.error("Error inesperado en signUp:", err)
       return { error: "Error inesperado en el registro" }
@@ -259,6 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     signUp,
+    signUpTaller,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

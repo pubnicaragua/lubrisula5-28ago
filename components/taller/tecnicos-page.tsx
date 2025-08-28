@@ -60,7 +60,8 @@ export function TecnicosPage() {
     direccion: "",
     habilidades: "",
     certificaciones: "",
-    disponibilidad: "Disponible"
+    disponibilidad: "Disponible",
+    password: "123456"
   })
 
   const FN_GET_TECNICOS = async () => {
@@ -69,14 +70,14 @@ export function TecnicosPage() {
   }
 
 
-  const saveTecnicos = (newTecnicos: any[]) => {
-    setTecnicos(newTecnicos)
-    try {
-      localStorage.setItem("mockTecnicos", JSON.stringify(newTecnicos))
-    } catch (error) {
-      console.error("Error guardando en localStorage:", error)
-    }
-  }
+  // const saveTecnicos = (newTecnicos: any[]) => {
+  //   setTecnicos(newTecnicos)
+  //   try {
+  //     localStorage.setItem("mockTecnicos", JSON.stringify(newTecnicos))
+  //   } catch (error) {
+  //     console.error("Error guardando en localStorage:", error)
+  //   }
+  // }
 
   const getAvailabilityColor = (status: boolean) => {
     switch (status) {
@@ -141,7 +142,7 @@ export function TecnicosPage() {
       dia: dia.charAt(0).toUpperCase() + dia.slice(1), // Capitaliza el día
       horario,
     }));
-    await TECNICO_SERVICES.INSERT_TECNICO({
+    const res = await TECNICO_SERVICES.INSERT_TECNICO({
       info: {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -157,8 +158,11 @@ export function TecnicosPage() {
       },
       habilidades: habilidades,
       horarios: horarioArray,
-      certificaciones
+      certificaciones,
+      password: formData.password
     })
+    console.log(res)
+    if (res.error) return (alert(res.error), setIsLoading(false))
     await FN_GET_TECNICOS()
     setFormData({
       nombre: "",
@@ -171,7 +175,8 @@ export function TecnicosPage() {
       direccion: "",
       habilidades: "",
       certificaciones: "",
-      disponibilidad: "Disponible"
+      disponibilidad: "Disponible",
+      password: "123456"
 
     })
 
@@ -192,7 +197,9 @@ export function TecnicosPage() {
       direccion: tecnicoData.direccion,
       habilidades: tecnicoData.tecnicos_habilidades.map(hab => hab.habilidad).toString(),
       certificaciones: tecnicoData.tecnicos_certificaciones.map(cert => cert.certificacion).toString(),
-      disponibilidad: tecnicoData.estado
+      disponibilidad: tecnicoData.estado,
+      password: "Incognito"
+
     })
     setOpenEditDialog(true)
   }
@@ -236,6 +243,7 @@ export function TecnicosPage() {
       habilidades: NewHabilidades,
       horarios: horarioArray,
       certificaciones: NewCertificaciones
+
     })
     await FN_GET_TECNICOS()
     setOpenEditDialog(false)
@@ -288,7 +296,7 @@ export function TecnicosPage() {
       t.id === tecnico.id ? { ...t, disponibilidad: nuevaDisponibilidad } : t,
     )
 
-    saveTecnicos(updatedTecnicos)
+    // saveTecnicos(updatedTecnicos)
 
     toast({
       title: "Disponibilidad actualizada",
@@ -308,6 +316,7 @@ export function TecnicosPage() {
       habilidades: "",
       certificaciones: "",
       disponibilidad: "Disponible",
+      password: "123456"
     })
   }
 
@@ -440,6 +449,17 @@ export function TecnicosPage() {
                         placeholder="Correo electrónico"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="Password">Contraseña</Label>
+                      <Input
+                        id="Password"
+                        type="text"
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
                       />
                     </div>

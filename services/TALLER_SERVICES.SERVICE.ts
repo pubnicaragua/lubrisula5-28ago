@@ -1,4 +1,4 @@
-import { AxiosGet, AxiosPatch } from "./AxiosServices.module";
+import { AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module";
 
 // export type SolicitudesTalleresType = {
 //     id: number
@@ -46,6 +46,7 @@ export type TallerType = {
     hora_apertura?: string;
     hora_cierre?: string;
 }
+
 const TALLER_SERVICES = {
     async GET_ALL_SOLICITUDES_TALLERES(): Promise<TallerSolicitudType[]> {
         const TalleresData: TallerSolicitudType[] = await AxiosGet({ path: '/solicitudes_talleres' })
@@ -60,11 +61,19 @@ const TALLER_SERVICES = {
             path: `/solicitudes_talleres?id=eq.${Id}`,
             payload: { estado: "aprobada" }
         })
+        console.log(TalleresData)
         return TalleresData;
+    },
+    async INSERT_TALLER(taller: Omit<TallerType, 'id'>): Promise<TallerType> {
+        const TalleresData: TallerType[] = await AxiosPost({
+            path: `/talleres`,
+            payload: taller
+        })
+        return TalleresData[0];
     },
     async UPDATE_TALLER(taller: TallerType): Promise<TallerType> {
         const TalleresData: TallerType[] = await AxiosPatch({
-            path: `/taller?id=eq.${taller.id}`,
+            path: `/tallers?id=eq.${taller.id}`,
             payload: taller
         })
         return TalleresData[0];

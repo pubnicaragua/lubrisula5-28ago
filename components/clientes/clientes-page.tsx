@@ -75,14 +75,22 @@ export function ClientesPage() {
     })
   }
   const FN_ADD_NEW_CLIENTE = async (nuevoCliente: ClienteType) => {
+    console.log(nuevoCliente)
     const NewData: ClienteType = { ...nuevoCliente, created_at: new Date().toISOString() }
     const res = await CLIENTS_SERVICES.ADD_NEW_CLIENTE(NewData)
+    if (!res.success) {
+      alert(res.error)
+      return false
+    }
+
     setState_Clientes((prev) => [...prev, { ...NewData, status: "Activo" }])
     setOpen(false)
     toast({
       title: "Cliente creado",
       description: "El cliente ha sido registrado exitosamente",
     })
+    return true
+
   }
 
   // Cargar datos del localStorage al iniciar
