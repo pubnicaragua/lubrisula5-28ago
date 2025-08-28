@@ -20,6 +20,7 @@ const ASEGURADORA_SERVICE = {
         const aseguradoras: AseguradoraType[] = await AxiosGet({ path: '/aseguradoras' })
         return aseguradoras;
     },
+
     async INSERT_ASEGURADORA(aseguradora: AseguradoraType) {
 
         const res = await AxiosPost({

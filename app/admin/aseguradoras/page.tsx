@@ -1,7 +1,7 @@
 // import { createServerSupabaseClient } from "@/lib/supabase/server"
 "use client"
 import { AseguradorasPage } from "@/components/aseguradoras/aseguradoras-page"
-import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.SERVICE"
+import ASEGURADORA_SERVICE, { AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
 import { useEffect, useState } from "react"
 export const dynamic = "force-dynamic"
 

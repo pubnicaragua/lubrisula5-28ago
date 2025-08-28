@@ -15,7 +15,7 @@ import { toast } from "@/components/ui/use-toast"
 import SINIESTROS_SERVICES, { type SiniestroType } from "@/services/SINIESTROS_SERVICES.service"
 import CLIENTS_SERVICES, { type ClienteType } from "@/services/CLIENTES_SERVICES.SERVICE"
 import VEHICULO_SERVICES, { type VehiculoType } from "@/services/VEHICULOS.SERVICE"
-import ASEGURADORA_SERVICES, { type AseguradoraType } from "@/services/ASEGURADORA_SERVICES.SERVICE"
+import ASEGURADORA_SERVICES, { type AseguradoraType } from "@/services/ASEGURADORA_SERVICES.service"
 
 export default function SiniestrosPage() {
   const [siniestros, setSiniestros] = useState<SiniestroType[]>([])
