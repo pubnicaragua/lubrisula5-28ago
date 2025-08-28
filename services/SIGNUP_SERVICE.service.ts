@@ -40,7 +40,6 @@ const SIGNUP_SERVICES = {
     },
     SignUp: async (perfil: Omit<SingUpType, 'id' | 'created_at' | 'actualizado' | 'auth_id' | 'user_id'>): Promise<{ success: boolean, data: PerfilUsuario, error: string }> => {
         try {
-
             const { data, error: ErrorSignUp } = await getSupabaseClient().auth.signUp({
                 email: perfil.correo || '',
                 password: perfil.password,

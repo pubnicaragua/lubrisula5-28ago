@@ -65,6 +65,7 @@ export function ClientesPage() {
     })
   }
   const FN_DELETE_CLIENTE = async (id: string) => {
+    console.log(id)
     await CLIENTS_SERVICES.DELETE_CLIENTE(id)
     setState_Clientes((prev) => prev.filter((c) => c.id !== clienteToDelete.id))
     setDeleteDialogOpen(false)

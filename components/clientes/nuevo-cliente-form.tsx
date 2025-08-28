@@ -92,10 +92,13 @@ export function NuevoClienteForm({ onSubmit, clienteExistente }: NuevoClienteFor
           <Label htmlFor="email">Email *</Label>
           <Input id="email" name="email" type="email" value={formData?.email} onChange={handleInputChange} required />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email">Password *</Label>
-          <Input id="password" name="password" type="text" value={formData?.password} onChange={handleInputChange} required />
-        </div>
+        {
+          !clienteExistente &&
+          <div className="grid gap-2">
+            <Label htmlFor="email">Password *</Label>
+            <Input id="password" name="password" type="text" value={formData?.password} onChange={handleInputChange} required />
+          </div>
+        }
 
         <div className="grid gap-2">
           <Label htmlFor="phone">Teléfono *</Label>

@@ -1,3 +1,4 @@
+import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { AxiosDelete, AxiosGet, AxiosPatch, AxiosPost } from "./AxiosServices.module";
 import SIGNUP_SERVICES from "./SIGNUP_SERVICE.service";
 
@@ -37,21 +38,28 @@ const CLIENTS_SERVICES = {
             telefono: cliente.phone || ''
         })
         if (user.error) return { success: false, data: [], error: user.error };
+        console.log(cliente)
         delete cliente.password; // Remove password before sending to clients table
-        const res: ClienteType[] = await AxiosPost({ path: '/clients', payload: cliente });
+        const res: ClienteType[] = await AxiosPost({ path: '/clients', payload: { ...cliente, user_id: user.data.auth_id, taller_id: localStorage.getItem('taller_id') } });
         return { success: true, data: res, error: null };
     },
     async UPDATE_CLIENTE(cliente: ClienteType): Promise<ClienteType[]> {
         const clientId = cliente.id;
         delete cliente.id; // Remove id from payload to avoid conflict
         delete cliente.status; // Remove status if not needed in update
+        delete cliente?.password
 
         const res: ClienteType[] = await AxiosPatch({ path: `/clients?id=eq.${clientId}`, payload: cliente })
 
         return res;
     },
     async DELETE_CLIENTE(id: string) {
-        const res = await AxiosDelete({ path: `/clients?id=eq.${id}` })
+        console.log(id)
+        const res = await AxiosGet({ path: `/clients?id=eq.${id}` })
+        console.log(res)
+        const { data, error } = await getSupabaseAdmin().auth.admin.deleteUser(res[0].user_id || '');
+        if (error) console.log(error)
+        // const res = await AxiosDelete({ path: `/perfil_usuario?id=eq.${id}` })
 
         return res;
     }

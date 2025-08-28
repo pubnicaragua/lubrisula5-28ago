@@ -4,6 +4,7 @@ import type { Database } from "./database.types"
 // Verificar que las variables de entorno estén definidas
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl) {
   throw new Error("NEXT_PUBLIC_SUPABASE_URL no está definido")
@@ -22,6 +23,9 @@ export function createClient() {
     },
   })
 }
+export function createAdmin() {
+  return createSupabaseClient<Database>(supabaseUrl, supabaseRoleKey)
+}
 
 // Cliente singleton
 let supabaseClientInstance: ReturnType<typeof createSupabaseClient<Database>> | null = null
@@ -29,6 +33,12 @@ let supabaseClientInstance: ReturnType<typeof createSupabaseClient<Database>> | 
 export function getSupabaseClient() {
   if (!supabaseClientInstance) {
     supabaseClientInstance = createClient()
+  }
+  return supabaseClientInstance
+}
+export function getSupabaseAdmin() {
+  if (!supabaseClientInstance) {
+    supabaseClientInstance = createAdmin()
   }
   return supabaseClientInstance
 }

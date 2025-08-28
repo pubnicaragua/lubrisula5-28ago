@@ -105,7 +105,7 @@ const TECNICO_SERVICES = {
         })
         console.log(user)
         if (user.error) return { success: false, error: user.error }
-        const newTecnico: TecnicoType[] = await AxiosPost({ path: '/tecnicos', payload: InsertTecnicoData.info })
+        const newTecnico: TecnicoType[] = await AxiosPost({ path: '/tecnicos', payload: { ...InsertTecnicoData.info, auth_id: user.data.auth_id, estado: 'Activo', taller_id: localStorage.getItem('taller_id') } })
         const IdTecnico = newTecnico[0].id;
         const Habilidades: TecnicoHabilidadType[] = InsertTecnicoData.habilidades.map(hab => ({ tecnico_id: IdTecnico, habilidad: hab }))
         const ResHabilidades: TecnicoType[] = await AxiosPost({ path: '/tecnicos_habilidades', payload: Habilidades })
