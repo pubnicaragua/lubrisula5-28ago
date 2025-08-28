@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getCitas() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("citas")
@@ -20,7 +20,7 @@ export async function getCitas() {
 }
 
 export async function getCitaById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("citas")
@@ -37,7 +37,7 @@ export async function getCitaById(id: string) {
 }
 
 export async function getCitasByFecha(fecha: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("citas")
@@ -54,7 +54,7 @@ export async function getCitasByFecha(fecha: string) {
 }
 
 export async function getTecnicosDisponibles(fecha: string, horaInicio: string, horaFin: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   // Primero obtenemos todos los técnicos
   const { data: tecnicos, error: tecnicosError } = await supabase
@@ -98,7 +98,7 @@ export async function getTecnicosDisponibles(fecha: string, horaInicio: string, 
 }
 
 export async function createCita(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const cliente_id = formData.get("cliente_id") as string
   const vehiculo_id = formData.get("vehiculo_id") as string
@@ -137,7 +137,7 @@ export async function createCita(formData: FormData) {
 }
 
 export async function updateCita(id: string, formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const cliente_id = formData.get("cliente_id") as string
   const vehiculo_id = formData.get("vehiculo_id") as string
@@ -176,7 +176,7 @@ export async function updateCita(id: string, formData: FormData) {
 }
 
 export async function updateEstadoCita(id: string, estado: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("citas").update({ estado }).eq("id", id).select()
 
@@ -191,7 +191,7 @@ export async function updateEstadoCita(id: string, estado: string) {
 }
 
 export async function deleteCita(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("citas").delete().eq("id", id)
 

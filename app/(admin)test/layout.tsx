@@ -1,15 +1,16 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminNav } from "@/components/admin/admin-nav"
 import { UserNav } from "@/components/user-nav"
 import { ModeToggle } from "@/components/mode-toggle"
 
+// createServerSupabaseClient
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createServerSupabaseClient()
+  const supabase = getSupabaseServer()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
@@ -22,7 +23,7 @@ export default async function AdminLayout({
     .eq('user_id', session.user.id)
     .single()
 
-  const rol = user?.rol?.nombre
+  const rol = user?.rol?.[0]?.nombre
 
   if (rol !== 'admin' && rol !== 'superadmin') {
     redirect('/dashboard')

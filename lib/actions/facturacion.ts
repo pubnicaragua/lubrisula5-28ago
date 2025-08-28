@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getFacturas() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("facturas")
@@ -20,7 +20,7 @@ export async function getFacturas() {
 }
 
 export async function getFacturaById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("facturas")
@@ -47,7 +47,7 @@ export async function getFacturaById(id: string) {
 }
 
 export async function getOrdenesNoFacturadas() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("ordenes")
@@ -65,7 +65,7 @@ export async function getOrdenesNoFacturadas() {
 }
 
 export async function createFactura(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const cliente_id = formData.get("cliente_id") as string
   const orden_id = formData.get("orden_id") as string
@@ -138,7 +138,7 @@ export async function createFactura(formData: FormData) {
 }
 
 export async function updateEstadoFactura(id: string, estado: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("facturas").update({ estado }).eq("id", id).select()
 
@@ -153,7 +153,7 @@ export async function updateEstadoFactura(id: string, estado: string) {
 }
 
 export async function deleteFactura(id: string, ordenId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   // Primero eliminar los items
   const { error: itemsError } = await supabase.from("items_factura").delete().eq("factura_id", id)

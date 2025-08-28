@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 interface KanbanColumn {
@@ -17,7 +17,7 @@ export async function saveKanbanConfiguration(
   mostrarTiempoEstimado: boolean,
   mostrarAsignados: boolean,
 ) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     // Obtener el ID del usuario autenticado
@@ -72,7 +72,7 @@ export async function saveKanbanConfiguration(
 }
 
 export async function getKanbanConfiguration() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
   const { data: columns, error: columnsError } = await supabase
     .from("kanban_columns")
     .select("*")

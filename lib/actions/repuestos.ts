@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getRepuestos() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("repuestos")
@@ -20,7 +20,7 @@ export async function getRepuestos() {
 }
 
 export async function getRepuestoById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("repuestos").select("*, proveedores(id, nombre)").eq("id", id).single()
 
@@ -33,7 +33,7 @@ export async function getRepuestoById(id: string) {
 }
 
 export async function getProveedores() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("proveedores").select("*").order("nombre", { ascending: true })
 
@@ -46,7 +46,7 @@ export async function getProveedores() {
 }
 
 export async function createRepuesto(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const codigo = formData.get("codigo") as string
@@ -85,7 +85,7 @@ export async function createRepuesto(formData: FormData) {
 }
 
 export async function updateRepuesto(id: string, formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const codigo = formData.get("codigo") as string
@@ -124,7 +124,7 @@ export async function updateRepuesto(id: string, formData: FormData) {
 }
 
 export async function deleteRepuesto(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("repuestos").delete().eq("id", id)
 
@@ -138,7 +138,7 @@ export async function deleteRepuesto(id: string) {
 }
 
 export async function createProveedor(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const contacto = formData.get("contacto") as string
@@ -169,7 +169,7 @@ export async function createProveedor(formData: FormData) {
 }
 
 export async function deleteProveedor(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("proveedores").delete().eq("id", id)
 

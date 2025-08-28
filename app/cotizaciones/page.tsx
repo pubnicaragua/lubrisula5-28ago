@@ -1,8 +1,8 @@
 import { CotizacionesPage } from "@/components/cotizaciones/cotizaciones-page"
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export default async function CotizacionesRoute() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   // Verificar si las tablas necesarias existen
   const { data: tablesExist, error: tablesError } = await (await supabase).rpc("execute_sql", {

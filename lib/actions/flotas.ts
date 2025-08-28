@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getFlotas() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("flotas")
@@ -20,7 +20,7 @@ export async function getFlotas() {
 }
 
 export async function getFlotaById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("flotas").select("*, clientes(id, nombre)").eq("id", id).single()
 
@@ -33,7 +33,7 @@ export async function getFlotaById(id: string) {
 }
 
 export async function getConductoresByFlotaId(flotaId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("conductores").select("*").eq("flota_id", flotaId)
 
@@ -46,7 +46,7 @@ export async function getConductoresByFlotaId(flotaId: string) {
 }
 
 export async function createFlota(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const cliente_id = formData.get("cliente_id") as string
@@ -75,7 +75,7 @@ export async function createFlota(formData: FormData) {
 }
 
 export async function updateFlota(id: string, formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const cliente_id = formData.get("cliente_id") as string
@@ -104,7 +104,7 @@ export async function updateFlota(id: string, formData: FormData) {
 }
 
 export async function deleteFlota(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("flotas").delete().eq("id", id)
 
@@ -118,7 +118,7 @@ export async function deleteFlota(id: string) {
 }
 
 export async function createConductor(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const apellido = formData.get("apellido") as string
@@ -149,7 +149,7 @@ export async function createConductor(formData: FormData) {
 }
 
 export async function deleteConductor(id: string, flotaId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("conductores").delete().eq("id", id)
 

@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export async function createUserTables() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   // Crear tabla de perfiles de usuario si no existe
   const { error: profilesError } = await supabase.rpc("create_table_if_not_exists", {

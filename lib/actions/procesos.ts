@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getProcesos() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("procesos").select("*").order("orden", { ascending: true })
 
@@ -17,7 +17,7 @@ export async function getProcesos() {
 }
 
 export async function getProcesoById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("procesos").select("*").eq("id", id).single()
 
@@ -30,7 +30,7 @@ export async function getProcesoById(id: string) {
 }
 
 export async function getPaquetesServicio() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("paquetes_servicio")
@@ -46,7 +46,7 @@ export async function getPaquetesServicio() {
 }
 
 export async function getPaqueteServicioById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("paquetes_servicio")
@@ -63,7 +63,7 @@ export async function getPaqueteServicioById(id: string) {
 }
 
 export async function createProceso(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const descripcion = formData.get("descripcion") as string
@@ -94,7 +94,7 @@ export async function createProceso(formData: FormData) {
 }
 
 export async function updateProceso(id: string, formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const descripcion = formData.get("descripcion") as string
@@ -125,7 +125,7 @@ export async function updateProceso(id: string, formData: FormData) {
 }
 
 export async function deleteProceso(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("procesos").delete().eq("id", id)
 
@@ -139,7 +139,7 @@ export async function deleteProceso(id: string) {
 }
 
 export async function createPaqueteServicio(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const descripcion = formData.get("descripcion") as string
@@ -187,7 +187,7 @@ export async function createPaqueteServicio(formData: FormData) {
 }
 
 export async function deletePaqueteServicio(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   // Primero eliminar las relaciones
   const { error: relError } = await supabase.from("procesos_paquete").delete().eq("paquete_id", id)

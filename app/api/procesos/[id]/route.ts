@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     const { data, error } = await supabase.from("procesos_taller").select("*").eq("id", params.id).single()
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     const body = await request.json()
@@ -65,7 +65,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     // Verificar si hay materiales asociados

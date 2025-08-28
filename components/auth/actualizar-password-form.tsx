@@ -10,8 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase/auth"
-
+import { supabase } from "@/lib/auth"
+// import supabase from "@/lib/supabase/auth"
 // Esquema de validación
 const formSchema = z
   .object({

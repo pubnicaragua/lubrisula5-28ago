@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export async function GET() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     const { data, error } = await supabase.from("procesos_taller").select("*").order("orden", { ascending: true })
@@ -20,7 +20,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     const body = await request.json()

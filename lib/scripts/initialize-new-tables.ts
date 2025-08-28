@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import fs from "fs"
 import path from "path"
 
 export async function initializeNewTables() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   try {
     // Leer el archivo SQL

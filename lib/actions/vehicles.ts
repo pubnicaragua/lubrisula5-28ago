@@ -1,12 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 // Obtener todos los vehículos
 export async function getVehicles() {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()
@@ -49,7 +49,7 @@ export async function getVehicles() {
 // Crear un nuevo vehículo
 export async function createVehicle(vehicleData) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()
@@ -95,7 +95,7 @@ export async function createVehicle(vehicleData) {
 // Obtener un vehículo por ID
 export async function getVehicleById(id) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()
@@ -138,7 +138,7 @@ export async function getVehicleById(id) {
 // Actualizar un vehículo
 export async function updateVehicle(id, vehicleData) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()
@@ -190,7 +190,7 @@ export async function updateVehicle(id, vehicleData) {
 // Eliminar un vehículo
 export async function deleteVehicle(id) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()
@@ -232,7 +232,7 @@ export async function deleteVehicle(id) {
 // Obtener vehículos por cliente
 export async function getVehiclesByClient(clientId) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseServer()
 
     // Verificar si la tabla existe
     const { error: tableCheckError } = await supabase.from("vehicles").select("id").limit(1).single()

@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getMiembrosEquipo() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("miembros_equipo").select("*").order("created_at", { ascending: false })
 
@@ -17,7 +17,7 @@ export async function getMiembrosEquipo() {
 }
 
 export async function getMiembroEquipoById(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase.from("miembros_equipo").select("*").eq("id", id).single()
 
@@ -30,7 +30,7 @@ export async function getMiembroEquipoById(id: string) {
 }
 
 export async function getHorariosByMiembroId(miembroId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { data, error } = await supabase
     .from("horarios")
@@ -47,7 +47,7 @@ export async function getHorariosByMiembroId(miembroId: string) {
 }
 
 export async function createMiembroEquipo(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const apellido = formData.get("apellido") as string
@@ -80,7 +80,7 @@ export async function createMiembroEquipo(formData: FormData) {
 }
 
 export async function updateMiembroEquipo(id: string, formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const nombre = formData.get("nombre") as string
   const apellido = formData.get("apellido") as string
@@ -113,7 +113,7 @@ export async function updateMiembroEquipo(id: string, formData: FormData) {
 }
 
 export async function deleteMiembroEquipo(id: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("miembros_equipo").delete().eq("id", id)
 
@@ -127,7 +127,7 @@ export async function deleteMiembroEquipo(id: string) {
 }
 
 export async function createHorario(formData: FormData) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const miembro_id = formData.get("miembro_id") as string
   const dia = formData.get("dia") as string
@@ -156,7 +156,7 @@ export async function createHorario(formData: FormData) {
 }
 
 export async function deleteHorario(id: string, miembroId: string) {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
 
   const { error } = await supabase.from("horarios").delete().eq("id", id)
 

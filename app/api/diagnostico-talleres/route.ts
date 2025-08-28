@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export async function GET() {
-  const supabase = createClient()
+  const supabase = getSupabaseServer()
   const tablas = ["procesos_taller", "materiales", "material_orden", "material_cotizacion", "suppliers"]
 
   const resultados: Record<string, boolean> = {}

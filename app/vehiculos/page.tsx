@@ -1,8 +1,8 @@
 import { VehiculosPage } from "@/components/vehiculos/vehiculos-page"
-import { createClient } from "@/lib/supabase/server"
+import { getSupabaseServer } from "@/lib/supabase/server"
 
 export default async function VehiculosRoute() {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
 
   // Verificar si la tabla vehicles existe
   const { data: tableExists, error: tableError } = await supabase.rpc("execute_sql", {
@@ -37,5 +37,9 @@ export default async function VehiculosRoute() {
     clients = clientsData
   }
 
-  return <VehiculosPage initialVehicles={vehicles} clients={clients} tableExists={vehiclesTableExists} />
+  return <VehiculosPage
+  // initialVehicles={vehicles}
+  //  clients={clients}
+  // tableExists={vehiclesTableExists}
+  />
 }
