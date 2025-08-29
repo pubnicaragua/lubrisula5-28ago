@@ -65,7 +65,8 @@ export type DetalleCotyzacionesType = {
 
 const COTIZACIONES_SERVICES = {
     async GET_ALL_COTIZACIONES(): Promise<CotizacionesType[]> {
-        const data: CotizacionesType[] = await AxiosGet({ path: '/view_cotizaciones' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const data: CotizacionesType[] = await AxiosGet({ path: '/view_cotizaciones?taller_id=eq.' + taller_id })
         return data;
     },
     async GET_PARTS_BY_COTIZACION_ID(cotizacion_id: string): Promise<ParteCotizacionType[]> {
@@ -88,7 +89,9 @@ const COTIZACIONES_SERVICES = {
 
     },
     async INSERT_COTIZACION(cotizacion: CotizacionInsertTableType, partes: ParteCotizacionType[]) {
-        const newCotizacion: CotizacionInsertTableType[] = await AxiosPost({ path: '/quotations', payload: cotizacion })
+        const taller_id = localStorage.getItem("taller_id") || "";
+
+        const newCotizacion: CotizacionInsertTableType[] = await AxiosPost({ path: '/quotations', payload: { ...cotizacion, taller_id } })
         const PartesDeCotizaciones = partes.map(part => ({ ...part, quotation_id: newCotizacion[0].id }))
         await AxiosPost({ path: '/quotation_parts', payload: PartesDeCotizaciones })
         return true;

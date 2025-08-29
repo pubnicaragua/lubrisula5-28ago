@@ -48,7 +48,6 @@ export type PaqueteServicioType = {
   servicios?: Omit<ServicioType, "categorias_servicio">[];
 }
 
-
 const SERVICIOS_SERVICES = {
   async GET_ALL_TIPO_SERVICIOS(): Promise<TipoServicioType[]> {
     const data: TipoServicioType[] = await AxiosGet({ path: '/tipos_operacion' })
@@ -59,15 +58,18 @@ const SERVICIOS_SERVICES = {
     return data;
   },
   async GET_ALL_SERVICIOS(): Promise<ServicioType[]> {
-    const data: ServicioType[] = await AxiosGet({ path: '/servicios?select=*,categorias_servicio(*)' })
+    const taller_id = localStorage.getItem("taller_id") || "";
+    const data: ServicioType[] = await AxiosGet({ path: `/servicios?select=*,categorias_servicio(*)&taller_id=eq.${taller_id}` })
     return data;
   },
   async GET_ALL_PAQUETES_SERVICIOS(): Promise<PaqueteServicioType[]> {
-    const data: PaqueteServicioType[] = await AxiosGet({ path: '/paquetes_servicio?select=*,categorias_servicio(*),servicios(*)' })
+    const taller_id = localStorage.getItem("taller_id") || "";
+    const data: PaqueteServicioType[] = await AxiosGet({ path: `/paquetes_servicio?select=*,categorias_servicio(*),servicios(*)&taller_id=eq.${taller_id}` })
     return data;
   },
   async INSERT_PAQUETES_SERVICIOS(paquete: Omit<PaqueteServicioType, "categorias_servicio" | "servicios">, ListIdServices: number[]): Promise<Omit<PaqueteServicioType, "categorias_servicio" | "servicios">> {
-    const ResPaquete: PaqueteServicioType[] = await AxiosPost({ path: '/paquetes_servicio', payload: paquete })
+    const taller_id = localStorage.getItem("taller_id") || "";
+    const ResPaquete: PaqueteServicioType[] = await AxiosPost({ path: '/paquetes_servicio', payload: { ...paquete, taller_id } })
 
     for (let servId of ListIdServices) {
       await AxiosPatch({ path: `/servicios?id=eq.${servId}`, payload: { paquete_id: ResPaquete[0].id } })
@@ -93,7 +95,8 @@ const SERVICIOS_SERVICES = {
   },
 
   async INSERT_SERVICIO(serv: ServicioType): Promise<ServicioType> {
-    const res: ServicioType[] = await AxiosPost({ path: '/servicios', payload: serv })
+    const taller_id = localStorage.getItem("taller_id") || "";
+    const res: ServicioType[] = await AxiosPost({ path: '/servicios', payload: { ...serv, taller_id } })
     return res[0];
   },
   async UPDATE_SERVICIO(serv: ServicioType): Promise<ServicioType> {

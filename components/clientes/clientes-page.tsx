@@ -43,8 +43,7 @@ export function ClientesPage() {
   const { toast } = useToast()
 
   const FN_GET_CLIENTS = async () => {
-    const taller_id = localStorage.getItem("taller_id") || ""
-    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id)
+    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
     setState_Clientes(res)
   }
   const FN_UPDATE_CLIENTE = async (clienteEditado: ClienteType) => {

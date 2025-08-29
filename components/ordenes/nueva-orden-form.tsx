@@ -29,8 +29,7 @@ export function NuevaOrdenForm({ onSubmit, ordenExistente }: NuevaOrdenFormProps
   const [State_TiposServicios, SetState_TiposServicios] = useState<TipoServicioType[]>([])
   // const [State_EstadoOrden, SetState_EstadoOrden] = useState<TipoServicioType[]>([])
   const GET_CLIENTES = async () => {
-    const taller_id = localStorage.getItem("taller_id") || ""
-    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id);
+    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
     SetStateClientes(res)
   }
   const GET_VEHICULOS = async (client_id: string) => {

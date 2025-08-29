@@ -134,8 +134,7 @@ export function NuevaCotizacionForm({ onSuccess, cotizacionExistente }: NuevaCot
   useEffect(() => {
     async function loadClients() {
       // const data = await getClients()
-      const taller_id = localStorage.getItem("taller_id") || ""
-      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id)
+      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
       setClients(data)
       setLoading(false)
     }

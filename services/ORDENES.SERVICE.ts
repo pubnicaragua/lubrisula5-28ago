@@ -39,7 +39,8 @@ export type OrdenTrabajoInsertTablaType = {
 
 const ORDENES_TRABAJO_SERVICES = {
     async GET_ALL_ORDENES(): Promise<OrdenTrabajoType[]> {
-        const data: OrdenTrabajoType[] = await AxiosGet({ path: '/view_ordenes_trabajo' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const data: OrdenTrabajoType[] = await AxiosGet({ path: '/view_ordenes_trabajo?taller_id=eq.' + taller_id })
         return data;
     },
     async GET_ALL_ORDENES_BY_ESTADO(estado: 'Completada' | 'En Proceso' | 'Pendiente' | 'Entregada' | 'Cancelada'): Promise<OrdenTrabajoType[]> {
@@ -52,7 +53,9 @@ const ORDENES_TRABAJO_SERVICES = {
     },
 
     async INSERT_ORDEN(orden: OrdenTrabajoInsertTablaType): Promise<OrdenTrabajoType[]> {
-        const res: OrdenTrabajoType[] = await AxiosPost({ path: '/ordenes_trabajo', payload: orden })
+        const taller_id = localStorage.getItem("taller_id") || "";
+
+        const res: OrdenTrabajoType[] = await AxiosPost({ path: '/ordenes_trabajo', payload: { ...orden, taller_id } })
         return res;
     },
     async UPDATE_ORDEN(id: string, orden: OrdenTrabajoInsertTablaType): Promise<OrdenTrabajoType[]> {

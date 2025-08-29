@@ -19,7 +19,8 @@ export type ClienteType = {
 };
 
 const CLIENTS_SERVICES = {
-    async GET_ALL_CLIENTS(taller_id: string): Promise<ClienteType[]> {
+    async GET_ALL_CLIENTS(): Promise<ClienteType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const UsuariosData: ClienteType[] = await AxiosGet({ path: `/view_clients?taller_id=eq.${taller_id}` })
         return UsuariosData;
     },

@@ -81,11 +81,15 @@ export type TecnicoConDetallesType = {
 
 const TECNICO_SERVICES = {
     async GET_ALL_TECNICOS(): Promise<TecnicoType[]> {
-        const data: TecnicoType[] = await AxiosGet({ path: '/tecnicos' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        console.log(taller_id)
+        const data: TecnicoType[] = await AxiosGet({ path: `/tecnicos?taller_id=eq.${taller_id}` })
         return data;
     },
     async GET_ALL_DETALLE_TECNICOS(): Promise<TecnicoConDetallesType[]> {
-        const data: TecnicoConDetallesType[] = await AxiosGet({ path: '/tecnicos?select=*,tecnicos_habilidades(*), tecnicos_horarios(*), tecnicos_certificaciones(*)' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+
+        const data: TecnicoConDetallesType[] = await AxiosGet({ path: `/tecnicos?select=*,tecnicos_habilidades(*), tecnicos_horarios(*), tecnicos_certificaciones(*)&taller_id=eq.${taller_id}` })
         return data;
     },
 

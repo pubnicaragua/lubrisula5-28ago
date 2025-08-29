@@ -69,6 +69,7 @@ export type CitasDetalleType = {
     tecnicos?: Tecnico;
     vehicles?: Vehicle;
     tipos_operacion?: TipoOperacion;
+    taller_id?: string;
     nota?: string
 };
 
@@ -77,19 +78,22 @@ export type CitaType = Omit<CitasDetalleType, 'vehicles' | 'tipos_operacion' | '
 
 const CITAS_SERVICES = {
     async GET_ALL_CITAS(): Promise<CitasDetalleType[]> {
-        const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*), tecnicos(*), vehicles(*), tipos_operacion(*)' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*), tecnicos(*), vehicles(*), tipos_operacion(*)&taller_id=eq.' + taller_id })
         return CitasData;
     },
     async GET_ALL_CITAS_PROGRAMADAS_RECIENTES(): Promise<CitasDetalleType[]> {
-        const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*),tecnicos(*),vehicles(*),tipos_operacion(*)&order=created_at.desc&estado=eq.programada&limit=5' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const CitasData: CitasDetalleType[] = await AxiosGet({ path: '/citas?select=*,clients(*),tecnicos(*),vehicles(*),tipos_operacion(*)&order=created_at.desc&estado=eq.programada&limit=5&taller_id=eq.' + taller_id })
         return CitasData;
     },
     async GET_CITA_BY_ID(Id: string): Promise<CitasDetalleType> {
         const CitasData: CitasDetalleType[] = await AxiosGet({ path: `/citas?id=eq.${Id}` })
         return CitasData[0];
     },
-    async INSERT_CITA(Data: Omit<CitaType, 'id' | 'updated_at'>): Promise<CitaType> {
-        const res: CitaType[] = await AxiosPost({ path: '/citas', payload: Data })
+    async INSERT_CITA(Data: Omit<CitaType, 'id' | 'updated_at' | 'taller_id'>): Promise<CitaType> {
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const res: CitaType[] = await AxiosPost({ path: '/citas', payload: { ...Data, taller_id } })
         return res[0]
     },
     async UPDATE_CITA(Data: CitaType): Promise<CitaType> {
@@ -97,7 +101,7 @@ const CITAS_SERVICES = {
         return res[0]
     },
     async CONFIRMAR_CITA(cita_id: string): Promise<CitaType> {
-        const res: CitaType[] = await AxiosPatch({ path: `/citas?id=eq.${cita_id}`, payload: {estado:'Confirmada'} })
+        const res: CitaType[] = await AxiosPatch({ path: `/citas?id=eq.${cita_id}`, payload: { estado: 'Confirmada' } })
         return res[0]
     },
     async DELETE_CITA(cita_id: string) {

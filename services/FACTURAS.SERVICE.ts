@@ -51,7 +51,8 @@ export type MetodoPagoType = {
 
 const FACTURAS_SERVICES = {
     async GET_ALL_FACTURAS(): Promise<FacturaType[]> {
-        const facturas: FacturaType[] = await AxiosGet({ path: '/view_facturas' })
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const facturas: FacturaType[] = await AxiosGet({ path: '/view_facturas?taller_id=eq.' + taller_id })
         return facturas;
     },
     async GET_ALL_METODOS_PAGO(): Promise<MetodoPagoType[]> {
@@ -59,7 +60,8 @@ const FACTURAS_SERVICES = {
         return facturas;
     },
     async INSERT_FACTURA(factura: FacturaType): Promise<FacturaTableType> {
-        const res: FacturaTableType[] = await AxiosPost({ path: '/facturas', payload: factura });
+        const taller_id = localStorage.getItem("taller_id") || "";
+        const res: FacturaTableType[] = await AxiosPost({ path: '/facturas', payload: { ...factura, taller_id } });
         return res[0]
     },
     async UPDATE_FACTURA(factura: FacturaTableType): Promise<FacturaTableType> {

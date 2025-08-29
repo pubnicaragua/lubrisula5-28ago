@@ -46,8 +46,7 @@ export default function Form_NuevaCita({ onSucces }: { onSucces?: () => void }) 
     const [State_Form, SetState_Form] = useState<Omit<CitaType, 'id'>>({})
 
     const FN_GET_CLIENTES = async () => {
-        const taller_id = localStorage.getItem("taller_id") || ""
-        const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id);
+        const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
         SetState_Clientes(res)
     }
     const FN_GET_VEHICULOS = async (client_id: string) => {

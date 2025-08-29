@@ -1,5 +1,5 @@
 
-import { AxiosDelete, AxiosGet } from "./AxiosServices.module";
+import { AxiosGet, AxiosPost } from "./AxiosServices.module";
 
 export type CategoriaMaterialType = {
     id: string;
@@ -38,20 +38,39 @@ export type InventarioType = {
     categorias_materiales: CategoriaMaterialType;
     suppliers: ProveedorType;
 }
+export type ProductoInsertFormType = {
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    categoria_id: string;
+    precio_compra: number;
+    precio_venta: number;
+    stock_actual: number;
+    stock_minimo: number;
+    proveedor_id: string;
+    ubicacion_almacen: string;
+    fecha_ingreso: string;
+    estado: string;
+    taller_id: string;
+};
 const INVENTARIO_SERVICES = {
     async GET_INVENTARIO(): Promise<InventarioType[]> {
-        const data: InventarioType[] = await AxiosGet({ path: '/inventario_test?select=*,categorias_materiales(*),suppliers(*)' })
+        const taller = localStorage.getItem("taller_id") || "";
+        console.log(taller)
+        const data: InventarioType[] = await AxiosGet({ path: `/inventario_test?select=*,categorias_materiales(*),suppliers(*)&taller_id=eq.${taller}` })
 
+        return data;
+    },
+    async INSERT_PRODUCTO(producto: ProductoInsertFormType): Promise<CategoriaMaterialType[]> {
+        const data: CategoriaMaterialType[] = await AxiosPost({ path: '/inventario_test', payload: producto })
         return data;
     },
     async GET_CATEGORIA_MATERIALES(): Promise<CategoriaMaterialType[]> {
         const data: CategoriaMaterialType[] = await AxiosGet({ path: '/categorias_materiales' })
-
         return data;
     },
     async GET_PROVEEDORES(): Promise<ProveedorType[]> {
         const data: ProveedorType[] = await AxiosGet({ path: '/suppliers' })
-
         return data;
     },
 };

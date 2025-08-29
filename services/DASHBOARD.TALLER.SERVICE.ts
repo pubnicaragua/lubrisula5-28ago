@@ -33,27 +33,33 @@ export type RendimientoTecnicoType = {
 };
 const DASHBOARD_TALLER_SERVICES = {
     async GET_CABECERA(): Promise<CabeceraDashboardType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: CabeceraDashboardType[] = await AxiosGet({ path: '/vista_cabecera_dashboard' })
         return data;
     },
     async GET_RENDIMIENTO_ORDENES_SEMANALES(): Promise<RendimientoOrdenesSemanalesType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: RendimientoOrdenesSemanalesType[] = await AxiosGet({ path: '/vista_rendimientono_ordenes_semanales' })
         return data;
     },
     async GET_ESTADO_ORDENES(): Promise<EstadoOrdenType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: EstadoOrdenType[] = await AxiosGet({ path: '/vista_estado_ordenes' })
         return data;
     },
 
     async GET_PORCENTAJE_ORDENES_POR_TIPO(): Promise<TipoOrdenPorcentajeType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: TipoOrdenPorcentajeType[] = await AxiosGet({ path: '/vista_ordenes_por_tipo' })
         return data;
     },
     async GET_DISTRIBUCION_DE_ESPECIALIDADES(): Promise<DistribucionEspecialidadType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: DistribucionEspecialidadType[] = await AxiosGet({ path: '/vista_distribucion_de_especialidades' })
         return data;
     },
     async GET_RENDIMIENTO_DE_TECNICOS(): Promise<RendimientoTecnicoType[]> {
+        const taller_id = localStorage.getItem("taller_id") || "";
         const data: RendimientoTecnicoType[] = await AxiosGet({ path: '/vista_rendimiento_tecnicos' })
         return data;
     },

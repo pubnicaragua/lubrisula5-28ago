@@ -204,7 +204,7 @@ export function InventarioPage() {
         })
       } else {
         // Crear nuevo producto
-        const { error } = await supabase.from("inventario_test").insert({
+        const producto = {
           codigo: formData.codigo,
           nombre: formData.nombre,
           descripcion: formData.descripcion,
@@ -217,15 +217,16 @@ export function InventarioPage() {
           ubicacion_almacen: formData.ubicacion,
           fecha_ingreso: formData.fecha_ingreso,
           estado: formData.estado,
-        })
+          taller_id: localStorage.getItem("taller_id") || ""
+        };
 
-        if (error) throw error
+        await INVENTARIO_SERVICES.INSERT_PRODUCTO(producto);
 
         toast({
           title: "Producto creado",
           description: `El producto ${formData.nombre} ha sido creado correctamente`,
         })
-      }
+      };
 
       // Cerrar diálogo y recargar datos
       setIsDialogOpen(false)

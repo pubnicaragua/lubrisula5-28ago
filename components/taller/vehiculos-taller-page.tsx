@@ -91,8 +91,7 @@ export function VehiculosTallerPage({ onOpenHojaIngreso }: VehiculosTallerPagePr
   const loadMockData = async () => {
     setIsLoading(true)
     const savedVehiculos = await VEHICULO_SERVICES.GET_ALL_VEHICULOS()
-    const taller_id = localStorage.getItem("taller_id") || ""
-    const savedClientes = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id)
+    const savedClientes = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
     setVehiculos(savedVehiculos)
     setClientes(savedClientes)
     setIsLoading(false)

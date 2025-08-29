@@ -23,8 +23,7 @@ export function NuevoVehiculoForm({ onSubmit, clients = [], vehiculoExistente }:
 
   const FN_GET_CLIENTES = async () => {
     // Aquí podrías llamar a un servicio para obtener los clientes si no se pasan como prop 
-    const taller_id = localStorage.getItem("taller_id") || ""
-    const DataClientes: ClienteType[] = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id);
+    const DataClientes: ClienteType[] = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
     SetState_Clientes(DataClientes)
   }
   // Cargar datos del vehículo existente si se está editando
