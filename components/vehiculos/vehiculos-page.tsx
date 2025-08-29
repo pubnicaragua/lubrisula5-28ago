@@ -54,7 +54,9 @@ export function VehiculosPage() {
   }
 
   const FN_GET_CLIENTES = async () => {
-    const DataClientes: ClienteType[] = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
+
+    const taller_id = localStorage.getItem("taller_id") || ""
+    const DataClientes: ClienteType[] = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id);
     SetState_Clientes(DataClientes)
   }
 

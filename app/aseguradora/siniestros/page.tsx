@@ -73,7 +73,8 @@ export default function SiniestrosPage() {
 
   const loadClientes = async () => {
     try {
-      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
+      const taller_id = localStorage.getItem("taller_id") || ""
+      const data = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id)
       setClientes(data)
     } catch (error) {
       console.error("Error al cargar clientes:", error)

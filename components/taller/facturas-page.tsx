@@ -62,7 +62,8 @@ export function FacturasPage() {
     setIsLoading(false)
   }
   const FN_GET_ALL_CLIENTS = async () => {
-    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS()
+    const taller_id = localStorage.getItem("taller_id") || ""
+    const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id)
     SetState_Clientes(res)
   }
   const FN_GET_ORDENES_DE_TRABAJO = async () => {

@@ -12,13 +12,15 @@ export type ClienteType = {
     client_type?: string;
     created_at?: string;
     updated_at?: string;
+    taller_id?: string;
+    activo?: boolean;
     status?: "Activo" | "Inactivo"; // Assuming status is a string, adjust as necessary,
     password: string
 };
 
 const CLIENTS_SERVICES = {
-    async GET_ALL_CLIENTS(): Promise<ClienteType[]> {
-        const UsuariosData: ClienteType[] = await AxiosGet({ path: '/view_clients' })
+    async GET_ALL_CLIENTS(taller_id: string): Promise<ClienteType[]> {
+        const UsuariosData: ClienteType[] = await AxiosGet({ path: `/view_clients?taller_id=eq.${taller_id}` })
         return UsuariosData;
     },
     async GET_CLIENTS_BY_ID(Id: string): Promise<ClienteType> {

@@ -51,7 +51,8 @@ export default function Form_Update_Cita({ cita_id, onSucces, open, setOpen }: {
 
     }
     const FN_GET_CLIENTES = async () => {
-        const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS();
+        const taller_id = localStorage.getItem("taller_id") || ""
+        const res = await CLIENTS_SERVICES.GET_ALL_CLIENTS(taller_id);
         SetState_Clientes(res)
     }
     const FN_GET_VEHICULOS = async (client_id: string) => {
