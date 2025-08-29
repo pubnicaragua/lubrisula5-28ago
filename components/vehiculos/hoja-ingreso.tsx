@@ -724,19 +724,19 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
           <div className="border-b-2 border-gray-300 pt-2 bg-white h-[200px]">
 
             {
-              InitialfirmaCliente ?
+              // InitialfirmaCliente ?
                 <img
                   src={InitialfirmaCliente || "/placeholder.svg"}
                   alt="Firma del cliente"
                   className="w-full h-full object-contain"
                 />
-                :
-                <SignatureCanvas
-                  ref={(ref) => setSigClienteRef(ref)}
-                  canvasProps={{ className: "w-full h-full h-[200px]" }}
-                  onEnd={() => setFirmaCliente(sigClienteRef?.toDataURL())}
+                // :
+                // <SignatureCanvas
+                //   ref={(ref) => setSigClienteRef(ref)}
+                //   canvasProps={{ className: "w-full h-full h-[200px]" }}
+                //   onEnd={() => setFirmaCliente(sigClienteRef?.toDataURL())}
 
-                />
+                // />
             }
 
 
