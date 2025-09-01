@@ -15,7 +15,9 @@ import {
   UserCog,
   DollarSign,
   Package,
-  ServerIcon
+  ServerIcon,
+  UserSquare,
+  ShipIcon
 } from "lucide-react"
 
 export function TallerNav() {
@@ -28,19 +30,29 @@ export function TallerNav() {
       icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
     },
     {
-      href: "/taller/ordenes",
-      title: "Órdenes",
-      icon: <Wrench className="mr-2 h-4 w-4" />,
-    },
-    {
       href: "/taller/kanban",
       title: "Kanban",
       icon: <LayoutGrid className="mr-2 h-4 w-4" />,
     },
     {
+      href: "/taller/equipo",
+      title: "Equipo",
+      icon: <UserSquare className="mr-2 h-4 w-4" />,
+    },
+    {
+      href: "/taller/ordenes",
+      title: "Órdenes",
+      icon: <Wrench className="mr-2 h-4 w-4" />,
+    },
+    {
       href: "/taller/vehiculos",
       title: "Vehículos",
       icon: <Car className="mr-2 h-4 w-4" />,
+    },
+    {
+      href: "/taller/flotas",
+      title: "Flotas",
+      icon: <ShipIcon className="mr-2 h-4 w-4" />,
     },
     {
       href: "/taller/cotizaciones",

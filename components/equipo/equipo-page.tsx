@@ -2,9 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MainNav } from "@/components/main-nav"
-import { ModeToggle } from "@/components/mode-toggle"
-import { UserNav } from "@/components/user-nav"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -35,17 +32,17 @@ import {
 } from "@/components/ui/alert-dialog"
 
 interface MiembroEquipo {
-  id: string
-  nombre: string
-  apellido: string
-  cargo: string
-  especialidad: string
-  telefono: string
-  email: string
-  fechaContratacion: string
-  estado: "Activo" | "Inactivo" | "De Vacaciones" | "Permiso"
-  horasTrabajadas: number
-  ordenesCompletadas: number
+  id?: string
+  nombre?: string
+  apellido?: string
+  cargo?: string
+  especialidad?: string
+  telefono?: string
+  email?: string
+  fechaContratacion?: string
+  estado?: "Activo" | "Inactivo" | "De Vacaciones" | "Permiso"
+  horasTrabajadas?: number
+  ordenesCompletadas?: number
   salario?: number
 }
 
@@ -237,13 +234,6 @@ export function EquipoPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
-        <MainNav />
-        <div className="ml-auto flex items-center gap-4">
-          <ModeToggle />
-          <UserNav />
-        </div>
-      </header>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Equipo de Trabajo</h1>
