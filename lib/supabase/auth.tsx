@@ -90,7 +90,6 @@ export async function getUserRoleFromDB(userId: string) {
       .eq("user_id", userId)
 
     if (userRolesError || !userRoles || userRoles.length === 0) {
-      console.log("No se encontraron roles para el usuario:", userId)
       return null
     }
 
@@ -144,7 +143,6 @@ export async function setAdminRole() {
       throw error
     }
 
-    console.log("Rol de administrador establecido correctamente")
     return { success: true }
   } catch (error) {
     console.error("Error al establecer rol de administrador:", error)
@@ -179,12 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log("Signing out...")
       const res = await supabase.auth.signOut()
-      console.log(res)
       setUser(null)
     } catch (error) {
-      console.log("Error signing out:", (error as Error).message)
     }
   }
 
@@ -218,17 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { role: 'taller' }, // metadata opcional
         },
       })
-      console.log(data)
-      console.log(data)
       if (ErrorUserAuth) {
-        console.log("Error en signUp:", ErrorUserAuth)
-        console.log("Error en signUp:", ErrorUserAuth.message)
         return { success: false, error: ErrorUserAuth.message }
       }
-      console.log("SignUp data:", data)
-      console.log("nombre:", nombre)
-      console.log("apellido:", apellido)
-      console.log("telefono:", telefono)
 
       if (!ErrorUserAuth) {
         const taller = await TALLER_SERVICES.INSERT_TALLER({
@@ -274,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: "No se pudo asignar el rol al usuario" }
       }
 
-      console.log("Usuario registrado y rol asignado correctamente")
       return { success: true, error: null }
     } catch (err: any) {
       console.error("Error inesperado en signUp:", err)
@@ -302,15 +288,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
       if (error) {
-        console.log("Error en signUp:", error.message)
         return { error: error.message }
       }
-      console.log("SignUp data:", data)
-      console.log("taller id:", taller_id)
-      console.log("role:", role)
-      console.log("nombre:", nombre)
-      console.log("apellido:", apellido)
-      console.log("telefono:", telefono)
 
 
       await supabase.from('perfil_usuario').insert([{ auth_id: data?.user?.id, nombre, apellido, telefono, correo: email, estado: true }])
@@ -349,7 +328,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: "No se pudo asignar el rol al usuario" }
       }
 
-      console.log("Usuario registrado y rol asignado correctamente")
       return null
     } catch (err: any) {
       console.error("Error inesperado en signUp:", err)

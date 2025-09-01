@@ -49,11 +49,8 @@ const SIGNUP_SERVICES = {
                 },
             })
             if (ErrorSignUp) throw new Error(ErrorSignUp.message);
-            console.log(data)
-            console.log(perfil)
             delete perfil.password
             const user = await AxiosPost({ path: '/perfil_usuario', payload: { ...perfil, auth_id: data.user.id } });
-            console.log(user)
             return { success: true, data: user[0], error: null };
         } catch (error) {
             console.error("Error en SignUp:", error);

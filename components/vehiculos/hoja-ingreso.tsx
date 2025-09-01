@@ -12,7 +12,7 @@ import html2canvas from "html2canvas"
 import { jsPDF } from "jspdf"
 import SignatureCanvas from "react-signature-canvas";
 import HOJA_INGRESO_SERVICE, { HojaIngresoType } from "@/services/HOJA_INGRESO.service"
-
+import { getSupabaseClient } from "@/lib/supabase/client"
 
 interface HojaIngresoProps {
   vehiculoId?: string
@@ -27,6 +27,26 @@ interface Punto {
   descripcion: string
 }
 
+export async function subirImagenesCarroceria(files: File[], vehiculoId: string): Promise<string[]> {
+  const urls: string[] = [];
+  for (const file of files) {
+    const fileName = `${Date.now()}-${file.name}`;
+    const filePath = `vehiculos/${vehiculoId}-${fileName}`;
+    const { error } = await getSupabaseClient().storage
+      .from('carrocerias') // tu bucket
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false, // no sobreescribir si ya existe
+      });
+
+    if (!error) {
+      const { data } = getSupabaseClient().storage.from('carrocerias').getPublicUrl(filePath);
+      urls.push(data.publicUrl);
+    }
+  }
+  return urls;
+}
+
 export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngresoProps) {
   const { toast } = useToast()
   const formRef = useRef<HTMLDivElement>(null)
@@ -35,6 +55,9 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
   const [isLoading, setIsLoading] = useState(false)
   const [vehiculoData, setVehiculoData] = useState<any>(null)
   const [imagenCarroceria, setImagenCarroceria] = useState<string | null>(null)
+  // const [imagenesCarroceria, setImagenesCarroceria] = useState<string[]>([]);
+  const [imagenesCarroceria, setImagenesCarroceria] = useState<File[]>([]);
+  const [UrlsimagenesCarroceria, setUrlsimagenesCarroceria] = useState<string[]>([]);
   const [puntos, setPuntos] = useState<Punto[]>([])
   const [modoEdicion, setModoEdicion] = useState(false);
   const [sigClienteRef, setSigClienteRef] = useState<any>(null)
@@ -108,7 +131,8 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       setMotor(data.motor || motor)
       setNivelGasolina(data.nivel_gasolina || "1/4")
       setComentarios(data.comentarios || "")
-      setImagenCarroceria(data.imagen_carroceria || null)
+      // setImagenCarroceria(data.imagen_carroceria || null)
+      setUrlsimagenesCarroceria(data.imagenes_carroceria || null)
       setPuntos(data.puntos || [])
       setInitialfirmaCliente(data?.firma_cliente || null)
       setFirmaCliente(data?.firma_cliente || null)
@@ -117,16 +141,39 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
     }
   }
 
+  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0]
+  //   if (file) {
+  //     const reader = new FileReader()
+  //     reader.onload = (e) => {
+  //       setImagenCarroceria(e.target?.result as string)
+  //     }
+  //     reader.readAsDataURL(file)
+  //   }
+  // }
+  // Modifica la función de subida
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagenCarroceria(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const readers = Array.from(files).map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+      Promise.all(readers).then((images) => {
+        setUrlsimagenesCarroceria(prev => [...prev, ...images]);
+      });
     }
-  }
+    handleImageUploadUrl(event);
+  };
+  const handleImageUploadUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setImagenesCarroceria(prev => [...prev, ...Array.from(files)]);
+    }
+  };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!modoEdicion || !canvasRef.current) return
@@ -238,7 +285,29 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       })
       return
     }
+    // setIsLoading(true);
 
+    // 1. Sube las imágenes y obtén las URLs
+    let urls: string[] = [];
+    if (imagenesCarroceria.length > 0) {
+      urls = await subirImagenesCarroceria(imagenesCarroceria, vehiculoId);
+      urls = [...UrlsimagenesCarroceria, ...urls];
+    } else {
+      urls = UrlsimagenesCarroceria;
+    }
+    // const inspeccionData: HojaIngresoType = {
+    //   vehiculo_id: vehiculoId,
+    //   fecha: new Date().toISOString(),
+    //   interiores,
+    //   exteriores,
+    //   coqueta,
+    //   motor,
+    //   nivel_gasolina: nivelGasolina,
+    //   comentarios,
+    //   imagen_carroceria: imagenCarroceria,
+    //   puntos,
+    //   firmas: { firmaCliente, firmaEncargado }
+    // }
     const inspeccionData: HojaIngresoType = {
       vehiculo_id: vehiculoId,
       fecha: new Date().toISOString(),
@@ -248,7 +317,7 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
       motor,
       nivel_gasolina: nivelGasolina,
       comentarios,
-      imagen_carroceria: imagenCarroceria,
+      imagenes_carroceria: urls, // ahora es un array
       puntos,
       firmas: { firmaCliente, firmaEncargado }
     }
@@ -668,7 +737,29 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
                 )}
               </div>
 
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              {/* <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" /> */}
+
+
+              {UrlsimagenesCarroceria.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {UrlsimagenesCarroceria?.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Carrocería ${idx + 1}`}
+                      className="max-h-40 border rounded"
+                    />
+                  ))}
+                </div>
+              ) : null}
 
               {imagenCarroceria ? (
                 <div className="space-y-4">
@@ -725,18 +816,18 @@ export default function HojaIngreso({ vehiculoId, onSave, onCancel }: HojaIngres
 
             {
               // InitialfirmaCliente ?
-                <img
-                  src={InitialfirmaCliente || "/placeholder.svg"}
-                  alt="Firma del cliente"
-                  className="w-full h-full object-contain"
-                />
-                // :
-                // <SignatureCanvas
-                //   ref={(ref) => setSigClienteRef(ref)}
-                //   canvasProps={{ className: "w-full h-full h-[200px]" }}
-                //   onEnd={() => setFirmaCliente(sigClienteRef?.toDataURL())}
+              <img
+                src={InitialfirmaCliente || "/placeholder.svg"}
+                alt="Firma del cliente"
+                className="w-full h-full object-contain"
+              />
+              // :
+              // <SignatureCanvas
+              //   ref={(ref) => setSigClienteRef(ref)}
+              //   canvasProps={{ className: "w-full h-full h-[200px]" }}
+              //   onEnd={() => setFirmaCliente(sigClienteRef?.toDataURL())}
 
-                // />
+              // />
             }
 
 

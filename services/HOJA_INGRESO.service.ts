@@ -36,7 +36,7 @@ export type HojaIngresoType = {
     };
     nivel_gasolina: string;
     comentarios: string;
-    imagen_carroceria: string | null;
+    imagenes_carroceria: string[] | null;
     puntos: {
         x: number;
         y: number;

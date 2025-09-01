@@ -18,6 +18,7 @@ if (!supabaseAnonKey) {
 export function createClient() {
   return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
+      
       persistSession: true,
       autoRefreshToken: true,
     },
